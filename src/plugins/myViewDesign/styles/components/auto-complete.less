@@ -1,0 +1,22 @@
+@auto-complete-prefix-cls: ~"@{css-prefix}auto-complete";
+
+.@{auto-complete-prefix-cls} {
+    .@{select-prefix-cls} {
+        &-not-found{
+            display: none;
+        }
+    }
+    .@{icon-prefix-cls}-ios-close-circle{
+        display: none;
+        font-size: @font-size-base;
+    }
+    &:hover .@{icon-prefix-cls}-ios-close-circle{
+        display: inline-block;
+    }
+    &.@{select-dropdown-prefix-cls} {
+        max-height: none;
+    }
+    &:focus, & div{
+        outline: none;
+    }
+}

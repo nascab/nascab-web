@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>videoJs</title>
+        <link href="./src/plugins/videojs/videojs.css" rel="stylesheet">
+        <script src="./src/plugins/videojs/videojs.js"></script>
+        <style>
+            ul {
+                list-style: none;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            li {
+                width: 200px;
+                height: 40px;
+                line-height: 40px;
+                margin: 20px 20px;
+                background: #ccc;
+                cursor: pointer;
+                border-radius: 8px;
+                text-align: center;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            li:hover {
+                background: #000;
+                color: #fff;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>.m3u8视频流播放测试</h1>
+        <section id="videoPlayer">
+            <video id="video_demo" controls muted autoplay width="600" height="300" class="video-js vjs-default-skin vjs-big-play-centered" poster="">
+                <source type="application/x-mpegURL" id="target">
+            </video>
+        </section>
+
+        <script type="text/javascript">
+            function createvideo(url) {
+                let source = document.getElementById('target')
+                source.src = url 
+                var player = videojs('video_demo', { "poster": "", "controls": "true" }, 											function() {
+                    this.on('play', function() {
+                        console.log('正在播放');
+                    });
+                    //暂停--播放完毕后也会暂停
+                    this.on('pause', function() {
+                        console.log("暂停中")
+                    });
+                    // 结束
+                    this.on('ended', function() {
+                        console.log('结束');
+                    })
+                });
+                player.play()
+            }
+            createvideo('http://192.168.110.30/Users/zhangterry/Documents/hls/stream.m3u8')
+        </script>
+    </body>
+</html>

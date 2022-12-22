@@ -1,0 +1,225 @@
+@font-face {
+  font-family: "nasIcons"; /* Project id 3592611 */
+  src: url('iconfont.ttf?t=1663209175703') format('truetype');
+}
+
+.nasIcons {
+  font-family: "nasIcons" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-bianji:before {
+  content: "\e62f";
+}
+
+.icon-face-detect:before {
+  content: "\e62d";
+}
+
+.icon-coco-class:before {
+  content: "\e62e";
+}
+
+.icon-bg-admin:before {
+  content: "\e62b";
+}
+
+.icon-play:before {
+  content: "\e630";
+}
+
+.icon-fullscreen:before {
+  content: "\e631";
+}
+
+.icon-video-last:before {
+  content: "\e632";
+}
+
+.icon-exif-info:before {
+  content: "\e633";
+}
+
+.icon-download:before {
+  content: "\e634";
+}
+
+.icon-volumn:before {
+  content: "\e635";
+}
+
+.icon-video-next:before {
+  content: "\e636";
+}
+
+.icon-pause:before {
+  content: "\e637";
+}
+
+.icon-exit-fullscreen:before {
+  content: "\e638";
+}
+
+.icon-subtitles:before {
+  content: "\e639";
+}
+
+.icon-msg-error:before {
+  content: "\e619";
+}
+
+.icon-position:before {
+  content: "\e629";
+}
+
+.icon-avatar:before {
+  content: "\e62a";
+}
+
+.icon-msg-list:before {
+  content: "\e616";
+}
+
+.icon-img-folder:before {
+  content: "\e614";
+}
+
+.icon-back:before {
+  content: "\e615";
+}
+
+.icon-setting-user:before {
+  content: "\e617";
+}
+
+.icon-file-list:before {
+  content: "\e618";
+}
+
+.icon-file-recent:before {
+  content: "\e60d";
+}
+
+.icon-file-collect:before {
+  content: "\e612";
+}
+
+.icon-upload:before {
+  content: "\e613";
+}
+
+.icon-add-album:before {
+  content: "\e61a";
+}
+
+.icon-white-list:before {
+  content: "\e61b";
+}
+
+.icon-log:before {
+  content: "\e61c";
+}
+
+.icon-ftp:before {
+  content: "\e61d";
+}
+
+.icon-black-list:before {
+  content: "\e61e";
+}
+
+.icon-folder:before {
+  content: "\e61f";
+}
+
+.icon-security:before {
+  content: "\e620";
+}
+
+.icon-backup:before {
+  content: "\e621";
+}
+
+.icon-vip:before {
+  content: "\e622";
+}
+
+.icon-setting-common:before {
+  content: "\e623";
+}
+
+.icon-movies-source:before {
+  content: "\e624";
+}
+
+.icon-photos-source:before {
+  content: "\e625";
+}
+
+.icon-movies-library:before {
+  content: "\e626";
+}
+
+.icon-webdav:before {
+  content: "\e627";
+}
+
+.icon-setting-system:before {
+  content: "\e628";
+}
+
+.icon-search:before {
+  content: "\e62c";
+}
+
+.icon-img-selected:before {
+  content: "\e606";
+}
+
+.icon-timeline:before {
+  content: "\e607";
+}
+
+.icon-recent:before {
+  content: "\e608";
+}
+
+.icon-img-layout-b:before {
+  content: "\e609";
+}
+
+.icon-folder-iew:before {
+  content: "\e60a";
+}
+
+.icon-normal-album:before {
+  content: "\e60b";
+}
+
+.icon-trash:before {
+  content: "\e60c";
+}
+
+.icon-tools:before {
+  content: "\e60e";
+}
+
+.icon-footprint:before {
+  content: "\e60f";
+}
+
+.icon-img-layout-a:before {
+  content: "\e610";
+}
+
+.icon-ai-album:before {
+  content: "\e611";
+}
+
+.icon-iconxiangyoukedianjibeifen:before {
+  content: "\e605";
+}
+

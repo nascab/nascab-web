@@ -1,0 +1,235 @@
+::v-deep .vjs-text-track-display div div{
+	font-size: var(--subtitleFontSize, 20px);
+	display: block !important;
+}
+
+//加粗slider bar
+::v-deep .ivu-slider-wrap {
+	height: 7px;
+	border-radius: 7px;
+
+	.ivu-slider-bar {
+		height: 7px;
+		border-radius: 7px;
+	}
+
+	.ivu-slider-button {
+		height: 19px;
+		width: 19px;
+	}
+}
+
+
+::v-deep .vjs-text-track-display div {
+	font-size: 20px;
+	background-color: transparent !important;
+}
+
+.player-icon {
+	color: white;
+	font-size: 40px;
+}
+
+.subtitleWrapper {
+	font-weight: bold;
+	padding-left: 30px;
+	padding-right: 30px;
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	left: 0;
+	text-align: center;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	color: white;
+	padding-bottom: 50px;
+	font-size: 22px;
+	text-shadow: 1px 1px 2px black;
+
+}
+
+.video-detail-root {
+	background-color: black;
+	position: fixed;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	left: 0;
+	top: 0;
+}
+
+.video-root {
+	min-height: 100%;
+	min-width: 100%;
+	width: 100%;
+}
+
+.video-controller-top {
+	display: flex;
+	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 60px;
+	z-index: 2;
+	background: linear-gradient(to top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
+
+}
+
+.controller-bottom {
+	width: 100%;
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	flex-direction: column;
+	background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
+	z-index: 2;
+
+
+	.controller-slider {
+		padding-left: 20px;
+		padding-right: 20px;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		height: 40px;
+		width: 100%;
+
+		.time {
+			font-size: 18px;
+			font-weight: bold;
+			color: white;
+		}
+
+		.slider {
+			flex: 1;
+		}
+	}
+
+	.controller-mobile {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		position: fixed;
+		top: 40%;
+		width: 100%;
+		justify-content: center;
+
+		.icon-btn {
+			text-align: center;
+			height: 80px;
+			width: 80px;
+		}
+
+		.icon-span-mobile {
+			color: white;
+			font-size: 60px;
+		}
+	}
+
+	.controller-btns {
+		padding-left: 20px;
+		padding-right: 20px;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		height: 100px;
+		width: 100%;
+		justify-content: space-between;
+
+
+		.controller-section-l {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: flex-start;
+		}
+
+		.controller-section-r {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			justify-content: flex-end;
+		}
+
+
+		.code-type {
+			margin-left: 20px;
+			width: 200px;
+			height: 30px;
+		}
+	}
+
+}
+
+//隐藏poptop的箭头
+::v-deep .ivu-poptip-arrow {
+	display: none;
+}
+
+.icon-root {
+	cursor: pointer;
+	height: 100%;
+	margin-left: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: row;
+
+	.icon-img {
+		width: 36px;
+		height: 36px;
+	}
+
+	.icon-img-info {
+		width: 32px;
+		height: 32px;
+	}
+
+	.icon-img-download {
+		width: 35px;
+		height: 35px;
+	}
+
+	.icon-img-fullscreen {
+		width: 34px;
+		height: 34px;
+	}
+}
+
+.option-item {
+	word-break: break-all;
+	max-width: 300px;
+	font-size: 14px;
+	cursor: pointer;
+	margin-bottom: 10px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+.video-name {
+	text-align: left;
+	font-size: 18px;
+	font-weight: bolder;
+	margin-left: 20px;
+	color: white;
+	margin-bottom: 10px;
+	margin-right: 20px;
+}
+
+.subtitleTitle {
+	max-width: 500px;
+	overflow: hidden;
+	white-space: nowrap;
+	-o-text-overflow: ellipsis;
+	text-overflow: ellipsis;
+}

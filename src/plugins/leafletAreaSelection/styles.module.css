@@ -1,0 +1,181 @@
+.leafletAreaSelectorControl button {
+  appearance: none;
+  font-family: inherit;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border: 1px solid rgb(204, 204, 204);
+  border-radius: 3px;
+  width: 100%;
+  height: 100%;
+  box-sizing: content-box;
+  background-color: white;
+  width: 30px;
+  height: 30px;
+  box-shadow: rgb(0 0 0 / 65%) 0px 1px 5px;
+  /*
+  The whole JS bundling ecosystem is cursed. No (simple) way to just generate a CSS with an image that works (at least: not using microbundle)
+  background-image: url('area-icon.png');
+  */
+  background-image: url('./images/area-icon.png');
+  background-size: cover;
+}
+
+.leafletAreaSelectorControl button:hover {
+  background-color: #f4f4f4;
+  transition: background-color 0.2s ease-out;
+}
+
+.leafletAreaSelectorControl button:focus {
+  background-color: #f4f4f4;
+}
+.leafletAreaSelectorControl button:global.active {
+  background-color: #17a2b8;
+}
+
+.leafletAreaSelectorControl button img {
+  width: 100%;
+  pointer-events: none;
+}
+
+.leafletMapOverlayPane:global.inactive {
+  pointer-events: none;
+}
+
+.leafletMapOverlayPane {
+  position: static;
+  cursor: crosshair;
+}
+
+.leafletMapOverlayPane :global .leaflet-area-draw-selection-pane {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 550;
+}
+
+.leafletMapOverlayPane:global.fading-enabled :global .leaflet-area-draw-selection-pane {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.leafletMapOverlayPane:global.inactive .leaflet-area-draw-selection-pane {
+  background-color: transparent;
+}
+
+.leafletMapOverlayPane .drawPaneHelp {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  overflow-x: clip;
+  overflow-y: hidden;
+  text-align: center;
+  font-size: 17px;
+  padding: 0.5em 0.3em;
+  background-color: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+.leafletMapOverlayPane:global.inactive :global .draw-pane-help {
+  display: none;
+}
+
+@media screen and (max-width: 667px) {
+  .leafletMapOverlayPane .drawPaneHelp {
+    font-size: 13px;
+  }
+}
+@media screen and (max-width: 375px) {
+  .leafletMapOverlayPane .drawPaneHelp {
+    font-size: 11px;
+  }
+}
+
+.endSelectionArea {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+.areaSelectMarker {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #0e4e73;
+  background-color: #fff;
+  cursor: move;
+}
+.areaSelectMarker:hover {
+  background-color: #0e4e73;
+}
+.areaSelectMarker:global.active {
+  background-color: #0e4e73;
+}
+
+.areaSelectGhostMarker {
+  composes: areaSelectMarker;
+  width: 14x;
+  height: 14px;
+  background-color: #c0c0c0;
+  opacity: 0.5;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .areaSelectMarker:after {
+    content: '';
+    width: 100%;
+    height: 100%;
+    padding: 15px;
+    display: block;
+    margin-left: -15px;
+    margin-top: -15px;
+  }
+}
+
+.areaSelectMarker:global.start-marker {
+  background-color: #28a745;
+  animation: endpath-pulse 1.5s infinite;
+}
+
+.areaSelectMarker:global.invalid {
+  border-color: rgb(220, 53, 69);
+  background-color: rgba(220, 53, 69, 0.7);
+}
+
+:global .leaflet-overlay-pane :global path.areaCloseLine {
+  stroke-dasharray: 20;
+  animation: closeline-dash 10s linear;
+  animation-iteration-count: infinite;
+}
+
+:global .leaflet-overlay-pane :global path.rect-progress-line {
+  stroke-dasharray: 10;
+  animation: closeline-dash 10s linear;
+  animation-iteration-count: infinite;
+}
+
+:global .map-container.drawing-area :global .leaflet-control-attribution {
+  display: none;
+}
+
+:global @keyframes closeline-dash {
+  to {
+    stroke-dashoffset: 1000;
+  }
+}
+
+:global @keyframes endpath-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}

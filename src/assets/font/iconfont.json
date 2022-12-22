@@ -1,0 +1,30 @@
+{
+  "id": "3592611",
+  "name": "nascab",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "21741753",
+      "name": "13.详情_更多",
+      "font_class": "13more_01",
+      "unicode": "e628",
+      "unicode_decimal": 58920
+    },
+    {
+      "icon_id": "5900852",
+      "name": "删除色块",
+      "font_class": "shanchusekuai",
+      "unicode": "ec45",
+      "unicode_decimal": 60485
+    },
+    {
+      "icon_id": "4846517",
+      "name": "编辑",
+      "font_class": "bianji",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    }
+  ]
+}

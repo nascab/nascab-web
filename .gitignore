@@ -1,0 +1,15 @@
+node_modules
+out/
+logs/
+run/
+.idea/
+package-lock.json
+data/
+dist/
+*.db
+CandyNas-Sqlite.db
+cache/
+yarn.lock
+db/database
+db/scripts
+.DS_Store
