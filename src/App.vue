@@ -3,7 +3,9 @@
 		<keep-alive>
 			<router-view v-if="$route.meta.keepAlive && isRouterAlive"></router-view>
 		</keep-alive>
-		<router-view v-if="!$route.meta.keepAlive && isRouterAlive"></router-view>
+		<transition :name="animationName">
+			<router-view v-if="!$route.meta.keepAlive && isRouterAlive"></router-view>
+		</transition>
 
 		<!-- 全局confirm对话框 -->
 		<my-dialog-confirm ref="appConfirmDialog" :title="confirmDialogTitle" :content="confirmDialogContent"
@@ -12,8 +14,8 @@
 		</my-dialog-confirm>
 
 		<!-- 全局的提示对话框 -->
-		<my-dialog-alert :preventClose="false" ref="appAlertDialog" :title="alertDialogTitle"
-			:content="alertDialogContent" @onOkClick="onAlertClick"></my-dialog-alert>
+		<my-dialog-alert :preventClose="false" ref="appAlertDialog" :title="alertDialogTitle" :content="alertDialogContent"
+			@onOkClick="onAlertClick"></my-dialog-alert>
 
 		<!-- 语言选择对话框 -->
 		<my-dialog-select :options="languages" :isBlur="true" ref="languageDialog" :title="$t('setting.language')"
@@ -23,7 +25,7 @@
 		<!-- 全局上传 -->
 		<transition name="fade" v-if="initFinish">
 			<div v-show="uploadIsShow" class="upload-wrapper">
-				<Upload></Upload>
+				<Upload ref="uploadComponent"></Upload>
 			</div>
 		</transition>
 
@@ -40,6 +42,7 @@
 import Vue from 'vue';
 import Upload from "@/views/upload/upload"
 import bgTask from "@/components/bg-task/bg-task"
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
 	watch: {
@@ -47,6 +50,18 @@ export default {
 			if (to.path.includes('login')) {
 				this.uploadIsShow = false
 			}
+			// if (to.meta && to.meta.level) {
+			// 	if(to.meta.level==this.currentPageLevel){
+			// 		this.animationName=""
+			// 	}else{
+			// 		if(to.meta.level>this.currentPageLevel){
+			// 			this.animationName="slide-left"
+			// 		}else{
+			// 			this.animationName="slide-right"
+			// 		}
+			// 	}
+			// }
+			// this.currentPageLevel=to.meta.level
 		},
 	},
 	components: {
@@ -60,6 +75,8 @@ export default {
 	},
 	data() {
 		return {
+			currentPageLevel: 1,
+			animationName: "fade",
 			initFinish: false,
 			bgTaskIsShow: false,
 			uploadIsShow: false,
@@ -85,6 +102,19 @@ export default {
 		}
 	},
 	mounted() {
+
+
+		let token = localStorage.getItem('token')
+		if (token) {
+			this.$store.state.token = token
+		}
+		let currentUser = localStorage.getItem('currentUser')
+		if (currentUser) {
+			currentUser = JSON.parse(currentUser)
+			this.$store.state.currentUser = currentUser
+		}
+
+
 		if (this.isMobile()) {
 			//手机端
 			Vue.prototype.isMobile = true
@@ -112,10 +142,47 @@ export default {
 		Vue.prototype.runInElectron = runInElectron;
 		Vue.prototype.shouldShowTour = this.shouldShowTour
 		Vue.prototype.isAndroid = /(Android)/i.test(navigator.userAgent)
+		Vue.prototype.dealOnPageScroll = this.dealOnPageScroll
+		Vue.prototype.pushState = this.pushState
+		Vue.prototype.openNewWebViewByPath = this.openNewWebViewByPath
+		Vue.prototype.goPathNewWebView = this.goPathNewWebView
+		Vue.prototype.goPath = this.goPath
+		Vue.prototype.copyText = this.copyText
 
+
+
+		//标记是否在app里面
+		Vue.prototype.isFromApp = localStorage.getItem("from") == "app"
 		this.initFinish = true
 	},
 	methods: {
+		copyText(text) {
+			let clip = navigator.clipboard
+			if (clip) {
+				clip.writeText(text)
+				this.showVsNotification(this.$t('system.copied'))
+			}
+		},
+		goPathNewWebView(path, title, query, newTag) {
+			if (this.isFromApp) {
+				//如果在app里面就打开新页面
+				jsBridge.onOpenNewWebViewByPath(path, title)
+			} else {
+				console.log("newTag",newTag)
+				if (newTag) {
+					console.log("location.href",location.href)
+					window.open(location.protocol+'//' + window.location.host + "/#" + path,"_blank");                 
+				} else {
+					this.goPath(path, query)
+				}
+			}
+		},
+		pushState() {
+			//要想监听后退时间必须pushstate
+			if (window.history && window.history.pushState) {
+				history.pushState(null, null, document.URL);
+			}
+		},
 		//App.vue
 		isMobile() {
 			function isIos() {
@@ -136,14 +203,23 @@ export default {
 			}
 			this.bgTaskIsShow = !this.bgTaskIsShow
 		},
-		switchUpload(isShow) {
-			if (this.isMobile()) {
-				this.bgTaskIsShow = false
-			}
-			if (isShow === false || isShow === true) {
-				this.uploadIsShow = isShow
+		switchUpload(isShow, uploadTargetPath) {
+			if (this.isFromApp && jsBridge && isShow) {
+				jsBridge.onClickUpload(uploadTargetPath)
 			} else {
-				this.uploadIsShow = !this.uploadIsShow
+				if (this.isMobile()) {
+					this.bgTaskIsShow = false
+				}
+				if (isShow === false || isShow === true) {
+					console.log("this.uploadIsShow =", isShow)
+					this.uploadIsShow = isShow
+					//设置目标上传目录
+					if (uploadTargetPath) {
+						this.$refs.uploadComponent.onSelectPath(uploadTargetPath)
+					}
+				} else {
+					this.uploadIsShow = !this.uploadIsShow
+				}
 			}
 		},
 		// 显示全局提示对话康
@@ -233,6 +309,40 @@ export default {
 					});
 			}
 
+		},
+		dealOnPageScroll(e, onReachBottom, onShowToTopBtn) {
+			//滚动回调
+			let scrollTop = null;
+			let scrollHeight = null;
+			if (e.srcElement.scrollingElement) {
+				scrollTop = e.srcElement.scrollingElement.scrollTop
+				scrollHeight = e.srcElement.scrollingElement.scrollHeight
+			} else if (e.srcElement) {
+				scrollTop = e.srcElement.scrollTop
+				scrollHeight = e.srcElement.scrollHeight
+			} else if (e.target) {
+				scrollTop = e.target.scrollTop
+				scrollHeight = e.target.scrollHeight
+			}
+			let windowHeight = document.documentElement.clientHeight;
+			if (!scrollHeight && e.srcElement.scrollingElement) {
+				scrollHeight = e.srcElement.scrollingElement.scrollHeight;
+			}
+			if (scrollTop > windowHeight) {
+				if (onShowToTopBtn) onShowToTopBtn(true)
+			} else {
+				if (onShowToTopBtn) onShowToTopBtn(false)
+			}
+			if (scrollTop + windowHeight >= scrollHeight - 5) {
+				if (onReachBottom) onReachBottom()
+			}
+		},
+		goPath(path, query) {
+			this.switchUpload(false)
+			this.$router.push({
+				path: path,
+				query: query,
+			});
 		}
 	}
 }
@@ -280,6 +390,10 @@ export default {
 
 .icon-main-color {
 	color: $nas-main;
+}
+
+.icon-red-color {
+	color: $nas-red;
 }
 
 img {
@@ -398,5 +512,36 @@ div {
 
 body {
 	scrollbar-width: none;
+}
+
+
+.slide-right-enter-active,
+.slide-right-leave-active,
+.slide-left-enter-active,
+.slide-left-leave-active {
+	will-change: transform;
+	transition: all 0.5s;
+	width: 100vw;
+	position: absolute;
+}
+
+.slide-right-enter {
+	opacity: 0;
+	transform: translate3d(-100%, 0, 0);
+}
+
+.slide-right-leave-active {
+	opacity: 0;
+	transform: translate3d(100%, 0, 0);
+}
+
+.slide-left-enter {
+	opacity: 0;
+	transform: translate3d(100%, 0, 0);
+}
+
+.slide-left-leave-active {
+	opacity: 0;
+	transform: translate3d(-100%, 0, 0);
 }
 </style>

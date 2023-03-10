@@ -1,10 +1,10 @@
 <template >
 	<div class="my-sidebar-root">
 
-		<!-- 回到首页 -->
-		<my-btn-icon class="nas-mobile-show" style="position:fixed;bottom:135px;left:15px;" iIcon="md-home" @click="goPath('/home')"></my-btn-icon>
+		<!-- 回到首页 app内部不显示-->
+		<my-btn-icon v-if="!isFromApp" type="grey" class="nas-mobile-show" style="position:fixed;bottom:135px;left:15px;" iIcon="md-home" @click="goPath('/home')"></my-btn-icon>
 		<!-- 切换边栏 -->
-		<my-btn-icon class="nas-mobile-show" style="position:fixed;bottom:65px;left:15px;" iIcon="md-reorder" @click="(activeSidebar = !activeSidebar)"></my-btn-icon>
+		<my-btn-icon type="grey" class="nas-mobile-show" style="position:fixed;bottom:65px;left:15px;" iIcon="md-reorder" @click="(activeSidebar = !activeSidebar)"></my-btn-icon>
 
 		<vs-sidebar absolute v-model="selectedIndex" :open.sync="activeSidebar">
 
@@ -37,6 +37,10 @@
 <script>
 export default {
 	props: {
+		initIndex:{
+			default: 0,
+			type: Number
+		},
 		optionList: {
 			default: [],
 			type: Array
@@ -51,7 +55,7 @@ export default {
 	data() {
 		return {
 			activeSidebar: false,
-			selectedIndex: '0'
+			selectedIndex: this.initIndex
 		};
 	},
 	created() {
@@ -63,11 +67,20 @@ export default {
 			console.log('itemClick', index)
 			this.selectedIndex = index
 			this.activeSidebar = false
-			this.$emit('onItemClick', this.optionList[index].id)
+			this.$emit('onItemClick', this.optionList[index])
 
 		},
 		setIndex(index) {
 			this.selectedIndex = index
+		},
+		setSelectById(optionId) {
+			if (optionId) {
+				for (let i = 0; i < this.optionList.length; i++) {
+					if (this.optionList[i].id == optionId) {
+						this.selectedIndex = i
+					}
+				}
+			}
 		}
 	}
 }

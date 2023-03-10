@@ -5,7 +5,7 @@
 			<div v-if="targetPath" style="font-weight:bold">
 				{{ $t('upload.targetFolder') + " : " }}
 			</div>
-			<Tag color="primary" v-if="targetPath" closable @on-close="targetPath = ''">{{ targetPath }}</Tag>
+			<Tag color="primary" style="border-radius:20px" v-if="targetPath" closable @on-close="targetPath = ''">{{ targetPath }}</Tag>
 			<!-- 选择上传文件夹 -->
 			<Button v-else @click="selectPath" type="primary" style="border-radius:20px">{{ $t('upload.selectTargetFolder') }}</Button>
 
@@ -80,7 +80,7 @@
 					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
 			</template>
 		</vs-dialog>
-
+		
 
 		<!-- 关闭按钮 -->
 		<vs-button v-if="!spaceId" @click="switchUpload()" icon class="closs-btn">
@@ -155,7 +155,7 @@ export default {
 				}
 				let uploadUrl = axios.uploadUrl() + `&savePath=${axios.encodePath(this.targetPath)}&overMode=${this.overMode}`
 				if (this.spaceId) {
-					uploadUrl = axios.privateSpaceUploadUrl() + `&spaceId=${this.spaceId}&overMode=over&spaceToken=${this.$store.state.privateSpace[this.spaceId]}&filename=${base64.encode(file.name)}`
+					uploadUrl = axios.privateSpaceUploadUrl() + `&spaceId=${this.spaceId}&overMode=over&spaceToken=${this.$store.state.privateSpace[this.spaceId]}&filename=${file.name}`
 				}
 				this.uploadUrl = uploadUrl
 				file.uploadUrl = uploadUrl

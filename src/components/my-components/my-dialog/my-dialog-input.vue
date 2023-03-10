@@ -16,7 +16,7 @@
 				{{ content ? content : title }}
 			</div>
 			<!-- 输入框 -->
-			<vs-input :type="isPwd ? 'password' : 'text'" v-model="inputValue" :placeholder="placeholder"  @keydown.down="onBtnClick">
+			<vs-input @keyup.enter="onBtnClick" :type="isPwd ? 'password' : 'text'" v-model="inputValue" :placeholder="placeholder"  @keydown.down="onBtnClick">
 				<template #icon>
 					<p>?</p>
 				</template>

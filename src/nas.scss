@@ -29,6 +29,18 @@ a {
 
 }
 
+.enable-text-select{
+	/*系统默认菜单被禁用*/
+	-webkit-user-select: all !important;
+	/*webkit浏览器*/
+	-khtml-user-select: all !important;
+	/*早期浏览器*/
+	-moz-user-select: all !important;
+	/*火狐*/
+	-ms-user-select: all !important;
+	/*IE10*/
+	user-select:all !important;
+}
 img {
 	-webkit-touch-callout: none !important;
 	-webkit-user-select: none !important;

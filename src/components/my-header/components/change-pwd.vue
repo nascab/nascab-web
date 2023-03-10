@@ -75,7 +75,7 @@ export default {
 		}
 	},
 	mounted() {
-		this.currentUser = JSON.parse(sessionStorage.getItem("currentUser"))
+		this.currentUser = JSON.parse(localStorage.getItem("currentUser"))
 	},
 	methods: {
 		handleSubmit(name) {
@@ -89,8 +89,8 @@ export default {
 						if (!res.code) {
 							this.showVsAlertDialog(this.$t('common.alert'), this.$t('header.changePasswordSuccess'), () => {
 								this.$emit('onClose')
-								sessionStorage.removeItem('token')
-								sessionStorage.removeItem('currentUser')
+								localStorage.removeItem('token')
+								localStorage.removeItem('currentUser')
 								this.$router.push({
 									path: '/login'
 								})

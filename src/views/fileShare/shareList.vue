@@ -111,8 +111,8 @@
 		},
 		data() {
 			return {
-				ftpUrl:sessionStorage.getItem('ftpUrl'),
-				webDavUrl: sessionStorage.getItem('webDavUrl'),
+				ftpUrl:'',
+				webDavUrl: '',
 				selectId: null,
 				operationType: "create",
 				showAdd: false,
@@ -122,6 +122,9 @@
 		},
 		mounted() {
 			this.getAll()
+			console.log(localStorage.ftpUrl)
+			this.ftpUrl=localStorage.ftpUrl
+			this.webDavUrl=localStorage.webDavUrl
 		},
 		methods: {
 			onAddFinish() {

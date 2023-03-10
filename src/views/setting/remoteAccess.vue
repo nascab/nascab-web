@@ -9,7 +9,11 @@
           <vs-tooltip v-if="currentVipInfo && currentVipInfo.subdomain">
             <div v-if="currentVipInfo && currentVipInfo.subdomain"
               style="display: flex; flex-direction: row; align-items: center">
-              <a @click="lanIpClick">http://{{ currentVipInfo.subdomain }}{{ currentVipInfo.proxyDomain }}</a>
+              <a @click="lanIpClick('http://')">http://{{ currentVipInfo.subdomain }}{{ currentVipInfo.proxyDomain }}</a>
+            </div>
+            <div v-if="currentVipInfo && currentVipInfo.subdomain"
+              style="display: flex; flex-direction: row; align-items: center">
+              <a @click="lanIpClick('https://')">https://{{ currentVipInfo.subdomain }}{{ currentVipInfo.proxyDomain }}</a>
             </div>
             <template #tooltip>
               {{ $t('nascab.pleaseOpenTwoStepsLogin') }}
@@ -29,13 +33,11 @@
                 class="icon-main-color">{{
                     $t("nascab.online")
                 }}</span>
-              <span v-else style="color: red;flex-shrink:0;max-width: 600px;text-align:left">{{ $t("nascab.offline")
-              }}
-                :{{
+              <span v-else style="color: red;flex-shrink:0;max-width: 600px;text-align:left">{{
                     proxyState.error
                 }}</span>
             </div>
-            <div style="display:flex;align-items:center">
+            <div style="display:flex;align-items:center" v-if="remoteEnable">
               <!-- 刷新 -->
               <vs-tooltip v-if="currentVipInfo && currentVipInfo.subdomain">
                 <vs-button flat border @click="getNasAccountInfo()"
@@ -65,9 +67,8 @@
         </div>
       </div>
       <!-- 自定义端口映射 -->
-      <div v-if="currentVipInfo && currentVipInfo.subdomain"
+      <!-- <div v-if="currentVipInfo && currentVipInfo.subdomain"
         style="display:flex;flex-direction:column;align-items:flex-start;">
-        <!-- 自定义端口映射 -->
         <Divider style="margin-top:30px">{{ $t('nascab.customProxyTitle') }}</Divider>
         <div style="color:#888;text-align:left;max-width:800px;display:flex;align-items:center">
           <p>{{ $t('nascab.customAlert', { port: currentVipInfo.extraPort1 }) }}</p>
@@ -82,20 +83,16 @@
             </template>
           </vs-tooltip>
         </div>
-
-        <!-- 本地服务ip -->
         <div style="margin-top:50px;width:100%">
           <vs-input v-model="customProxIp" type="text" class="item-input" placeholder="127.0.0.1"
             :label="$t('nascab.localIp') + '  ' + $t('nascab.localMachine')">
           </vs-input>
         </div>
-        <!-- 本地服务端口 -->
         <div style="margin-top:30px;width:100%">
           <vs-input v-model="customProxPort" type="text" class="item-input" placeholder="1-65535"
             :label="$t('nascab.localPort')">
           </vs-input>
         </div>
-        <!-- 本地服务外网地址和端口提示 -->
         <div v-if="customProxIp && customProxPort" style="margin-top:30px;width:100%;text-align:left">
           {{ $t('nascab.customServerRemoteUrl') }}: {{
               currentVipInfo.subdomain
@@ -110,7 +107,7 @@
             <my-btn class="save-btn" :title="$t('nascab.saveIpPort')" />
           </div>
         </div>
-      </div>
+      </div> -->
       <vs-dialog overflow-hidden full-screen v-model="showIframeDialog">
         <iframe v-if="showIframeDialog" scrolling="auto" :src="loadUrl" class="iframe"></iframe>
       </vs-dialog>
@@ -204,10 +201,10 @@ export default {
         path: path
       })
     },
-    lanIpClick() {
+    lanIpClick(protocal) {
       let clip = navigator.clipboard
       if (clip) {
-        clip.writeText('http://' + this.currentVipInfo.subdomain + this.currentVipInfo.proxyDomain)
+        clip.writeText(protocal+this.currentVipInfo.subdomain + this.currentVipInfo.proxyDomain)
         this.showVsNotification(this.$t('system.copied'))
       }
     },

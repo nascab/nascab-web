@@ -20,11 +20,14 @@
 				</my-sidebar-mobile>
 			</div>
 
-			<div class="brower-list-root">
+			<files-operation-record v-if="menuActive=='operation_record'"></files-operation-record>
+			<div v-else class="brower-list-root">
 				<folder-brower-operation-bar ref="fileBar" style="position: absolute;left: 0;"
-					@onBack="$refs.fileBrowser.goBack()" :showSlider="true" @createNewFolder="createNewFolder"
-					@onSliderChange="onSliderChange" :showClearBtn="menuActive != 'list'" @onClear="onClear"
-					:showCreateNew="showCreateNew">
+					@onBack="$refs.fileBrowser.goBack()" :showSlider="!isMobile" @createNewFolder="createNewFolder"
+					@onSliderChange="onSliderChange" :showSearch="menuActive=='list'" :showClearBtn="menuActive != 'list'" @onClear="onClear"
+					:showCreateNew="showCreateNew" @onRefresh="$refs.fileBrowser.refresh()"
+					 @onCopy="$refs.fileBrowser.copy()"
+					 @onSearch="(val)=>$refs.fileBrowser.onSearch(val)">
 				</folder-brower-operation-bar>
 				<div style="width: 100%;height: 100%;overflow: hidden;padding-top: 80px;">
 					<folder-brower style="width: 100%;height: 100%; z-index: 0;overflow-y: auto;" ref="fileBrowser"
@@ -40,12 +43,13 @@
 import myHeader from "@/components/my-header/my-header.vue"
 import folderBrower from "@/components/folder-brower/folder-brower.vue"
 import folderBrowerOperationBar from "@/components/folder-brower/folder-brower-operation-bar.vue"
-
+import filesOperationRecord from "./filesOperationRecord.vue"
 export default {
 	components: {
 		myHeader,
 		folderBrower,
-		folderBrowerOperationBar
+		folderBrowerOperationBar,
+		filesOperationRecord
 	},
 	data() {
 		return {
@@ -62,6 +66,10 @@ export default {
 				id: 'recent',
 				title: this.$t('file.recent'),
 				font: "nasIcons icon-file-recent"
+			}, {
+				id: 'operation_record',
+				title: this.$t('file.logs'),
+				font: "nasIcons icon-log"
 			}],
 			menuActive: "list"
 		}
@@ -89,7 +97,8 @@ export default {
 				this.$refs.fileBrowser.clearCollect('')
 			}
 		},
-		setLeftMenuId(menuId) {
+		setLeftMenuId(menu) {
+			let menuId=menu.id
 			this.menuActive = menuId
 			this.$nextTick(() => {
 				if (this.$refs.fileBrowser) {

@@ -3,8 +3,8 @@
 		<div id="vviewRoot"></div>
 		<Icon @click.stop="onClose" type="md-return-left" size="30" color="white"
 			style="z-index:999;position:fixed;left:20px;top:20px" />
-		<photo-exif :serverType="serverType" @onIndexUpdate="onIndexUpdate" ref="exif" v-if="showExif"
-			:indexObj="indexObj" @closeExif="closeExif">
+		<photo-exif :serverType="serverType" @onIndexUpdate="onIndexUpdate" ref="exif" v-if="showExif" :indexObj="indexObj"
+			@closeExif="closeExif">
 		</photo-exif>
 
 		<Modal v-model="showPhotoEditor" fullscreen footer-hide>
@@ -16,6 +16,7 @@
 <script>
 import photoExif from "./photoExif.vue"
 import tuiImageEditor from "./photoEditor.vue"
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
 	name: "photo-detail",
@@ -85,7 +86,7 @@ export default {
 			//加载太多会有问题 列表只加载60个 即前30个 后30个 从原列表截取
 			let showUrl = photoList[index].url
 			let urlList = []
-			let showCount = 200
+			let showCount = 600
 
 			this.showList = []
 			// 总列表的前面取一部分 后面取一部分 最多取showCount个 只取type=1即图片类型的
@@ -131,11 +132,18 @@ export default {
 				console.log(this.indexObj)
 				let Url = this.indexObj.url
 				if (Url.indexOf('type=tiny') != -1) {
-					Url=Url.replace('type=tiny', 'type=raw');
+					Url = Url.replace('type=tiny', 'type=raw');
 				}
-				Url=Url.replace('tinyImg', 'rawFile');
+				Url = Url.replace('tinyImg', 'rawFile');
 
-				window.open(Url);
+
+				let fullUrl = window.location.protocol + "//" + window.location.host + Url
+				if (this.isFromApp) {
+					jsBridge.openInBrowser(fullUrl)
+				} else {
+					window.open(Url, "_blank")
+				}
+
 			}
 			if (!this.isMobile) {//pc可以编辑
 				toolbar.oneToOne = {
@@ -245,8 +253,38 @@ export default {
 						// }).catch((error) => { })
 					},
 					view: (event) => {
+						let isToRight = true
+						if (event.detail.index < this.imgIndex) {
+							isToRight = false
+						}
 						this.imgIndex = event.detail.index
 						this.indexObj = this.showList[this.imgIndex]
+
+						// 预加载 
+						let needPreLoad = true
+						let nextUrl = ''
+						if (isToRight) {
+							if (this.imgIndex + 1 > this.showList.length) {
+								needPreLoad = false
+							} else {
+								nextUrl = this.showList[this.imgIndex + 1] ? this.showList[this.imgIndex + 1].url : ""
+							}
+						} else {
+							if (this.imgIndex - 1 < 0) {
+								needPreLoad = false
+							} else {
+								nextUrl = this.showList[this.imgIndex - 1] ? this.showList[this.imgIndex - 1].url : ""
+							}
+						}
+						if (needPreLoad && nextUrl) {
+							let img = new Image()
+							if (nextUrl.indexOf('type=tiny') != -1) {
+								nextUrl = nextUrl.replace('type=tiny', 'type=raw');
+							}
+							nextUrl = nextUrl.replace('tinyImg', 'rawFile');
+							console.log('预加载', nextUrl)
+							img.src = nextUrl
+						}
 					},
 					ready: (res) => { },
 					//照片隐藏的时候 此组件一起隐藏
@@ -272,6 +310,7 @@ export default {
 }
 </script>
 <style>
+
 .viewer-root {
 	z-index: 100;
 }
@@ -331,6 +370,10 @@ export default {
 }
 </style>
 <style lang="scss" scoped>
+
+::v-deep .viewer-toolbar ul{
+	transform:scale(1.2) !important;
+}
 .viewerroot {
 	margin-right: 250px;
 }

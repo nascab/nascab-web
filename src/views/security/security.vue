@@ -109,7 +109,8 @@ export default {
 	},
 	methods: {
 
-		setLeftMenuId(menuId) {
+		setLeftMenuId(menu) {
+			let menuId=menu.id
 			this.leftIndex = menuId
 		},
 	}

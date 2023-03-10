@@ -7,44 +7,45 @@
 		</div>
 		<!-- 照片区域 -->
 		<div style="cursor: pointer;" v-for="(photo, index) in photoList" :id="'photoItem' + photo.id" :key="photo.id"
-			class="photo-item"
-			:style="{ margin: photoMargin + 'px', width: photoWidth + 'px', height: photoHeight + 'px' }"
+			class="photo-item" :style="{ margin: photoMargin + 'px', width: photoWidth + 'px', height: photoHeight + 'px' }"
 			@click="onPhotoClick(index)" @mouseenter="mouseEnterImg(index)" @mouseleave="mouseLeaveImg(index)"
-			@contextmenu="showRightMenu($event, $root, photo, index)" @touchstart="touchstart(index)"
-			@touchend="touchend">
+			@contextmenu="showRightMenu($event, $root, photo, index)" @touchstart="touchstart(index)" @touchend="touchend">
 			<!-- 照片 -->
 			<img :id="'photoImg' + photo.id" :style="{ height: photoHeight + 'px', 'object-fit': showMode }"
 				class="photo-img" v-lazy="photo.url" @dragstart.prevent />
 			<!-- 播放按钮 -->
-			<div class="icon-play-root" v-if="photo.type == 2">
+			<div class="icon-play-root" v-if="photo.type == 2 && photo.is_livephoto ==0">
 				<!-- 视频的时长 -->
-				<img src="@/static/icon_play_white.png" />
+				<span style="color: white;font-size: 30px;" class="nasIcons icon-play"></span>
 				<p class="icon-duration">{{ utils.formatSeconds(photo.duration) }}</p>
 			</div>
+			<!-- livephoto标记 -->
+			<span v-if="photo.is_livephoto == 1" class="ic-livephoto nasIcons icon-livezhaopian"></span>
+
 			<!-- hover层 -->
 			<div class="photo-hover-mask" v-show="photo.hover && !photo.selected">
 				<!-- 某张图设置为相册首页 只有在ordinaryAlbumId有值的时候才显示 -->
 				<Icon v-if="ordinaryAlbumId" @click.stop="setOrdinaryCover(index)" class="photo-select-icon-setcover"
 					:size="25" color="#eee" type="ios-disc" />
 				<!-- 勾选框 -->
-				<img @click.stop="hoverSelect(index)" src="@/static/photo/icon-img-select.png"
-					class="photo-select-icon-hover" />
+				<span @click.stop="hoverSelect(index)" class="photo-select-icon-hover nasIcons icon-radio-unchecked"></span>
 			</div>
 			<!-- 选择层 -->
 			<div class="photo-select-mask" v-if="photo.selected">
 				<!-- 已选 -->
-				<img src="@/static/photo/icon-img-selected.png" class="photo-select-icon-hover" />
+				<span class="photo-select-icon-hover nasIcons icon-radio-checked"></span>
 			</div>
 		</div>
 		<!-- 底部的loading和没有更多 -->
 		<div style="display: flex;justify-content: center;width: 100%;flex-direction:column;align-items:center">
 			<!-- 手动加载更多的按钮 -->
 			<Button v-if="nextHasMore && photoList.length > 0" @click="loadNextPage()" type="default"
-				style="width: 250px;margin-top: 30px;height:45px;border-radius:20px">{{ $t('common.loadmore')
+				style="width: 250px;margin-top: 30px;height:45px;border-radius:20px">{{
+					$t('common.loadmore')
 				}}</Button>
 			<Spin v-if="nextLoading" size="large" style="margin-top:30px"></Spin>
 			<span v-if="!nextLoading && !nextHasMore" style="margin-top: 30px;">{{
-					$t('common.noMore')
+				$t('common.noMore')
 			}}</span>
 			<div style="height:80px"></div>
 		</div>
@@ -149,13 +150,13 @@ export default {
 
 		};
 	},
-	created() {
+	mounted() {
 		if (this.isMobile) {
 			this.itemBaseWidth = 180
 		}
+
 		// 根据索引id删除列表中的数据 在图片详情中删除图片会触发这个事件
 		this.$bus.$on('removeIndexById', (indexId) => {
-			console.log('removeIndexById', indexId)
 			if (this.photoList && this.photoList.length > 0) {
 				for (let i in this.photoList) {
 					if (this.photoList[i].id == indexId) {
@@ -166,13 +167,34 @@ export default {
 		})
 
 		this.$bus.$on('onIndexUpdate', (updatedIndex) => {
-			console.log('onIndexUpdate', updatedIndex.id)
 			for (let i in this.photoList) {
 				if (this.photoList[i].id == updatedIndex.id) {
 					this.photoList[i] = updatedIndex
 					this.dealPhotoUrl(this.photoList[i])
-
 				}
+			}
+		})
+
+		this.$nextTick(() => {
+			//如果是人脸相册 右键菜单加一个设置为人物相册海报
+			console.log("faceId:" + this.faceId)
+			if (this.faceId) {
+				console.log("添加设置人脸首页菜单")
+				this.rightMenuList.push({
+					text: this.$t('photo.setFacePoster'),
+					type: "SET_FACE_POSTER",
+				})
+				this.rightMenuList.push({
+					text: this.$t('photo.removeFromFace'),
+					type: "REMOVE_FROM_FACE",
+				})
+				this.$forceUpdate()
+			}
+			if (this.trash != 1) {
+				this.rightMenuList.push({
+					text: this.$t('photo.putInTrash'),
+					type: "TRASH",
+				})
 			}
 		})
 	},
@@ -191,11 +213,20 @@ export default {
 		touchend() {
 			clearTimeout(this.longPressTimeout); //清空定时器，防止重复注册定时器
 		},
-
+		cancelTouchEvent() {
+			//滚动的时候清空计时器 防止触发菜单
+			if (this.longPressTimeout) {
+				clearTimeout(this.longPressTimeout);
+				this.longPressTimeout = null
+			}
+		},
 		setShowTopBtn(show) {
 			this.showToTopBtn = show
 		},
 		showRightMenu(event, root, file, index) {
+			if(file.selected){
+				return event.preventDefault()
+			}
 			if (this.isMobile) return event.preventDefault()
 			this.selectedFile = file
 			this.selectedIndex = index
@@ -206,7 +237,45 @@ export default {
 			let type = this.rightMenuList[indexList[0]].type
 			if (type == 'CHECK') { //查看
 				this.onPhotoClick(this.selectedIndex)
+			} else if (type == "TRASH") {
+				this.$bus.$emit("onTrashMsg", this.photoList[this.selectedIndex].id)
+			} else if (type == "SET_FACE_POSTER") {
+				//设置为人脸相册海报
+				this.setFacePosterApi(this.selectedIndex)
+			} else if (type == "REMOVE_FROM_FACE") {
+				//从人脸相册移除
+				this.removeFromFaceApi(this.selectedIndex)
 			}
+		},
+		removeFromFaceApi(index) {
+			// 从人脸相册移除
+			this.api
+				.post("/api/photoApi/removeFromFace", {
+					photoIndexId: this.photoList[index].id,
+					rawFaceId: this.photoList[index].face_id
+				})
+				.then((res) => {
+					if (!res.code) {
+						this.showVsNotification(this.$t('common.changeSuccess'));
+						this.photoList.splice(index, 1)
+					}
+				})
+				.catch((error) => { });
+		},
+		setFacePosterApi(index) {
+			//  照片设置为人物的封面
+			this.api
+				.post("/api/photoApi/setFacePoster", {
+					photoIndexId: this.photoList[index].id,
+					setFaceId: this.faceId,
+					rawFaceId: this.photoList[index].face_id
+				})
+				.then((res) => {
+					if (!res.code) {
+						this.showVsNotification(this.$t('common.changeSuccess'));
+					}
+				})
+				.catch((error) => { });
 		},
 		setOrdinaryCover(index) {
 			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('album.setPhotoAsCover'), () => {
@@ -489,12 +558,20 @@ export default {
 	justify-content: center;
 	position: relative;
 
+	.ic-livephoto {
+		position: absolute;
+		right: 5px;
+		top: 5px;
+		color: white;
+		font-size: 30px;
+	}
+
 	.photo-select-mask {
 		height: 100%;
 		border-radius: 10px;
 		position: absolute;
 		width: 100%;
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba(0, 0, 0, 0.4);
 	}
 
 	.photo-select-icon {
@@ -514,6 +591,8 @@ export default {
 }
 
 .photo-select-icon-hover {
+	color: white;
+	font-size: 20px;
 	border-radius: 10px;
 	right: 10px;
 	bottom: 10px;
@@ -523,8 +602,8 @@ export default {
 }
 
 .photo-select-icon-setcover {
-	right: 8px;
-	top: 8px;
+	left: 12px;
+	bottom: 12px;
 	position: absolute;
 }
 
@@ -548,9 +627,6 @@ export default {
 	justify-content: center;
 	// background: linear-gradient(to top, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2));
 
-	img {
-		width: 25px;
-	}
 
 	.icon-duration {
 		margin-right: 8px;
@@ -559,5 +635,4 @@ export default {
 		color: white;
 		// font-weight: bold;
 	}
-}
-</style>
+}</style>

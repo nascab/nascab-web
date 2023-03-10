@@ -1,10 +1,10 @@
 <template>
-	<div class="movie-detail-root" :style="{padding:isMobile?'15px':'0'}">
+	<div class="movie-detail-root" :style="{ padding: isMobile ? '15px' : '0' }">
 		<!-- myheader占位 -->
 		<div class="main-layout">
-			<div style="margin-bottom:20px;padding-right: 30px;display:flex;align-items: center;">
+			<div class="header-root">
 				<!-- 返回按钮 -->
-				<Icon @click="goBack" type="md-return-left" style="margin-right:20px;cursor:pointer" size="30"
+				<Icon @click="goBack" type="md-close" style="margin-right:20px;cursor:pointer" size="20"
 					color="#333333" />
 				<!-- 电影文件名 -->
 				<div style="overflow-x:hidden">
@@ -17,12 +17,12 @@
 							<span style="flex-shrink:0">[{{ utils.formatSeconds(movieIndexObj.duration) }}]</span>
 							<vs-tooltip style="flex-shrink:0" bottom v-if="!isMobile">
 								<a v-if="!isMobile" @click="clickType">[{{ $t('security.type') }}:{{
-										movieIndexObj.is_tvplay == 1 ?
-											$t('movie.tvdrama') : $t('movie.movie')
+									movieIndexObj.is_tvplay == 1 ?
+									$t('movie.tvdrama') : $t('movie.movie')
 								}}]</a>
 								<template #tooltip>
 									<p>{{ movieIndexObj.is_tvplay == 1 ? $t('movie.clickSwitchToMovie') :
-											$t('movie.clickSwitchToTV')
+										$t('movie.clickSwitchToTV')
 									}}</p>
 								</template>
 							</vs-tooltip>
@@ -36,11 +36,11 @@
 							<span style="flex-shrink:0">[{{ utils.formatSeconds(movieIndexObj.duration) }}]</span>
 							<vs-tooltip style="flex-shrink:0" bottom v-if="!isMobile">
 								<a @click="clickType">[{{ $t('security.type') }}:{{ movieIndexObj.is_tvplay == 1 ?
-										$t('movie.tvdrama') : $t('movie.movie')
+									$t('movie.tvdrama') : $t('movie.movie')
 								}}]</a>
 								<template #tooltip>
 									<p>{{ movieIndexObj.is_tvplay == 1 ? $t('movie.clickSwitchToMovie') :
-											$t('movie.clickSwitchToTV')
+										$t('movie.clickSwitchToTV')
 									}}</p>
 								</template>
 							</vs-tooltip>
@@ -53,24 +53,10 @@
 				<!-- 海报 手机端 自己占用一行 -->
 				<div class="nas-mobile-show">
 					<div style="width:100%;margin-bottom:10px;display:flex;align-items:center;flex-direction:column">
-						<img style="width:100%;object-fit:contain;border-radius: 10px;" :src="movieIndexObj.url" />
+						<img style="width:100%;object-fit:contain;border-radius: 10px;" v-lazy="movieIndexObj.url" />
 						<!-- 手机端播放按钮  非安卓-->
-						<my-btn v-if="!isAndroid" style="margin-top:20px" class="play-btn" @click="playMovie(false)"
+						<my-btn style="margin-top:20px" class="play-btn" @click="playMovie()"
 							:title="$t('movie.play')"></my-btn>
-						<!-- 安卓的ui -->
-						<div v-else
-							style="display:flex;flex-direction:column;align-items:center;margin-top: 20px;justify-content: center;">
-							<div style="display:flex;align-items:center;width: 100%;flex-wrap: wrap;">
-								<!-- 使用nascab播放器 -->
-								<my-btn @click="playMovie(false)" :title="$t('movie.nascabPlayer')"></my-btn>
-								<!-- 使用浏览器播放器 -->
-								<my-btn type="white" v-if="isAndroid" @click="playMovie(true)"
-									:title="$t('movie.browserPlayer')"></my-btn>
-							</div>
-							<a @click="showVsAlertDialog($t('common.alert'), $t('movie.differentExplain'))"
-								v-if="isAndroid" style="margin-top:5px">有什么区别?</a>
-						</div>
-
 					</div>
 				</div>
 				<Card style="width: 100%;" class="top-root-card">
@@ -78,13 +64,13 @@
 						<div class="nas-mobile-none" style="position: relative;">
 							<!-- 电影截图/海报 -->
 							<div>
-								<img class="img-poster" :src="movieIndexObj.url" />
+								<img class="img-poster" v-lazy="movieIndexObj.url" />
 							</div>
 							<!-- 评分组件 -->
 							<div class="rate-root" v-if="movieIndexObj.movie_douban_score">
 								<Rate :disabled="true" allow-half v-model="movieIndexObj.movie_douban_score" />
 								<span style="color:#ff9900;font-weight: bold;font-size: 14px;">{{
-										movieIndexObj.movie_douban_score * 2
+									movieIndexObj.movie_douban_score * 2
 								}}</span>
 							</div>
 
@@ -92,8 +78,7 @@
 							<div style="position: absolute;top: 10px;left: 10px;">
 								<img v-if="movieIndexObj.movie_douban_id"
 									@click.stop="utils.checkDouban(movieIndexObj.filename, parseInt(movieIndexObj.movie_douban_id))"
-									style="width: 30px;height: 30px;cursor: pointer;"
-									src="@/static/social-douban.png" />
+									style="width: 30px;height: 30px;cursor: pointer;" src="@/static/social-douban.png" />
 								<img v-if="movieIndexObj.movie_imdb_id"
 									@click.stop="utils.checkImdb(movieIndexObj.filename, movieIndexObj.movie_imdb_id)"
 									style="border-radius: 5px; width: 30px;height: 30px;margin-left: 10px;cursor: pointer;"
@@ -112,7 +97,7 @@
 							<!-- 未找到电影信息 还不是会员 提示升级可以自动匹配 -->
 							<div class="no-movie-info" v-if="!movieIndexObj.movie_info_name && !vipInfo">
 								{{ $t('movie.upgradeAutoMatch') }}
-								<a style="margin-left:10px" @click="goToSetting(7)">{{ $t('nascab.upgrade')
+								<a style="margin-left:10px" @click="goToSetting('nasAccount')">{{ $t('nascab.upgrade')
 								}}</a>
 							</div>
 							<!-- 匹配名称 -->
@@ -130,7 +115,7 @@
 									}})</span>
 									<!-- 信息有误? -->
 									<a style="margin-left:10px" @click="showSearchMovieInfo = true">{{
-											$t('movie.wrongInfo')
+										$t('movie.wrongInfo')
 									}}?</a>
 								</div>
 							</div>
@@ -169,49 +154,70 @@
 					<!-- 清除电影信息 -->
 					<a v-if="movieIndexObj.movie_info_name" style="position:absolute;right: 10px;bottom: 10px;"
 						@click="clearMovieInfo">{{
-								$t('movie.clearMovieInfo')
+							$t('movie.clearMovieInfo')
 						}}</a>
 				</Card>
+			</div>
+			<!-- 同文件夹内海报 -->
+			<div class="mid-root" v-if="sameFolderImgList && sameFolderImgList.length > 0">
+				<div class="recent-title">
+					{{ $t('movie.relatedPictures') }}
+				</div>
+				<div class="recent-root">
+					<swiper style="width: 100%;" ref="mySwiperRecent" :options="swiperOptions">
+						<swiper-slide v-for="(poster, index) in sameFolderImgList">
+							<div class="recent-item" @click.stop="goPreviewImage(index)">
+								<Card class="recent-card-item" style="height:100%;">
+									<img v-lazy="poster" />
+								</Card>
+							</div>
+						</swiper-slide>
+					</swiper>
+				</div>
 			</div>
 			<!-- 其他剧集 -->
 			<div class="mid-root" v-if="otherTv && otherTv.length > 0">
 				<div class="recent-title">
 					{{ $t('movie.otherTv') }}
 				</div>
-				<div class="recent-root">
-					<swiper style="width: 100%;" ref="mySwiperRecent" :options="swiperOptions">
-						<swiper-slide v-for="(movie, index) in otherTv">
-							<div class="recent-item" @click.stop="recentMovieClick(index)">
-								<Card class="recent-card-item" style="height:100%;">
-									<img :src="movie.url" />
-									<div class="movie-name">{{ movie.filename }}</div>
-								</Card>
+				<div class="othertv-root">
+					<Card v-for="(movie, index) in otherTv" style="margin-top: 10px;">
+						<div style="display: flex;flex-direction:row;" @click.stop="tvListClick(index)">
+							<img v-lazy="movie.url" style="width:80px;height:80px;border-radius:10px;object-fit:cover" />
+							<div style="display:flex;flex-direction:column;margin-left:10px;justify-content: center;">
+								<div class="movie-name">{{ movie.filename }}</div>
+								<!-- 电影文件大小 -->
+								<span style="flex-shrink:0;margin-top: 10px;">[{{ utils.formatSeconds(movie.duration) }}][{{
+									utils.getSizeStr(movie.size) }}]</span>
 							</div>
-						</swiper-slide>
-					</swiper>
+
+						</div>
+					</Card>
 				</div>
 			</div>
 			<!-- 最近播放 -->
 			<div class="mid-root" v-else>
-				<div class="recent-title">
-					{{ $t('movie.recentPlay') }}
-					<Icon color="#386DF2" v-if="!showRecentList" @click="setShowRecent(1)" type="md-eye-off" size="20"
-						style="cursor: pointer;margin-left: 5px;" />
-					<Icon color="#386DF2" v-else @click="setShowRecent(0)" type="md-eye" size="20"
-						style="cursor: pointer;margin-left: 5px;" />
-				</div>
-				<div v-if="showRecentList" class="recent-root">
+				<div v-if="recentMovies && recentMovies.length > 0">
+					<div class="recent-title">
+						{{ $t('movie.recentPlay') }}
+						<Icon color="#386DF2" v-if="!showRecentList" @click="setShowRecent(1)" type="md-eye-off" size="20"
+							style="cursor: pointer;margin-left: 5px;" />
+						<Icon color="#386DF2" v-else @click="setShowRecent(0)" type="md-eye" size="20"
+							style="cursor: pointer;margin-left: 5px;" />
+					</div>
+					<div v-if="showRecentList" class="recent-root">
 
-					<swiper style="width: 100%;" ref="mySwiperRecent" :options="swiperOptions">
-						<swiper-slide v-for="(movie, index) in recentMovies">
-							<div class="recent-item" @click.stop="recentMovieClick(index)">
-								<Card class="recent-card-item" style="height:100%;">
-									<img :src="movie.url" />
-									<div class="movie-name">{{ movie.filename }}</div>
-								</Card>
-							</div>
-						</swiper-slide>
-					</swiper>
+						<swiper style="width: 100%;" ref="mySwiperRecent" :options="swiperOptions">
+							<swiper-slide v-for="(movie, index) in recentMovies">
+								<div class="recent-item" @click.stop="recentMovieClick(index)">
+									<Card class="recent-card-item" style="height:100%;">
+										<img v-lazy="movie.url" />
+										<div class="movie-name">{{ movie.filename }}</div>
+									</Card>
+								</div>
+							</swiper-slide>
+						</swiper>
+					</div>
 				</div>
 			</div>
 			<!-- 电影流信息 -->
@@ -233,8 +239,8 @@
 												type="md-videocam" />
 											<Icon style="margin-right:5px" size="16" v-if="stream.codec_type == 'audio'"
 												type="md-volume-up" />
-											<Icon style="margin-right:5px" size="16"
-												v-if="stream.codec_type == 'subtitle'" type="md-bookmark" />
+											<Icon style="margin-right:5px" size="16" v-if="stream.codec_type == 'subtitle'"
+												type="md-bookmark" />
 											<span v-if="stream.codec_type == 'video'">{{ $t('movie.streamVideo')
 											}}</span>
 											<span v-if="stream.codec_type == 'audio'">{{ $t('movie.streamAudio')
@@ -249,25 +255,25 @@
 										<!-- 分辨率 -->
 										<p v-if="stream.width && stream.height" class="stream-info-title">
 											{{ $t('movie.resolution') }}:<span class="stream-info-content">{{
-													stream.width
+												stream.width
 											}}x{{ stream.height }}</span>
 										</p>
 										<!-- 视频比例 -->
 										<p v-if="stream.display_aspect_ratio" class="stream-info-title">
 											{{ $t('movie.displayRatio') }}:<span class="stream-info-content">{{
-													stream.display_aspect_ratio
+												stream.display_aspect_ratio
 											}}</span>
 										</p>
 										<!-- 编码名字 -->
 										<p v-if="stream.codec_name" class="stream-info-title">
 											{{ $t('movie.codecName') }}:<span class="stream-info-content">{{
-													stream.codec_name
+												stream.codec_name
 											}}</span>
 										</p>
 										<!-- 帧率 -->
 										<p v-if="stream.r_frame_rate" class="stream-info-title">
 											{{ $t('movie.frameRate') }}:<span class="stream-info-content">{{
-													stream.r_frame_rate
+												stream.r_frame_rate
 											}}</span>
 										</p>
 										<!-- 像素格式 -->
@@ -287,37 +293,37 @@
 										<!-- 标题 -->
 										<p v-if="stream.tags && stream.tags.title" class="stream-info-title">
 											{{ $t('common.title') }}:<span class="stream-info-content">{{
-													stream.tags.title
+												stream.tags.title
 											}}</span>
 										</p>
 										<!-- 声道步距 -->
 										<p v-if="stream.channel_layout" class="stream-info-title">
 											{{ $t('movie.channelLayout') }}:<span class="stream-info-content">{{
-													stream.channel_layout
+												stream.channel_layout
 											}}</span>
 										</p>
 										<!-- 声道数量 -->
 										<p v-if="stream.channels" class="stream-info-title">
 											{{ $t('movie.channels') }}:<span class="stream-info-content">{{
-													stream.channels
+												stream.channels
 											}}</span>
 										</p>
 										<!-- 码率 -->
 										<p v-if="stream.tags && stream.tags.BPS" class="stream-info-title">
 											{{ $t('movie.bitrate') }}:<span class="stream-info-content">{{
-													stream.tags.BPS
+												stream.tags.BPS
 											}}</span>
 										</p>
 										<!-- 编码名字 -->
 										<p v-if="stream.codec_name" class="stream-info-title">
 											{{ $t('movie.codecName') }}:<span class="stream-info-content">{{
-													stream.codec_name
+												stream.codec_name
 											}}</span>
 										</p>
 										<!-- 语言 -->
 										<p v-if="stream.tags && stream.tags.language" class="stream-info-title">
 											{{ $t('setting.language') }}:<span class="stream-info-content">{{
-													stream.tags.language
+												stream.tags.language
 											}}</span>
 										</p>
 									</div>
@@ -328,19 +334,19 @@
 										<!-- 标题 -->
 										<p v-if="stream.tags && stream.tags.title" class="stream-info-title">
 											{{ $t('common.title') }}:<span class="stream-info-content">{{
-													stream.tags.title
+												stream.tags.title
 											}}</span>
 										</p>
 										<!-- 编码名字 -->
 										<p v-if="stream.codec_name" class="stream-info-title">
 											{{ $t('movie.codecName') }}:<span class="stream-info-content">{{
-													stream.codec_name
+												stream.codec_name
 											}}</span>
 										</p>
 										<!-- 语言 -->
 										<p v-if="stream.tags && stream.tags.language" class="stream-info-title">
 											{{ $t('setting.language') }}:<span class="stream-info-content">{{
-													stream.tags.language
+												stream.tags.language
 											}}</span>
 										</p>
 
@@ -368,8 +374,13 @@
 			</search-movie-info>
 		</Modal>
 
-	</div>
 
+		<!-- 照片详情弹窗 -->
+		<Modal v-model="showPhotoDetail" fullscreen footer-hide style="background-color: transparent;">
+			<photo-detail v-if="showPhotoDetail" @onClose="showPhotoDetail = false" :fromFolderBrower="true"
+				ref="photoDetail"></photo-detail>
+		</Modal>
+	</div>
 </template>
 
 <script>
@@ -378,6 +389,7 @@ import utils from "@/plugins/utils";
 
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import searchMovieInfo from "@/views/movies/components/searchMovie.vue";
+import photoDetail from "@/views/photos/components/photoDetail.vue";
 
 import {
 	Swiper,
@@ -397,6 +409,8 @@ export default {
 	},
 	data() {
 		return {
+
+			showPhotoDetail: false,
 			openAsPage: false,
 			detailMovieList: [],
 			detailIndex: [],
@@ -411,6 +425,7 @@ export default {
 			hasContinuePlay: false,
 			recentMovies: [],
 			lastProgressStr: '',
+			sameFolderImgList: [],
 			swiperOptions: {
 				centeredSlidesBounds: true,
 				spaceBetween: 20,
@@ -420,6 +435,7 @@ export default {
 		}
 	},
 	components: {
+		photoDetail,
 		Swiper,
 		SwiperSlide,
 		myHeader,
@@ -428,7 +444,6 @@ export default {
 	},
 	mounted() {
 		let passParams = this.$route.params
-		console.log(passParams)
 		//兼容弹窗模式打开 从props传进来属性
 		if (this.propsDetailMovieList.length > 0) {
 			this.detailMovieList = this.propsDetailMovieList
@@ -447,8 +462,40 @@ export default {
 		this.currentIndex = this.detailIndex
 		this.init()
 	},
+	beforeDestroy() {
+	},
 
 	methods: {
+		//点击了图片 跳转到图片详情
+		goPreviewImage(index) {
+			console.log("goPreviewImage", index)
+			//将文件对象包装为indexObj的格式 方便使用一套代码展示 从物理路径跳过去无法使用加入回收站功能 因为没有indexId
+			let useList = []
+			for (let i = 0; i < this.sameFolderImgList.length; i++) {
+				useList.push({
+					title: i + "",
+					type: 1,
+					url: this.sameFolderImgList[i]
+				})
+			}
+			this.showPhotoDetail = true;
+			this.$nextTick(() => {
+				this.$refs.photoDetail.showImg(useList, index);
+			});
+			this.pushState()
+		},
+		goToSetting(pageName) {
+			if (this.$store.state.currentUser.is_admin == 1) {
+				this.$router.push({
+					path: "/setting",
+					query: {
+						pageName: pageName,
+					},
+				});
+			} else {
+				this.showVsNotification(this.$t('common.noPermission'))
+			}
+		},
 		goBack() {
 			if (this.openAsPage) this.$router.go(-1)
 			else this.$emit('onClose')
@@ -461,14 +508,6 @@ export default {
 				//切换为电视剧
 				this.$emit('onMarkType', 1, this.movieIndexObj.id)
 			}
-		},
-		goToSetting(index) {
-			this.$router.push({
-				path: "/setting",
-				query: {
-					index: index,
-				},
-			});
 		},
 		onSwiper(swiper) {
 			console.log(swiper);
@@ -510,27 +549,12 @@ export default {
 				return
 			}
 		},
-		//allowAndroidPlayRaw 在安卓很多机型 浏览器强制接管视频播放 如果播放flv转码就不会 所以提供一个选项
-		//如果是nascab播放器播放 就能选择字幕等 如果是浏览器播放器播放 就没法选字幕音频
-		playMovie(allowAndroidPlayRaw) {
-
-			if (this.isMobile) {
-				//手机端直接跳页面
-				this.$router.push({
-					name: 'videoDetail',
-					params: {
-						passVideoList: this.movieList,
-						passPlayIndex: this.currentIndex,
-						passAllowAndroidPlayRaw: allowAndroidPlayRaw,
-						serverType: 'movie'
-					},
-				});
-			} else {
-				this.showVideoDetail = true;
-				this.$nextTick(() => {
-					this.$refs.videoPlayer.playVideo(this.movieList, this.currentIndex, allowAndroidPlayRaw);
-				});
-			}
+		playMovie() {
+			this.showVideoDetail = true;
+			this.$nextTick(() => {
+				this.$refs.videoPlayer.playVideo(this.movieList, this.currentIndex);
+			});
+			this.pushState()
 
 		},
 		getIndexDetail() {
@@ -547,14 +571,17 @@ export default {
 							...this.movieIndexObj,
 							...res.movieIndex
 						}
-						if (this.movieIndexObj.movie_cover_path) {
+						if (this.movieIndexObj.movie_cover_path && this.movieIndexObj.movie_info_state == 1) {
 							//如果有封面 则使用封面
-							this.movieIndexObj.url = this.axios.getRawFileUrl(this.movieIndexObj.movie_cover_path,
-								'', 'movie')
+							this.movieIndexObj.url = this.axios.getRawFileUrl(this.movieIndexObj.movie_cover_path, '', 'movie')
+						} else if (this.movieIndexObj.folder_cover_path) {
+							//没有封面 看看有没有同文件夹下匹配的海报
+							this.movieIndexObj.url = this.axios.getRawFileUrl(this.movieIndexObj.folder_cover_path, '', 'movie')
 						} else {
 							this.movieIndexObj.url = this.axios.getImgFullPath(this.movieIndexObj.id, true, this
 								.movieIndexObj.filename, 'movie');
 						}
+
 						if (this.movieIndexObj.movie_douban_score) {
 							this.movieIndexObj.movie_douban_score = this.movieIndexObj.movie_douban_score / 2
 						}
@@ -570,6 +597,9 @@ export default {
 								//如果有封面 则使用封面
 								res.recentMovies[i].url = this.axios.getRawFileUrl(res.recentMovies[i]
 									.movie_cover_path, '', 'movie')
+							} else if (res.recentMovies[i].folder_cover_path) {
+								//没有封面 看看有没有同文件夹下匹配的海报
+								res.recentMovies[i].url = this.axios.getRawFileUrl(res.recentMovies[i].folder_cover_path, '', 'movie')
 							}
 						}
 						this.recentMovies = res.recentMovies
@@ -584,10 +614,30 @@ export default {
 								//如果有封面 则使用封面
 								res.tvplayList[i].url = this.axios.getRawFileUrl(res.tvplayList[i]
 									.movie_cover_path, '', 'movie')
+							} else if (res.tvplayList[i].folder_cover_path) {
+								//没有封面 看看有没有同文件夹下匹配的海报
+								res.tvplayList[i].url = this.axios.getRawFileUrl(res.tvplayList[i].folder_cover_path, '', 'movie')
 							}
 						}
 						this.otherTv = res.tvplayList
+						if (this.otherTv && this.otherTv.length > 0) {
+							let currentMovie = this.movieList[this.currentIndex]
+							//当前是电视剧 要把播放列表替换为剧集去播放
+							for (let i = 0; i < this.otherTv.length; i++) {
+								if (currentMovie.id == this.otherTv[i].id) {
+									this.currentIndex = i
+									this.movieList = this.otherTv
+									break
+								}
+							}
+						}
 						this.vipInfo = res.vipInfo
+
+						if (res.sameFolderImgList) {
+							for (let i in res.sameFolderImgList) {
+								this.sameFolderImgList.push(this.axios.getRawFileUrl(res.sameFolderImgList[i]))
+							}
+						}
 						this.$forceUpdate()
 					}
 				})
@@ -608,6 +658,10 @@ export default {
 			this.currentIndex = 0
 			this.init()
 		},
+		tvListClick(index) {
+			this.currentIndex = index
+			this.playMovie()
+		}
 	}
 }
 </script>
@@ -655,6 +709,22 @@ export default {
 	width: 100%;
 	height: 100%;
 	overflow: auto;
+	padding-top: 60px;
+}
+
+.header-root {
+	border-bottom: 1px solid #eeeeee;
+	background-color: white;
+	z-index: 2;
+	height: 60px;
+	display: flex;
+	width: 100%;
+	padding-left: 20px;
+	padding-right: 20px;
+	align-items: center;
+	position: absolute;
+	top: 0px;
+	left: 0px;
 }
 
 .top-root-card {
@@ -751,6 +821,14 @@ export default {
 	flex-direction: column;
 	width: 100%;
 
+	.othertv-root {
+		width: 100%;
+		margin-top: 10px;
+		display: flex;
+		flex-direction: column;
+		padding-bottom: 10px;
+	}
+
 	.recent-root {
 		width: 100%;
 		margin-top: 10px;
@@ -788,7 +866,7 @@ export default {
 				overflow: hidden;
 				text-overflow: ellipsis;
 				display: -webkit-box;
-				-webkit-line-clamp: 1;
+				-webkit-line-clamp: 3;
 				-webkit-box-orient: vertical
 			}
 		}
@@ -842,5 +920,4 @@ export default {
 .stream-root::-webkit-scrollbar {
 	display: none;
 	/* Chrome Safari */
-}
-</style>
+}</style>

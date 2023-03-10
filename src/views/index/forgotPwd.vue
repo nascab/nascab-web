@@ -2,7 +2,7 @@
 	<div class="root">
 
 		<!-- 左上角logo -->
-		<img style="position: fixed;left: 60px;top: 40px;width: 150px;object-fit: contain;"
+		<img v-if="!isMobile" style="position: fixed;left: 60px;top: 40px;width: 150px;object-fit: contain;"
 			src="@/static/common/naslogo.png" mode="widthFix" />
 
 		<div style="display: flex;height: 100%;width: 100%;align-items: center;justify-content: center;">
@@ -54,7 +54,10 @@
 				<vs-button @click="goLogin" style="margin-top: 20px;" border>{{ $t('login.goLogin') }}
 				</vs-button>
 			</div>
+			<!-- <img v-if="isMobile" style="position: fixed;bottom: 40px;width: 120px;object-fit: contain;"
+				src="@/static/common/naslogo.png" mode="widthFix" /> -->
 		</div>
+
 	</div>
 </template>
 

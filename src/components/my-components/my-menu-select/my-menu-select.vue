@@ -64,6 +64,9 @@ export default {
 		}
 	},
 	methods: {
+		setSelectedIndex(i){
+			this.selectedIndex=i
+		},
 		onItemSelect(index) {
 			this.itemClick(index)
 			this.showSelectItem = false
@@ -94,8 +97,8 @@ export default {
 	margin-top: 10px;
 	border-radius: 20px;
 	color: white;
-	padding: 10px;
-	background-color: $nas-grey;
+	padding: 6px;
+	background-color: $nas-main;
 }
 
 .select-item {

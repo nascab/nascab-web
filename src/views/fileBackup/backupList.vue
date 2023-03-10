@@ -132,7 +132,7 @@
 			</div>
 		</div>
 		<!-- 添加任务对话框 -->
-		<vs-dialog blur v-model="showAdd">
+		<Modal blur v-model="showAdd" footer-hide>
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ operationType == 'update' ? $t('backup.updateTask') : $t('backup.createTask') }}
@@ -140,13 +140,13 @@
 			</template>
 			<add-task v-if="showAdd" :type="operationType" :taskId="selectId" ref="addTask" @onClose="onAddFinish">
 			</add-task>
-			<vs-button style="margin-top: 10px;margin-bottom: 10px;width: 100%;" @click="onCreateTask">
+			<vs-button style="margin-top: 10px;margin-bottom: 10px;width: 100%;border-radius: 20px;" @click="onCreateTask">
 				{{ operationType == 'update' ? $t('backup.updateTask') : $t('backup.createTask') }}
 			</vs-button>
-		</vs-dialog>
+		</Modal>
 
 		<!-- 展示备份记录的对话框 -->
-		<vs-dialog blur v-model="showRecords">
+		<Modal v-model="showRecords" footer-hide>
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ selectedTask ? selectedTask.task_name + ' ' + $t('backup.records') : $t('backup.records') }}
@@ -154,7 +154,7 @@
 			</template>
 			<backup-records v-if="showRecords" :taskObj="selectedTask" ref="taskRecord">
 			</backup-records>
-		</vs-dialog>
+		</Modal>
 	</div>
 </template>
 
@@ -356,7 +356,7 @@ export default {
 
 <style lang="scss" scoped>
 .top-root {
-	padding-left: 30px;
+	padding-left: 20px;
 	@media all and (max-width:640px) {
 		padding-left: 10px;
 	}

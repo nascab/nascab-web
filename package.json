@@ -1,6 +1,6 @@
 {
   "name": "nascab",
-  "version": "3.0.7",
+  "version": "3.1.6",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
@@ -14,7 +14,6 @@
     "deepmerge": "^2.2.1",
     "element-resize-detector": "^1.2.0",
     "es6-promise": "^4.2.8",
-    "flv-extend": "^0.1.1",
     "js-base64": "^3.7.3",
     "js-calendar": "^1.2.3",
     "leaflet": "^1.7.1",
@@ -36,7 +35,9 @@
     "vue-tour": "^2.0.0",
     "vuesax": "^4.0.1-alpha.25",
     "vuex": "^3.4.0",
-    "which-browser": "^0.7.0"
+    "xterm": "^5.1.0",
+    "xterm-addon-attach": "^0.8.0",
+    "xterm-addon-fit": "^0.7.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.13",

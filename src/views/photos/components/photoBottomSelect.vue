@@ -15,8 +15,7 @@
 				<my-btn-icon v-if="showRemoveFromAlbum" style="margin-right:10px;" iIcon="md-remove"
 					@click="removeFromAlbum"></my-btn-icon>
 				<!-- 删除按钮 -->
-				<my-btn-icon type="red" style="margin-right:10px;" iIcon="md-trash"
-					@click="trashPhotos(1)"></my-btn-icon>
+				<my-btn-icon type="red" style="margin-right:10px;" iIcon="md-trash" @click="trashPhotos(1)"></my-btn-icon>
 				<!-- 取消 -->
 				<my-btn-icon type="white" style="margin-right:10px;" iIcon="md-close" @click="onUnSelect"></my-btn-icon>
 			</div>
@@ -109,11 +108,19 @@ export default {
 			selectedList: []
 		};
 	},
-	created() {
+	mounted() {
+		console.log("created onTrashMsg")
 
+		this.$bus.$on('onTrashMsg', (photoIndexId) => {
+			console.log("onTrashMsg onTrashMsg onTrashMsg",photoIndexId)
+			this.inOutTrashApi(1, false, [photoIndexId], () => {
+				this.$bus.$emit("removeIndexById", photoIndexId)
+			})
+		})
 	},
 	beforeDestroy() {
-
+		console.log("beforeDestroy onTrashMsg")
+		this.$bus.$off('onTrashMsg')
 	},
 	methods: {
 		//点击按钮添加到普通相册 弹出modal让用户选择添加到哪个相册
@@ -190,24 +197,31 @@ export default {
 				.catch((error) => { });
 		},
 		inOutApi(trash, needRefresh) {
+			this.inOutTrashApi(trash, needRefresh, this.selectedList, () => {
+				this.selectedList = []
+				if (trash == 1) {
+					this.$emit('onTrashInSuc')
+					this.showVsNotification(this.$t('file.putInTrashSuc'));
+					this.$emit('onUnSelect')
+				} else {
+					this.$emit('onTrashOutSuc')
+					this.showVsNotification(this.$t('file.putOutTrashSuc'));
+				}
+				if (needRefresh) {
+					//是否需要通知照片列表进行刷新
+					this.$emit('onNeedRefresh')
+				}
+			})
+		},
+		inOutTrashApi(trash, needRefresh, idList, onSuc) {
 			this.api.post('/api/fileApi/inOutTrash', {
-				ids: this.selectedList,
+				ids: idList,
 				trash: trash
 			}).then((res) => {
 				if (!res.code) {
-					this.selectedList = []
-					if (trash == 1) {
-						this.$emit('onTrashInSuc')
-						this.showVsNotification(this.$t('file.putInTrashSuc'));
-						this.$emit('onUnSelect')
-					} else {
-						this.$emit('onTrashOutSuc')
-						this.showVsNotification(this.$t('file.putOutTrashSuc'));
-					}
-					if (needRefresh) {
-						//是否需要通知照片列表进行刷新
-						this.$emit('onNeedRefresh')
-					}
+					if (onSuc) { onSuc() }
+
+
 				}
 			}).catch((error) => { })
 		},

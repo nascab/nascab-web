@@ -3,14 +3,10 @@
 		<div class="option-item" v-for="(option, index) in optionList">
 			<div class="sign" v-if="index == selectedIndex"></div>
 			<div class="item-content" @click="itemClick(index)">
-				<vs-tooltip right primary>
-					<span :class="option.font" v-if="index == selectedIndex" style="font-size: 26px;"
-						class="item-icon"></span>
-					<span :class="option.font" v-else style="font-size: 22px;" class="item-icon-normal"></span>
-					<template #tooltip>
-						<p>{{ option.title }}</p>
-					</template>
-				</vs-tooltip>
+				<span :class="option.font" v-if="index == selectedIndex" style="font-size: 26px;"
+					class="item-icon"></span>
+				<span :class="option.font" v-else style="font-size: 22px;" class="item-icon-normal"></span>
+
 				<div class="item-title" :style="{ color: index == selectedIndex ? '#386DF2' : '#99AABF' }">
 					{{ option.title }}
 				</div>
@@ -22,6 +18,10 @@
 <script>
 export default {
 	props: {
+		initIndex: {
+			default: 0,
+			type: Number
+		},
 		optionList: {
 			default: [],
 			type: Array
@@ -30,7 +30,7 @@ export default {
 	components: {},
 	data() {
 		return {
-			selectedIndex: 0
+			selectedIndex: this.initIndex
 		};
 	},
 	created() {
@@ -39,10 +39,19 @@ export default {
 	methods: {
 		itemClick(index) {
 			this.selectedIndex = index
-			this.$emit('onItemClick', this.optionList[index].id)
+			this.$emit('onItemClick', this.optionList[index])
 		},
 		setIndex(index) {
 			this.selectedIndex = index
+		},
+		setSelectById(optionId) {
+			if (optionId) {
+				for (let i = 0; i < this.optionList.length; i++) {
+					if (this.optionList[i].id == optionId) {
+						this.selectedIndex = i
+					}
+				}
+			}
 		}
 	}
 }

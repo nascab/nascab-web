@@ -1,13 +1,12 @@
 <template>
-	<div id="videoDetailWrapper" refs="rootWrapper" class="video-detail-root" :catchtouchmove="false"
-		@mousemove="onMouse">
+	<div id="videoDetailWrapper" refs="rootWrapper" class="video-detail-root" :catchtouchmove="false" @mousemove="onMouse">
 		<video x5-video-player-type="h5" object-fit='fill' width="100%" height="100%" preload="auto" id="player"
 			ref="player" :muted="isMuted" class="video-js vjs-fill" :duration="indexObj.duration" :controls="false"
 			webkit-playsinline playsinline crossorigin="anonymous" autoplay>
 			<!-- <source ref="videoSource"> -->
 			<!-- 字幕 -->
 			<!-- <track mode="showing" v-if="textTrackUrl && !isCloseSubtitle" ref="textTrack" kind="capitions"
-				:src="textTrackUrl" srclang="en" label="subtitle" default> -->
+					:src="textTrackUrl" srclang="en" label="subtitle" default> -->
 		</video>
 
 		<!-- 承载点击事件的ui层 -->
@@ -146,6 +145,12 @@
 								:action="normalUploadUrl" :format="['ass', 'srt']" accept=".ass,.srt">
 								<Button icon="ios-cloud-upload-outline">{{ $t('movie.selectLocalSubtitles') }}</Button>
 							</Upload>
+							<!-- 选择服务器上的字幕 -->
+							<Button style="margin-top:10px" @click="showChooseSubtitle = true"
+								icon="ios-cloud-upload-outline">{{
+									$t('movie.selectSubtitleInServer')
+								}}</Button>
+
 						</template>
 					</Poptip>
 
@@ -156,14 +161,15 @@
 						</div>
 						<template #content>
 							<!-- 声道数量显示 -->
-							<a @click="chooseAc" class="option-item">{{ $t('movie.audioChannel') }}:{{ audioChannel
+							<a @click="chooseAc" class="option-item">{{ $t('movie.audioChannel') }}:{{
+								audioChannel
 							}}</a>
 							<!-- 音轨选择 -->
 							<div class="option-item" v-for="(item, index) in currentAudioStreamList"
 								@click="chooseAudio(index)" :key="item.value">
 								<p>{{ item.label }}</p>
-								<Icon style="margin-left:3px" v-if="index == audioStreamIndex" type="md-checkmark"
-									size="20" color="#333" />
+								<Icon style="margin-left:3px" v-if="index == audioStreamIndex" type="md-checkmark" size="20"
+									color="#333" />
 							</div>
 						</template>
 					</Poptip>
@@ -192,8 +198,8 @@
 							<div class="option-item" @click="onChooseMovieSize(item.value, index)"
 								v-for="(item, index) in playSizeList" :key="item.value">
 								<p>{{ item.label }}</p>
-								<Icon style="margin-left:3px" v-if="item.value == movieSize" type="md-checkmark"
-									size="20" color="#333" />
+								<Icon style="margin-left:3px" v-if="item.value == movieSize" type="md-checkmark" size="20"
+									color="#333" />
 							</div>
 						</template>
 					</Poptip>
@@ -206,8 +212,8 @@
 							<div class="option-item" @click="videoHelper.changePlaySpeed(index)"
 								v-for="(item, index) in playSpeedList" :key="item.value">
 								<p>{{ item.label }}</p>
-								<Icon style="margin-left:3px" v-if="item.value == playSpeed" type="md-checkmark"
-									size="20" color="#333" />
+								<Icon style="margin-left:3px" v-if="item.value == playSpeed" type="md-checkmark" size="20"
+									color="#333" />
 							</div>
 						</template>
 					</Poptip>
@@ -215,6 +221,22 @@
 				</div>
 			</div>
 		</div>
+
+
+		<vs-dialog v-model="showChooseSubtitle" scroll :full-screen="isMobile">
+			<template #header>
+				<h4 style="font-size: 16px;">
+					{{ $t('file.chooseFolder') + '[' + $t('file.doubleClickFolderEnter') + ']' }}
+				</h4>
+			</template>
+			<file-select ref="fileSelector" v-if="showChooseSubtitle" parent="root" @onSelect='onSelectSubtitleFile'
+				@onCancel="showChooseSubtitle = false" :fileType="0"></file-select>
+			<template #footer>
+				<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
+					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
+			</template>
+		</vs-dialog>
+
 		<!-- exif信息板 -->
 		<photo-exif :serverType="serverType" v-if="showExif && !fromFileBrower" :indexObj="indexObj"
 			@closeExif="showExif = false"></photo-exif>
@@ -225,7 +247,6 @@
 <script>
 import videoJS from 'video.js';
 import "video.js/dist/video-js.css"
-
 import photoExif from "../photos/components/photoExif.vue";
 import axios from "@/plugins/axios";
 import utils from "@/plugins/utils";
@@ -245,13 +266,14 @@ export default {
 	},
 	name: "video-detail",
 	components: {
-		photoExif,
+		photoExif
+
 	},
 	computed: {
 		resolutionStr: function () {//分辨率提示字符串
 			let str = this.$t('movie.resolution') + ":"
 			if (this.movieSize == 1) {
-				return str += this.$t('video.code_raw')
+				return str += this.$t('video.code_raw') + " [" + this.$t('video.rawPlayAlert') + "]"
 			} else {
 				let option = this.playSizeList.filter((item) => {
 					if (item.value == this.movieSize) return item
@@ -262,12 +284,12 @@ export default {
 	},
 	data() {
 		return {
+			showChooseSubtitle: false,
 			canPlayRawFile: true,//是否支持源文件
 			vPlayer: null,//videojs示例
 			audioChannel: 2,//默认双声道
 			openAsPage: false,
 			serverType: "photo",
-			allowAndroidPlayRaw: false,
 			isLoading: false,
 			textTrackUrl: '',
 			textTrackEl: null,
@@ -292,6 +314,7 @@ export default {
 			showExif: false,
 			indexObj: false, //当前的索引
 			isPlaying: false, //播放状态
+			isPlayingM3u8: false, //播放状态
 			seek: 0,
 			seekSec: 0,//显示的秒数 flv模式下和seek不一样 其他源和seek一样
 			showCustomController: true,
@@ -325,7 +348,7 @@ export default {
 		let passParams = this.$route.params
 		if (passParams.passVideoList) {
 			this.serverType = passParams.serverType
-			this.playVideo(passParams.passVideoList, passParams.passPlayIndex, passParams.passAllowAndroidPlayRaw)
+			this.playVideo(passParams.passVideoList, passParams.passPlayIndex)
 			this.openAsPage = true
 		} else if (this.propsServerType) {
 			//以弹窗形式打开处理
@@ -339,7 +362,9 @@ export default {
 	beforeDestroy() {
 		//卸载键盘事件
 		this.videoHelper.disposeKeyEvent(document)
-		this.videoHelper.stopPlayId()
+		if(this.isPlayingM3u8)this.videoHelper.stopPlayId()
+		this.videoHelper.onDestroy()
+
 		//销毁videojs
 		if (this.vPlayer) {
 			this.vPlayer.dispose();
@@ -349,8 +374,20 @@ export default {
 		//设置停止播放视频的状态
 		let playerCount = sessionStorage.getItem('player-count')
 		sessionStorage.setItem('player-count', playerCount ? parseInt(playerCount) - 1 : 0)
+
+
 	},
 	methods: {
+		//选择了服务器的字幕的回调
+		onSelectSubtitleFile(filePath) {
+			console.log(filePath)
+			if (!filePath.endsWith('.ass') && !filePath.endsWith('.srt')) {
+				this.showVsAlertDialog(this.$t('common.alert'), this.$t('movie.subtitleNoSupport'));
+			} else {
+				this.showChooseSubtitle = false
+				this.videoHelper.onSelectServerSubtitlePath(filePath)
+			}
+		},
 		setVolume(val) {
 			this.videoHelper.changeVolume(val)
 		},
@@ -446,10 +483,15 @@ export default {
 					this.subtitleStreamIndex = 0
 					this.videoSameNameSubtitleFilePath = null
 				}
+				localStorage.removeItem("lastPlayIsTransCode")
 			} else {
+				//保存一下是转码播放 切换视频后默认转码
+				localStorage.setItem("lastPlayIsTransCode", "1")
 				this.pauseVideo()
 				this.setMovieSize(movieSize)
 				this.playIndex(this.indexObj, true);
+				//保存用户选的分辨率
+				localStorage.setItem('lastPlayMovieSize', movieSize)
 			}
 		},
 		//----------回调事件------------
@@ -472,7 +514,7 @@ export default {
 			this.videoHelper.resetValue()
 			this.vPlayer.autoplay('play')
 			this.movieSize = this.videoHelper.getVideoSuitResolution(this.indexObj)
-			this.playIndex(this.indexObj, false);
+			this.playIndex(this.indexObj,  localStorage.lastPlayIsTransCode && localStorage.lastPlayIsTransCode == "1");
 		},
 		onNext() {
 			this.canPlayRawFile = true
@@ -492,11 +534,11 @@ export default {
 			this.videoHelper.resetValue()
 			this.vPlayer.autoplay('play')
 			this.movieSize = this.videoHelper.getVideoSuitResolution(this.indexObj)
-			this.playIndex(this.indexObj, false);
+			this.playIndex(this.indexObj, localStorage.lastPlayIsTransCode && localStorage.lastPlayIsTransCode == "1");
 		},
 		errorCb(err) {
 
-
+			console.log("！！1errorCb")
 		},
 		playCb() {
 			this.isPlaying = true;
@@ -518,6 +560,8 @@ export default {
 		onLoadedMetaDataCb(e) {
 		},
 		onLoadedDataCb(e) {
+			console.log("onLoadedDataCb")
+			console.log(this.vPlayer)
 			if (this.currentSubtitleStreamList.length > 0) {
 				//设置字幕显示
 				this.setSubtitleTrackUrl()
@@ -584,6 +628,7 @@ export default {
 					html5: {
 						nativeTextTracks: formatUtil.isIos() ? true : false,
 					},
+					errorDisplay: false,
 					suppressNotSupportedError: false
 				}, function () {
 					this.on("play", that.playCb);
@@ -601,6 +646,7 @@ export default {
 					//视频等待
 					this.on("waiting", that.onWaitingCb);
 					this.on("error", (e, b) => {
+						console.log("出现错误", e)
 						//视频错误监听事件
 						let errObj = that.vPlayer.error()
 						if (errObj && errObj.code == 4) {
@@ -621,6 +667,7 @@ export default {
 					});
 					this.on("canplaythrough", () => {
 						console.log('视频可以播放')
+						console.log(that.vPlayer)
 					});
 					//网络异常
 					this.on("stalled", () => {
@@ -632,6 +679,7 @@ export default {
 				this.videoHelper.resetVolume()
 			}
 			if (url.indexOf('.m3u8') != -1) {
+				this.isPlayingM3u8=true
 				formatUtil.setFormatState('m3u8')
 				this.vPlayer.src({
 					type: 'application/x-mpegURL',
@@ -641,6 +689,7 @@ export default {
 					this.vPlayer.currentTime(this.seekSec)
 				}
 			} else {
+				this.isPlayingM3u8=false
 				formatUtil.setFormatState(false)
 				this.vPlayer.src({
 					type: 'video/mp4',
@@ -674,8 +723,9 @@ export default {
 				this.setMovieSize(this.videoHelper.getVideoSuitResolution(this.indexObj))
 			}
 			//默认转码格式为flv ios不支持media source extension 但是原生支持m3u8
-			let transFormat = formatUtil.getTranscodeFormat()
+			let transFormat = formatUtil.getTranscodeFormat(this.indexObj)
 			let indexObj = this.indexObj
+			console.log("this.indexObj",this.indexObj)
 			let prifixPart = `${axios.baseUrl}/api/transCode/play/stream.${transFormat}?format=${transFormat}&`
 			if (transFormat == 'm3u8') {
 				prifixPart += `playId=${this.playId}&`
@@ -774,6 +824,7 @@ export default {
 			this.currentAudioStreamList = []
 			this.currentSubtitleStreamList = []
 			let settingPlayUrl = () => {
+				this.canPlayRawFile = formatUtil.getCanPlayRawFile(this.currentVideoStream,this.indexObj)
 				if (!playTransCode) {
 					if (!forcePlayRaw && !this.canPlayRawFile) {
 						console.log('不能播放源文件 强制转码')
@@ -846,15 +897,8 @@ export default {
 		// 		}
 		// 	}
 		// },
-		playVideo(photoList, index, allowAndroidPlayRaw) {//外部调用播放视频的入口
-			if (allowAndroidPlayRaw == true) {
-				this.allowAndroidPlayRaw = true
-			} else {
-				this.allowAndroidPlayRaw = false
-				if (this.isAndroid) {
-					this.canPlayRawFile = false
-				}
-			}
+		playVideo(photoList, index) {//外部调用播放视频的入口
+
 			this.currentIndex = index;
 			this.photoList = photoList;
 			this.indexObj = photoList[index];
@@ -862,7 +906,7 @@ export default {
 			if (this.indexObj.spaceId) {
 				this.fromPrivateSpace = true
 			}
-			this.playIndex(this.indexObj, false);
+			this.playIndex(this.indexObj,  localStorage.lastPlayIsTransCode && localStorage.lastPlayIsTransCode == "1");
 		}
 	},
 };

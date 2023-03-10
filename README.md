@@ -1,16 +1,3 @@
-# vue-nas
-
-## Project setup
-```
-npm install
-```
-
-NasCab Web project
-
-HomePage:
+NAS-CAB WEB CLIENT
+NasCab web项目 
 https://www.nascab.cn
-https://www.nas-cab.com
-
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

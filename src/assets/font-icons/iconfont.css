@@ -1,6 +1,8 @@
 @font-face {
   font-family: "nasIcons"; /* Project id 3592611 */
-  src: url('iconfont.ttf?t=1663209175703') format('truetype');
+  src: url('iconfont.woff2?t=1678198210131') format('woff2'),
+       url('iconfont.woff?t=1678198210131') format('woff'),
+       url('iconfont.ttf?t=1678198210131') format('truetype');
 }
 
 .nasIcons {
@@ -9,6 +11,22 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-radio-checked:before {
+  content: "\e763";
+}
+
+.icon-radio-unchecked:before {
+  content: "\e764";
+}
+
+.icon-livezhaopian:before {
+  content: "\e679";
+}
+
+.icon-yuanchengkongzhi:before {
+  content: "\e716";
 }
 
 .icon-bianji:before {

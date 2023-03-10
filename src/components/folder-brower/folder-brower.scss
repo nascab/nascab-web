@@ -1,0 +1,211 @@
+::v-deep .ivu-breadcrumb-item-separator {
+	display: none; //隐藏面包屑的间隔符
+}
+
+::v-deep .ivu-modal-body {
+	max-height: 600px;
+	overflow: auto;
+}
+
+//列表竖向排列形态
+.list-item-root-list {
+	width: 100%;
+	display: flex;
+	justify-content: flex-start;
+}
+
+.list-item-list {
+	position: relative;
+	display: flex;
+	justify-content: flex-start;
+	width: 100%;
+	align-items: center;
+
+	.play-icon {
+		color: white;
+		font-size: 30px;
+		position: absolute;
+		pointer-events: none;
+	}
+
+	.filename {
+		margin-left: 10px;
+		flex: 1;
+		text-align: left;
+		color: $nas-text-title;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		word-break: break-all;
+	}
+}
+
+.list-item-grid {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+
+	.play-icon {
+		color: white;
+		font-size: 30px;
+		position: absolute;
+		pointer-events: none;
+	}
+
+
+	.filename {
+		flex: 1;
+		text-align: center;
+		color: $nas-text-title;
+		margin-top: 10px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		word-break: break-all;
+	}
+}
+
+
+.bottom-select-root {
+	// 多选后的底部操作栏
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	height: 60px;
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	background-color: rgba(0, 0, 0, 0.7);
+	padding-left: 20px;
+	padding-right: 20px;
+
+}
+
+.mask-root {
+	height: 100%;
+	position: absolute;
+	width: 100%;
+}
+
+.hover-mask {
+	height: 100%;
+	position: absolute;
+	width: 100%;
+	background: rgba(0, 0, 0, 0.2);
+
+	.select-icon-hover {
+		color: white;
+		font-size: 20px;
+		right: 5px;
+		top: 5px;
+		height: 20px;
+		width: 20px;
+		position: absolute;
+	}
+}
+
+.select-mask {
+	height: 100%;
+	position: absolute;
+	width: 100%;
+	background: rgba(0, 0, 0, 0.4);
+
+	.select-icon-hover {
+		color: white;
+		font-size: 20px;
+		right: 5px;
+		top: 5px;
+		height: 20px;
+		width: 20px;
+		position: absolute;
+	}
+}
+
+
+.browser-root {
+	width: 100%;
+	position: static;
+	display: flex;
+	flex-direction: column;
+}
+
+.item-icon-folder {
+	text-align: center;
+	color: $nas-main;
+}
+
+.list-root {
+	height: 100%;
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: row;
+	align-content: flex-start;
+	position: relative;
+	display: inline-flex;
+	overflow-y: auto;
+
+	@media all and (max-width:640px) {
+		-webkit-overflow-scrolling: touch;
+	}
+}
+
+.clean-icon {
+	position: fixed;
+	right: 60px;
+	bottom: 30px;
+	cursor: pointer;
+}
+
+
+.item-img {
+	pointer-events: none;
+	border-radius: 10px;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.img-root {
+	position: relative;
+}
+
+.item-more {
+	right: 10px;
+	top: 10px;
+	position: absolute;
+}
+
+
+.item-attr {
+	font-weight: bold;
+	text-align: left;
+	margin-top: 10px;
+
+	span {
+		font-weight: normal;
+	}
+}
+
+.path-root {
+	width: calc(100% - 30px);
+	margin-bottom: 20px;
+	padding-left: 10px;
+	position: absolute;
+	padding-right: 50px;
+	overflow-x: auto;
+}
+
+.max-count {
+	width: 100%;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}

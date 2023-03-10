@@ -61,7 +61,8 @@ export default {
 	methods: {
 
 
-		setLeftMenuId(menuId) {
+		setLeftMenuId(menu) {
+			let menuId=menu.id
 			this.selectMenu = menuId
 		},
 		onSelectMenu(name) {

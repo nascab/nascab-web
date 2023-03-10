@@ -1,4 +1,5 @@
 import screenfull from 'screenfull';
+import jsBridge from '../../plugins/jsBridge';
 import formatUtil from './formatUtil';
 
 class VideoHelper {
@@ -46,10 +47,12 @@ class VideoHelper {
                 this.vue.isFullScreen = screenfull.isFullscreen
             });
         }
+        //隐藏导航栏
+        jsBridge.setIsShowNavBar(false)
     }
     //从本地缓存读取之前的比特率
     readBitrateFromLocal() {
-        let bitrateSave = localStorage.getItem("movie-play-bitrate");
+        let bitrateSave = localStorage.getItem("lastPlayBitrate");
         if (bitrateSave) {
             this.vue.videoBitRate = bitrateSave;
         }
@@ -61,9 +64,7 @@ class VideoHelper {
     }
     //将用户选取的比特率保存 下次使用
     saveBitrateToLocal() {
-        if (parseInt(this.vue.videoBitRate) <= 8192) {
-            localStorage.setItem('movie-play-bitrate', this.vue.videoBitRate)
-        }
+       localStorage.setItem('lastPlayBitrate', this.vue.videoBitRate)
     }
 
     changeVolume(value) {
@@ -133,7 +134,7 @@ class VideoHelper {
             //如果有旧的 先把旧的调用接口停掉
             this.vue.api.get(`/api/transCode/stopPlay?playId=${this.vue.playId}`, {}).then((res) => {
                 console.log('播放已经停止')
-             })
+            })
             try {
                 let playIdList = sessionStorage.getItem('play-id-list')
                 if (playIdList) {
@@ -171,10 +172,15 @@ class VideoHelper {
             console.log('保存出错了')
             console.log(err)
         }
-
     }
     download() {
-        window.open(this.vue.indexObj.rawUrl)
+        let url=this.vue.indexObj.rawUrl
+        let fullUrl = window.location.protocol + "//" + window.location.host + url
+        if (this.vue.isFromApp) {
+            jsBridge.openInBrowser(fullUrl)
+        } else {
+            window.open(url, "_blank")
+        }
     }
     destroyFlvPlayer() {
         if (this.vue.flvPlayer) {
@@ -200,6 +206,16 @@ class VideoHelper {
             }
         }
     }
+    //当选择了服务器上面的字幕文件
+    onSelectServerSubtitlePath(serverSubtitlePath) {
+        if (serverSubtitlePath) {
+            this.vue.uploadSubtitleName = serverSubtitlePath
+            this.vue.uploadSubtitleFilePath = serverSubtitlePath
+            this.vue.videoSameNameSubtitleFilePath = null
+            this.vue.seek = this.vue.seekSec
+            this.vue.setSubtitleTrackUrl()
+        }
+    }
     //字幕上传成功回调
     uploadSubtitleSuc(response, file, fileList) {
         if (response.code) {
@@ -210,7 +226,7 @@ class VideoHelper {
         this.vue.videoSameNameSubtitleFilePath = null
         this.vue.seek = this.vue.seekSec
         this.vue.setSubtitleTrackUrl()
-        
+
     }
     uploadSubtitleErr() {
         console.log('字幕上传失败 提示用户')
@@ -287,18 +303,30 @@ class VideoHelper {
             for (let i in this.optionsPlaySize) {
                 if (this.optionsPlaySize[i].value < 240) continue
                 if (useSideLen >= this.optionsPlaySize[i].value) {
-                    console.log('····················合适的视频分辨率···················', this.optionsPlaySize[i])
+                    console.log('····················合适的视频分辨率···················', this.optionsPlaySize[i].value)
                     //设置适合这个分辨率的码率选项列表 并获取视频源码率
                     let videoRawBitrate = this.setSuitBitrateOptions(this.optionsPlaySize[i])
                     console.log('视频源码率', videoRawBitrate)
                     //设置适合这个分辨率的码率当前值
                     if (videoRawBitrate) {
-                        this.vue.videoBitRate = this.optionsPlaySize[i].defaultBitrate > videoRawBitrate ? videoRawBitrate : this.optionsPlaySize[i].defaultBitrate
+                        //用户上次使用的码率 如果能继续用就继续用
+                        let bitrateSave = localStorage.getItem("lastPlayBitrate");
+                        if (bitrateSave&&videoRawBitrate>=bitrateSave) {
+                            this.vue.videoBitRate = bitrateSave;
+                        }else{
+                            this.vue.videoBitRate = this.optionsPlaySize[i].defaultBitrate > videoRawBitrate ? videoRawBitrate : this.optionsPlaySize[i].defaultBitrate
+                            localStorage.setItem("lastPlayBitrate",this.vue.videoBitRate)
+                        }
                     } else {
                         this.vue.videoBitRate = this.optionsPlaySize[i].defaultBitrate
                     }
-                    console.log('要使用的默认码率是', this.vue.videoBitRate)
-                    return this.optionsPlaySize[i].value
+                    console.log('要使用的码率是', this.vue.videoBitRate)
+                    console.log("上次用户手动选择使用的码率",localStorage.lastPlayMovieSize)
+                    if(localStorage.lastPlayMovieSize&&this.optionsPlaySize[i].value>=localStorage.lastPlayMovieSize){
+                        return localStorage.lastPlayMovieSize
+                    }else{
+                        return this.optionsPlaySize[i].value
+                    }
                 }
             }
         }
@@ -340,14 +368,16 @@ class VideoHelper {
         var ele = document.getElementById('videoDetailWrapper');
         if (screenfull.isEnabled) {
             screenfull.toggle(ele);
-        }else{
+        } else {
             let videoEl = document.getElementById('player_html5_api')
             if (videoEl && videoEl.webkitEnterFullScreen) {
                 //兼容ios
                 videoEl.webkitEnterFullScreen(); this.vue.isFullScreen = true;
             }
         }
-       
+        //通知手机横屏
+        jsBridge.setScreenDirection("LANDSCAPE")
+
     }
     //退出全屏
     exitFullscreen() {
@@ -360,8 +390,14 @@ class VideoHelper {
                 document.webkitCancelFullScreen(); this.vue.isFullScreen = false;
             }
         }
+        jsBridge.setScreenDirection("PORTRAIT")
     }
+    onDestroy(){
+        //销毁页面时候恢复自动横竖屏
+        jsBridge.setScreenDirection("AUTO")
+        jsBridge.setIsShowNavBar(true)
 
+    }
     parseAudioAndSubtitles(playFilePath) {
         //解析字幕和音频标签
         if (this.vue.indexObj.stream_info) {
@@ -434,7 +470,11 @@ class VideoHelper {
                         }
                     }
                     // 设置用户自定义的字体大小
-                    if(res.userFontSize)this.vue.userFontSize = res.userFontSize+"rem"
+                    if (res.userFontSize) {
+                        this.vue.userFontSize = res.userFontSize + "rem"
+                    }else{
+                        this.vue.userFontSize =  "1rem"
+                    }
                 }
             })
     }

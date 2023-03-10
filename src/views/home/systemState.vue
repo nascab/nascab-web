@@ -3,23 +3,31 @@
     <div class="header">
       <div style="display: flex;flex-direction: row;justify-content: flex-start;align-items: center;">
         <p class="top-title">{{ $t("state.systemState") }}</p>
-        <a class="versionStr" @click="goToSetting(5)" style="margin-left: 10px">V{{ version }}</a>
-
+        <Badge dot :offset="[5, -3]" :count="hasNewVersion">
+          <a class="versionStr" @click="goToSetting('systemSetting')" style="margin-left: 10px">V{{ version }}</a>
+        </Badge>
         <p v-if="systemState && systemState.cpu && systemState.mem" class="systemStr">
           CPU:{{ systemState.cpu.num + "x" }}
           {{ $t("home.RAM") + ":" + Math.ceil(parseFloat(systemState.mem.total / 1024 / 1024 / 1024)) + "GB" }}
         </p>
       </div>
-      <!-- 刷新按钮 -->
-      <vs-button icon style="background-color: white; flex-shrink: 0">
-        <Icon color="#333333" @click="init()" type="md-refresh" size="18" />
-      </vs-button>
+
+      <div style="display:flex;flex-shrink: 0">
+        <!-- 系统信息按钮 -->
+        <vs-button v-if="$store.state.currentUser.is_admin == 1" icon style="background-color: white; flex-shrink: 0">
+          <Icon color="#333333" @click="showSystemInfomation()" type="md-laptop" size="18" />
+        </vs-button>
+        <!-- 刷新按钮 -->
+        <vs-button icon style="background-color: white; flex-shrink: 0">
+          <Icon color="#333333" @click="getSystemState(true)" type="md-refresh" size="18" />
+        </vs-button>
+      </div>
+
     </div>
     <div class="content-root">
       <div class="card-root">
         <!-- 照片服务 索引状态 -->
-        <Card class="index-monitor"
-          v-if="photoIndexInfo && (photoIndexInfo.photoCount + photoIndexInfo.videoCount) > 0">
+        <Card class="index-monitor" v-if="photoIndexInfo && (photoIndexInfo.photoCount + photoIndexInfo.videoCount) > 0">
           <div class="ring-title" style="display: flex; align-items: center; justify-content: flex-start">
             <Spin v-if="photoIndexInfo.indexing"></Spin>
             <p>
@@ -38,8 +46,7 @@
 
         </Card>
         <!-- 影音管理 索引状态 -->
-        <Card class="index-monitor"
-          v-if="movieIndexInfo && (movieIndexInfo.photoCount + movieIndexInfo.videoCount) > 0">
+        <Card class="index-monitor" v-if="movieIndexInfo && (movieIndexInfo.photoCount + movieIndexInfo.videoCount) > 0">
           <div style="display: flex; align-items: center">
             <Spin v-if="movieIndexInfo.indexing"></Spin>
             <p class="ring-title">
@@ -63,8 +70,8 @@
           <div class="resource-monitor-wrapper">
             <!-- cpu用量 -->
             <i-circle style="margin-top: 20px; margin-right: 20px"
-              :stroke-color="systemState.cpu.load > 90 ? '#ff5500' : '#386DF2'" :size="80"
-              :percent="systemState.cpu.load" v-if="systemState.cpu">
+              :stroke-color="systemState.cpu.load > 90 ? '#ff5500' : '#386DF2'" :size="80" :percent="systemState.cpu.load"
+              v-if="systemState.cpu">
               <div style="margin-bottom: 5px">
                 <span style="font-size: 14px; color: #386df2">CPU</span>
               </div>
@@ -72,8 +79,7 @@
             </i-circle>
 
             <i-circle v-if="systemState.mem" style="margin-top: 20px"
-              :stroke-color="systemState.mem.use > 90 ? '#ff5500' : '#386DF2'" :size="80"
-              :percent="systemState.mem.use">
+              :stroke-color="systemState.mem.use > 90 ? '#ff5500' : '#386DF2'" :size="80" :percent="systemState.mem.use">
               <div style="margin-bottom: 5px">
                 <span style="font-size: 14px; color: #386df2">{{ $t('home.RAM') }}</span>
               </div>
@@ -82,10 +88,17 @@
           </div>
         </Card>
         <!-- 磁盘监控 -->
-        <Card class="disk-monitor" v-for="(disk, index) in diskList">
-          <p class="ring-title" style="width: 100%; text-align: left">
-            {{ $t("home.disk") }}:{{ disk.target }}
+        <Card class="disk-monitor" v-for="(disk, index) in diskList" v-if="!disk.isVirtual">
+          <p v-if="disk.isUSB" class="ring-title" style="width: 100%; text-align: left">
+            USB:{{ disk.diskSign }}
           </p>
+          <p v-else-if="disk.isCard" class="ring-title" style="width: 100%; text-align: left">
+            Card:{{ disk.diskSign }}
+          </p>
+          <p v-else class="ring-title" style="width: 100%; text-align: left">
+            {{ $t("home.disk") }}:{{ disk.path }}
+          </p>
+
           <i-circle style="margin-top: 20px" :stroke-color="disk.userPercent > 90 ? '#ff5500' : '#386DF2'" :size="80"
             :percent="disk.userPercent">
             <div style="margin-bottom: 5px">
@@ -97,10 +110,15 @@
         </Card>
       </div>
     </div>
+
+    <Modal v-model="showSystemInfo" footer-hide>
+      <system-info v-if="showSystemInfo"></system-info>
+    </Modal>
   </div>
 </template>
-
 <script>
+import systemInfo from "@/views/home/system/systemInfo"
+
 export default {
   props: {
     nasAccountInfo: {
@@ -108,8 +126,14 @@ export default {
       type: Object,
     }
   },
+  components: {
+    systemInfo
+  },
   data() {
     return {
+      showSystemInfo: false,
+      hasNewVersion: 0,
+      loading: false,
       version: "", //nascab版本
       intervalSystemState: null,
       intervalSystemStateGap: 15000, //多长时间获取一次系统信息
@@ -132,34 +156,39 @@ export default {
   beforeDestroy() {
     if (this.intervalSystemState) {
       clearInterval(this.intervalSystemState)
+      this.intervalSystemState = null
     }
   },
   methods: {
+    showSystemInfomation() {
+      this.showSystemInfo = true
+    },
+    goToSetting(pageName) {
+      if (this.$store.state.currentUser.is_admin == 1) {
+        this.goPathNewWebView("/setting?pageName=" + pageName, this.$t('home.settingCenter'), { pageName: pageName })
+      } else {
+        this.showVsNotification(this.$t('common.noPermission'))
+      }
+    },
     init() {
       this.getSystemState()
-    },
-    goToSetting(index) {
-      if (this.$store.state.currentUser.is_admin == 1) {
-        this.$router.push({
-          path: "/setting",
-          query: {
-            index: index,
-          },
-        });
-      }
     },
 
     showIndexAlert() {
       this.showVsAlertDialog(this.$t('common.alert'), this.$t('home.indexAlert'))
     },
     // 获取系统状态 cpu和内存用量
-    getSystemState() {
+    getSystemState(force) {
       if (!this.$store.state.token) { return }
+      if (this.loading) return
+      this.loading = true
       this.api
         .post("/api/commonApi/getSystemState", {
-          hideLoading: true
+          hideLoading: true,
+          force
         })
         .then((res) => {
+          this.loading = false
           this.version = res.version;
           for (let i = 0; i < res.data.length; i++) {
             let title = res.data[i].title
@@ -180,20 +209,13 @@ export default {
             } else if (title == "globalDiskInfo") {
               //解析磁盘
               this.diskList = JSON.parse(value)
-              console.log(this.diskList)
               for (let i = 0; i < this.diskList.length; i++) {
                 let disk = this.diskList[i]
-                if (disk.size && disk.pcent) {
-                  // 计算磁盘用量
-                  this.diskList[i].userPercent = parseInt(parseFloat(disk.pcent))
-                  // 换算磁盘总大小字符串
-                  let sizeStr = parseInt(parseFloat(disk.size) / 1000 / 1000 / 1000)
-                  if (sizeStr >= 1000) {
-                    sizeStr = parseInt(parseFloat(sizeStr / 1000) * 10) / 10 + 'T'
-                  } else {
-                    sizeStr += 'G'
-                  }
-                  this.diskList[i].sizeStr = sizeStr
+                console.log(disk)
+                if (disk.space && disk.space.free && disk.space.total) {
+                  this.diskList[i].userPercent = parseInt((1 - parseFloat(disk.space.free / disk.space.total)) * 100)
+                } else {
+                  this.diskList[i].userPercent = 0
                 }
               }
             } else if (title == "globalIndexInfofile_index_movie") {
@@ -204,7 +226,9 @@ export default {
             }
           }
         })
-        .catch((error) => { });
+        .catch((error) => {
+          this.loading = false
+        });
     },
   }
 }
@@ -258,7 +282,7 @@ export default {
 .top-title {
   flex-shrink: 0;
   color: $nas-text-title;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
 }
 

@@ -1,26 +1,42 @@
 <template>
 	<div class="bar-root">
-
-		<div >
-			<my-btn-icon :disabled="disableBtn" style="margin-right:10px;" iIcon="md-arrow-up" @click="$emit('onBack')"></my-btn-icon>
+		<!-- 上一级 -->
+		<div>
+			<my-btn-icon :disabled="isRoot" style="margin-right:10px;" iIcon="md-arrow-round-back"
+				@click="$emit('onBack')"></my-btn-icon>
 		</div>
+		<!-- 新建文件夹 -->
+		<!-- <my-btn style="margin-right:10px;" v-if="showCreateNew" :title="$t('file.newFolder')"
+						@click="$refs.newFolderDialog.setShow(true)"></my-btn> -->
+		<my-btn-icon style="margin-right:10px;" iIcon="md-add" @click="$refs.newFolderDialog.setShow(true)"></my-btn-icon>
 
-		<my-btn style="margin-right:10px;" v-if="showCreateNew" :title="$t('file.newFolder')"
-			@click="$refs.newFolderDialog.setShow(true)"></my-btn>
-		<my-btn  v-if="selectMode" :title="$t('upload.selectFolder')"
-			@click="$emit('onSelectClick')"></my-btn>
 		<!-- 改变图片大小 -->
 		<Slider v-if="showSlider" class="zoom-slider" show-tip="never" v-model="sliderValue" :min="sliderMin"
 			:max="sliderMax" :step="10" @on-input="onSizeChange">
 		</Slider>
-		<!-- <p v-if="showCurrentPath" style="margin-left: 20px;text-align: left;">{{ showPath }}</p> -->
 		<!-- 新建文件夹 -->
 		<my-dialog-input @onOkClick="onCreateNewFolder" :showCloseBtn="true" ref="newFolderDialog"
 			:title="$t('file.newFolder')" :content="$t('file.inputNewFolderName')">
 		</my-dialog-input>
 		<!-- 清除按钮 -->
-		<div @click="$emit('onClear')" v-if="showClearBtn&&!selectMode" style="margin-left: 10px;position:absolute;right:20px">
-			<my-btn type="red" :title="$t('common.clear')"></my-btn>
+
+		<div style="display:flex;align-items:center;position:absolute;right:20px">
+			<!-- 搜索栏 -->
+			<my-search v-if="showSearch" :placeholder="$t('movie.searchPlaceHolder')" @onSearch="onSearch"></my-search>
+			<!-- 清除 -->
+			<div @click="$emit('onClear')" v-if="showClearBtn" style="margin-left: 10px;">
+				<my-btn type="red" :title="$t('common.clear')"></my-btn>
+			</div>
+
+			<!-- 上传到当前文件夹 -->
+			<my-btn-icon iIcon="md-cloud-upload" style="margin-left:10px;"
+				@click="$bus.$emit('onUploadToCurrentPath')"></my-btn-icon>
+			<!-- 黏贴 -->
+			<my-btn-icon v-if="!isRoot && showPaste" style="margin-left:10px;" iIcon="md-copy"
+				@click="$emit('onCopy')"></my-btn-icon>
+			<!-- 刷新 -->
+			<my-btn-icon style="margin-left:10px;" iIcon="md-sync" @click="$emit('onRefresh')"></my-btn-icon>
+
 		</div>
 	</div>
 </template>
@@ -36,15 +52,15 @@ export default {
 			default: true,
 			type: Boolean
 		},
+		showSearch: {
+			default: false,
+			type: Boolean
+		},
 		showCreateNew: {
 			default: true,
 			type: Boolean
 		},
 		showSlider: {
-			default: false,
-			type: Boolean
-		},
-		selectMode: { //选择模式
 			default: false,
 			type: Boolean
 		}
@@ -57,19 +73,35 @@ export default {
 			sliderValue: 100,
 			newFolderName: "",
 			showPath: '',
-			disableBtn: false
+			isRoot: false,
+			showPaste: ""
 		}
 	},
+	mounted() {
+		this.$bus.$on('onShowPaste', (isShow) => {
+			this.showPaste = isShow
+		})
+	},
+	beforeDestroy() {
+		this.$bus.$off("onShowPaste");
+	},
 	methods: {
+		onSearch(searchValue) {
+			this.$emit('onSearch', searchValue)
+		},
 		onCreateNewFolder(inputVal) {
 			this.$emit('createNewFolder', inputVal)
 		},
 		onSizeChange() {
 			this.$emit('onSliderChange', this.sliderValue)
 		},
+		onCutCopy(showPaste) {
+			console.log("onCutCopy", showPaste)
+			this.showPaste = showPaste
+		},
 		setShowPath(path, isRoot) {
 			this.showPath = path
-			this.disableBtn = isRoot
+			this.isRoot = isRoot
 		}
 	}
 }
@@ -79,7 +111,7 @@ export default {
 .bar-root {
 	position: relative;
 	width: 100%;
-	height: 80px;
+	height: 70px;
 	display: flex;
 	align-items: center;
 	padding-left: 10px;

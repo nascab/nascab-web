@@ -47,7 +47,7 @@
 										}}] {{ msg.title }}</p>
 								</div>
 								<!-- 内容 -->
-								<a @click.prevent="deleteMsg(index)" style="flex-shrink: 0;margin-left: 10px;">
+								<a @click.prevent="deleteMsg(index,false)" style="flex-shrink: 0;margin-left: 10px;">
 									{{ $t('common.delete') }}
 								</a>
 							</div>
@@ -112,7 +112,8 @@ export default {
 
 	},
 	methods: {
-		setLeftMenuId(menuId) {
+		setLeftMenuId(menu) {
+			let menuId=menu.id
 			this.msgType = menuId
 		},
 		itemClick(msg, index) {
@@ -177,7 +178,7 @@ export default {
 		},
 		deleteMsg(index, isAll) {
 			let params = {
-				id: index ? this.messageList[index].id : null
+				id: index!=null ? this.messageList[index].id : null
 			}
 			if (isAll) {
 				params.isAll = isAll
@@ -337,7 +338,5 @@ export default {
 		padding-left: 20px;
 		padding-right: 20px;
 	}
-
-
 }
 </style>

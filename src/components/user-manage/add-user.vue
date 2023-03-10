@@ -78,7 +78,7 @@
 			}
 		},
 		mounted() {
-			this.currentUser = JSON.parse(sessionStorage.getItem("currentUser"))
+			this.currentUser = JSON.parse(localStorage.getItem("currentUser"))
 		},
 		methods: {
 			handleSubmit(name) {

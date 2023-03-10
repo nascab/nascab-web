@@ -13,7 +13,7 @@
 					<!-- 全部/照片/视频 -->
 					<my-menu-select @onItemClick="onChooseDataType" :optionList="typeMenuOptionList"></my-menu-select>
 					<!-- 范围选择 -->
-					<my-menu-select v-if="nearMode" style="display: inline-flex;margin-left: 10px;"
+					<my-menu-select ref="rangeSelector" v-if="nearMode" style="display: inline-flex;margin-left: 10px;"
 						@onItemClick="onChooseRange" :optionList="rangeMenuOptionList"></my-menu-select>
 					<!-- 改变图片大小 -->
 					<Slider class="zoom-slider" show-tip="never" v-model="sliderValue" :min="sliderMin" :max="sliderMax"
@@ -21,14 +21,14 @@
 					</Slider>
 
 					<!-- 选择按钮 手机端显示 <Icon type="logo-android" />-->
-					<div class="select-text" @click="$emit('onSwitchEditMode')">
-						{{ editMode ? $t('common.cancelSelect') : $t('common.select') }}</div>
+					<!-- <div class="select-text" @click="$emit('onSwitchEditMode')">
+						{{ editMode ? $t('common.cancelSelect') : $t('common.select') }}</div> -->
 				</div>
 
 				<div class="search-root" v-if="showSearchBtn">
 					<!-- 安卓的播放器设置按钮 -->
-					<my-btn-icon class="nas-mobile-show" iIcon="logo-android" v-if="isAndroid" style="margin-right:10px"
-						@click="showAndroidPlayerSetting = true"></my-btn-icon>
+					<!-- <my-btn-icon class="nas-mobile-show" iIcon="logo-android" v-if="isAndroid" style="margin-right:10px"
+						@click="showAndroidPlayerSetting = true"></my-btn-icon> -->
 
 					<!-- 搜索栏 -->
 					<my-search :placeholder="$t('photo.searchPlaceHolder')" @onSearch="onSearch"></my-search>
@@ -41,26 +41,10 @@
 			<div class="photo-date">
 				<span class="photo-geo" v-if="positionStr && positionStr != ' '">{{ positionStr }}</span>
 				<span class="photo-mode" v-if="firstPhoto && firstPhoto.mode && firstPhoto.mode != 'undefined'">{{
-						firstPhoto.mode
+					firstPhoto.mode
 				}}</span>
 			</div>
 		</div>
-
-		<!-- 安卓首选播放器选择 -->
-		<vs-dialog v-model="showAndroidPlayerSetting">
-			<h4>{{ $t('photo.andriodPrimaryPlayer') }}</h4>
-			<div
-				style="display:flex;flex-direction:column;align-items:center;margin-top: 20px;justify-content: center;">
-				<!-- 使用nascab播放器 -->
-				<vs-button border :active="!allowAndroidPlayRaw" @click="setAndroidPlayer(false)"
-					style="border-radius:20px">{{ $t('movie.nascabPlayer') }}</vs-button>
-				<!-- 使用浏览器播放器 -->
-				<vs-button border :active="allowAndroidPlayRaw" @click="setAndroidPlayer(true)"
-					style="border-radius:20px">{{ $t('movie.browserPlayer') }}</vs-button>
-				<a @click="showVsAlertDialog($t('common.alert'), $t('movie.differentExplain'))"
-					style="margin-top:5px">有什么区别?</a>
-			</div>
-		</vs-dialog>
 
 	</div>
 </template>
@@ -91,7 +75,6 @@ export default {
 	},
 	data() {
 		return {
-			allowAndroidPlayRaw: false,
 			showAndroidPlayerSetting: false,
 			typeMenuOptionList: [{
 				title: this.$t('photo.all'),
@@ -147,23 +130,19 @@ export default {
 			this.$emit('onChangeShowMode', this.showMode)
 		}
 
-		let allowAndroidPlayRaw = localStorage.getItem('allowAndroidPlayRaw')
-		this.allowAndroidPlayRaw = allowAndroidPlayRaw && allowAndroidPlayRaw == 'true'
-
 		//设置为保存的范围
 		let showRangeType = localStorage.getItem("photo-settging-show-range");
 		if (showRangeType && this.showRangeType != showRangeType) {
 			this.showRangeType = showRangeType;
+			this.$nextTick(() => {
+				if (this.$refs.rangeSelector && this.showRangeType > 0 && this.showRangeType <= 2)
+					this.$refs.rangeSelector.setSelectedIndex(this.showRangeType)
+			})
 		}
 		//触发加载第一页数据
 		this.$emit('onChooseRange', this.showRangeType)
 	},
 	methods: {
-		setAndroidPlayer(playRaw) {
-			this.allowAndroidPlayRaw = playRaw
-			this.showAndroidPlayerSetting = false
-			localStorage.setItem('allowAndroidPlayRaw', playRaw)
-		},
 		onSearch(searchStr) {
 			this.searchStr = searchStr
 			this.$emit('onSearch', this.searchStr)

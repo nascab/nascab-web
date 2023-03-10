@@ -1,46 +1,79 @@
 <template>
-	<div class="browser-root" ref="rootWrapper">
+	<div @contextmenu.stop="showRightMenuBg($event, $root)" class="browser-root" ref="rootWrapper">
 		<div v-if="!selectMode" class="path-root">
 			<div style="display:flex;justify-content:flex-start;width:100%;">
-				<a style="font-size:16px;flex-shrink: 0;" @click="parentPathClick(pitem, index)"
-					v-for="(pitem, index) in parentPathList">
+				<a style="font-size:14px;flex-shrink: 0;margin-left: 5px;" @click="parentPathClick(pitem, index)"
+					v-for="(pitem, index) in parentPathList"
+					:style="{ 'color': index == parentPathList.length - 1 ? '#386DF2' : '#999999' }">
 					{{ pitem }}</a>
 				<a v-if="parentPathList.length < 1">{{ $t('file.rootPath') }}</a>
 			</div>
 		</div>
 
-		<div :style="{ 'padding-top': selectMode ? '0' : '30px' }" style="overflow:hidden">
+		<div :style="{ 'padding-top': selectMode ? '0' : '30px', 'height': showInWindow ? '550px' : 'auto' }"
+			style="overflow:hidden;">
 			<div class="list-root" ref="wrapper">
 				<div v-if="fileTree.length < 1" style="margin-top: 20px;width: 100%;">{{ this.$t('common.noMore') }}
 				</div>
 
 				<div :id="'file_' + index" v-for="(file, index) in fileTree"
-					@contextmenu="showRightMenu($event, $root, file, index)" @touchstart="touchstart(file, index)"
-					@touchend="touchend">
-					<div class="list-item"
-						:style="{ 'background-color': selectedIndex == index ? 'rgba(0,0,0,0.1)' : 'transparent', 'padding': itemMargin + 'px' }"
-						@click="(e) => { clickTree(e, file, index) }">
+					:class="{ 'list-item-root-list': showType == 'list' }"
+					:style="{ 'background-color': selectedIndex == index ? 'rgba(0,0,0,0.1)' : 'transparent', 'padding': itemMargin / 2 + 'px' }"
+					@contextmenu.stop="showRightMenu($event, $root, file, index)" @touchstart="touchstart(file, index)"
+					@mouseenter="mouseEnterImg(index)" @mouseleave="mouseLeaveImg(index)" @touchend="touchend">
 
+					<div :class="{ 'list-item-list': showType == 'list', 'list-item-grid': showType == 'grid' }"
+						@click="(e) => { clickTree(e, file, index) }">
 						<div style="display: flex;justify-content: center;align-items: center;"
-							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }">
+							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px', 'margin': itemMargin / 2 + 'px' }">
 							<span v-if="file.type == 2" class="nasIcons icon-img-folder item-icon-folder"
 								:style="{ 'font-size': itemWidth + 'px' }"></span>
-
 							<!-- 视频和图片显示缩略图 -->
 							<img @dragstart.prevent class="item-img"
 								v-if="file.type == 1 && (file.fileType == 'image' || file.fileType == 'video')"
 								v-lazy="file.url" />
-							<img style="width:28%;position:absolute;pointer-events: none;"
-								src="@/static/icon_play_white.png" v-if="file.type == 1 && file.fileType == 'video'" />
+							<span v-if="file.type == 1 && file.fileType == 'video'"
+								class="play-icon nasIcons icon-play"></span>
 
 							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'text'"
 								src="@/static/icon-folder-text.png" />
 							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'file'"
 								src="@/static/icon-folder-file.png" />
 						</div>
+						<!-- 文件名称 -->
 						<p class="filename" :style="{ 'width': itemWidth + 'px' }">{{ file.name }}</p>
+						<div class="mask-root" v-if="!selectMode && selectedIndex != index">
+							<!-- hover层 -->
+							<div class="hover-mask" v-if="!selectMode && file.hover">
+								<!-- 勾选框 -->
+								<span @click.stop="selectFileItem(file, index)"
+									class="select-icon-hover nasIcons icon-radio-unchecked"></span>
+							</div>
+							<!-- 选择层 -->
+							<div class="select-mask" v-if="!selectMode && file.selected">
+								<!-- 已选 -->
+								<span @click.stop="selectFileItem(file, index)"
+									class="select-icon-hover nasIcons icon-radio-checked"></span>
+							</div>
+						</div>
 					</div>
 				</div>
+				<div v-if="fileTree.length >= 1000" class="max-count">{{ $t("file.maxShowCountAlert") }}</div>
+			</div>
+		</div>
+
+		<!-- 底部多选操作条 -->
+		<div class="bottom-select-root" v-if="doingSelect">
+			<div style="display:flex;align-items: center;">
+				<Checkbox @on-change="onSelectAll" v-model="checkAll"></Checkbox>
+				<div style="color:white">{{ $t('common.selectAll') }}</div>
+				<div @click="cancelMultipleSelect" style="color:white;margin-left: 10px;">{{ $t('common.cancel') }}</div>
+
+			</div>
+			<div style="display:flex;align-items: center;">
+				<div @click="copyCutSelectedList('copy')"><my-btn type="whtie" :title="$t('file.copy')"></my-btn></div>
+				<div @click="copyCutSelectedList('cut')"><my-btn :title="$t('file.cut')"></my-btn></div>
+				<div @click="deleteSelectedList"><my-btn type="red" :title="$t('common.delete')"></my-btn></div>
 			</div>
 		</div>
 		<!-- 照片详情弹窗 -->
@@ -55,13 +88,12 @@
 				@onClose="showVideoDetail = false" ref="videoPlayer"></video-detail>
 		</Modal>
 		<!-- 右键菜单 -->
-		<easy-cm @ecmcb="rightMenuClick" :list="rightMenuList"></easy-cm>
+		<easy-cm :arrow="true" :tag="parent" @ecmcb="rightMenuClick" :list="rightMenuList"></easy-cm>
 		<!-- 显示文件属性的对话框 -->
 		<vs-dialog v-model="attrDialogIsShow">
 			<template #header>
 				<div style="display: flex;align-items: center;margin-top: 20px;">
-					<img style="width: 22px;height: 22px;margin-right: 10px;"
-						src="@/static/common/icon-dialog-alert.png" />
+					<img style="width: 22px;height: 22px;margin-right: 10px;" src="@/static/common/icon-dialog-alert.png" />
 					<p style="color: #333333;font-size: 22px;text-align: center;">
 						{{ $t('file.attr') }}
 					</p>
@@ -73,10 +105,10 @@
 				<div class="item-attr" v-if="selectedFile">{{ $t('file.location') }}:<span>{{ selectedFile.tipName
 				}}</span></div>
 				<div class="item-attr">{{ $t('movie.createTime') }}:<span>{{ selectedFileAttr.ctime |
-						dateFormat('YYYY-MM-DD HH: mm')
+					dateFormat('YYYY-MM-DD HH: mm')
 				}}</span></div>
 				<div class="item-attr">{{ $t('file.modifyTime') }}:<span>{{ selectedFileAttr.mtime |
-						dateFormat('YYYY-MM-DD HH: mm')
+					dateFormat('YYYY-MM-DD HH: mm')
 				}}</span></div>
 				<div v-if="selectedFileAttr.sizeStr" class="item-attr">
 					{{ $t('file.size') }}:<span>{{ selectedFileAttr.sizeStr }}</span></div>
@@ -84,36 +116,82 @@
 		</vs-dialog>
 
 		<!-- 返回顶部按钮 -->
-		<my-btn-icon v-if="showToTopBtn && !selectMode" style="position:fixed;right:30px;bottom:10px;"
-			iIcon="md-arrow-up" @click="scrollToTop"></my-btn-icon>
+		<!-- <my-btn-icon v-if="showToTopBtn && !selectMode" style="position:fixed;right:30px;bottom:10px;" iIcon="md-arrow-up"
+			@click="scrollToTop"></my-btn-icon> -->
 
 
 		<!-- 手机端长按条目的时候弹出的菜单 -->
 		<vs-dialog v-model="showLongPressMenu">
 			<h4 v-if="selectedFile" class="max-line-one" style="word-break:break-all">{{ selectedFile.name }}</h4>
-			<vs-button border v-for="menu in rightMenuList" @click="rightMenuClick(null, menu.type)"
-				style="width:100%;margin-top:15px">
-				{{ menu.text }}
-			</vs-button>
+
+			<my-selector-phone :optionList="rightMenuList"
+				@onItemClick="(item) => (rightMenuClick(null, item.type))"></my-selector-phone>
+
+		</vs-dialog>
+		<!-- 新建文件夹 -->
+		<my-dialog-input @onOkClick="createNewFolder" :showCloseBtn="true" ref="newFolderDialog"
+			:title="$t('file.newFolder')" :content="$t('file.inputNewFolderName')">
+		</my-dialog-input>
+
+		<!-- 重命名对话框 -->
+		<my-dialog-input @onOkClick="onRenameInput" :placeholder="$t('file.inputNewFileName')" :showCloseBtn="true"
+			ref="renameDialog" :initValue="selectedFile ? selectedFile.name : ''"
+			:content="selectedFile ? selectedFile.name : ''" :title="$t('common.rename')">
+		</my-dialog-input>
+
+		<!-- 弹出的新窗口 -->
+		<Modal width="80" v-for="(window, index) in newWindowList" :mask-closable="false" v-model="window.show" draggable
+			scrollable :mask="false" :title="$t('home.fileBrower')" footer-hide>
+			<my-folder-brower v-if="window.show" :initPath="window.initPath" :showInWindow="true"></my-folder-brower>
+		</Modal>
+
+		<!-- 压缩 解压选择目的地 -->
+		<vs-dialog v-model="showChooseTargetFolder" prevent-close scroll :full-screen="isMobile">
+			<template #header>
+				<h4 v-if="currentOperationType == 'ZIP'" style="font-size: 16px;">
+					{{ $t("backup.chooseTargetPath") + " " + $t("file.zip") + ":" + selectedFile.name }}
+				</h4>
+				<h4 v-if="currentOperationType == 'UNZIP'" style="font-size: 16px;">
+					{{ $t("backup.chooseTargetPath") + " " + $t("file.unzip") + ":" + selectedFile.name }}
+				</h4>
+			</template>
+			<file-select ref="fileSelector" v-if="showChooseTargetFolder" parent="root" :type="2"
+				@onSelect='onSelectTargetFolder' @onCancel="showChooseTargetFolder = false"></file-select>
+			<template #footer>
+				<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
+					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
+			</template>
 		</vs-dialog>
 	</div>
 </template>
 
 <script>
+
 import typeData from "@/components/folder-brower/type-data.js"
 import axios from "@/plugins/axios";
 import base64 from '@/plugins/base64/index.js'
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
+import jsBridge from "@/plugins/jsBridge"
+
 //照片点击详情
 import photoDetail from "@/views/photos/components/photoDetail.vue";
 //视频点击详情
 export default {
+	name: "MyFolderBrower",
 	components: {
 		videoDetail,
-		photoDetail
+		photoDetail,
 	},
 	computed: {},
 	props: {
+		showInWindow: {
+			default: false,
+			type: Boolean
+		},
+		initPath: {
+			default: '',
+			type: String
+		},
 		selectMode: { //选择模式
 			default: false,
 			type: Boolean
@@ -125,13 +203,21 @@ export default {
 	},
 	data() {
 		return {
+			supportUnzipFormat: ['.tar', '.gzip', '.tgz', '.zip'],//支持的解压缩格式
+			currentOperationType: "",//当前正在进行的文件操作类型
+			showChooseTargetFolder: false,//选择目的地文件夹的dialog是否显示 现在用于zip和unzip
+			showType: "grid",//展示方式 grid为图片 list为竖向列表
+			checkAll: false,//多选模式下 是否全选的标记
+			selectedFileList: [],//多选的列表
+			doingSelect: false,//是否正在多选
+			newWindowList: [],//新窗口列表
 			showLongPressMenu: false,
 			showPhotoDetail: false,
 			showToTopBtn: false,
 			attrDialogIsShow: false,//属性对话框是否显示
 			rightMenuList: [],
-			itemBaseWidth: 80,
-			itemWidth: 80,
+			itemBaseWidth: 100,
+			itemWidth: 100,
 			itemMargin: 10,
 			showVideoDetail: false,
 			source: "list",
@@ -142,7 +228,7 @@ export default {
 			selectedFile: null,
 			selectedFileAttr: null,
 			isRoot: true,
-			parent: "",
+			parent: this.initPath,
 			pathSep: '/',
 			fileTree: [],
 			platform: '',
@@ -153,8 +239,207 @@ export default {
 	},
 	mounted() {
 		this.init()
+		//当接收到这个事件 证明要上传到当前文件夹 这时候应该呼出上传组件 
+		//如果是手机端 应该调用手机上传页面并且传入路径
+		this.$bus.$on("onUploadToCurrentPath", () => {
+			this.switchUpload(true, this.parent)
+		})
+		window.addEventListener("scroll", this.onPageScroll, true);
+		//监听后退事件
+		window.addEventListener('popstate', this.onPopstate)
+		if (localStorage.folderBrowerShowType) {
+			this.showType = localStorage.folderBrowerShowType
+		}
+	},
+	beforeDestroy() {
+		this.$bus.$off("onUploadToCurrentPath")
+		window.removeEventListener("scroll", this.onPageScroll, true);
+		window.removeEventListener('popstate', this.onPopstate);
+
 	},
 	methods: {
+		//压缩 解压选择目的地文件夹
+		onSelectTargetFolder(targetFolder) {
+			console.log("this.currentOperationType", this.currentOperationType)
+			if (this.currentOperationType == 'ZIP' || this.currentOperationType == 'UNZIP') {
+				this.zipApi(targetFolder)
+			}
+			this.showChooseTargetFolder = false
+		},
+		onSelectAll(isSelectAll) {
+			console.log("onSelectAll", isSelectAll)
+			if (isSelectAll) {
+				for (let i in this.fileTree) {
+					this.fileTree[i].selected = true
+					this.selectedFileList.push(this.fileTree[i])
+				}
+			} else {
+				this.cancelMultipleSelect()
+			}
+		},
+		//取消多选
+		cancelMultipleSelect() {
+			this.doingSelect = false
+			this.checkAll = false
+			for (let i in this.selectedFileList) {
+				this.selectedFileList[i].selected = false
+			}
+			this.selectedFileList = []
+		},
+		// 根据已选文件列表数量 定义是否正在进行多选 doingSelect
+		setIsDoingSelect() {
+			this.doingSelect = this.selectedFileList.length > 0
+			if (this.doingSelect) {
+				this.selectedIndex = -1
+			}
+		},
+		//勾选框的点击事件 
+		selectFileItem(file, index) {
+			if (this.fileTree[index].selected) {
+				this.$set(this.fileTree[index], "selected", false);
+				for (let i in this.selectedFileList) {
+					if (this.selectedFileList[i].fileFullPath == file.fileFullPath) {
+						this.selectedFileList.splice(i, 1)
+						break
+					}
+				}
+			} else {
+				this.$set(this.fileTree[index], "selected", true)
+				this.selectedFileList.push(this.fileTree[index])
+			}
+			this.setIsDoingSelect()
+		},
+		//目录点击事件
+		clickTree(e, data, index) {
+			console.log("clickTree", index)
+			if (this.doingSelect) {
+				this.selectFileItem(data, index)
+			} else {
+				if (this.selectedIndex == index) {
+					//双击
+					this.onDoubleClick(data, index)
+				}
+				this.selectedIndex = index
+				this.selectedFile = data
+			}
+		},
+		mouseEnterImg(index) {
+			if (this.isMobile || this.isRoot) return
+			this.$set(this.fileTree[index], "hover", true);
+		},
+		mouseLeaveImg(index) {
+			if (this.isMobile || this.isRoot) return
+			this.fileTree[index].hover = false;
+		},
+		onPopstate() {
+			//后退按钮被点击 如果当前正在播放视频 则关闭视频 如果每播放 则后退
+			if (this.showPhotoDetail || this.showVideoDetail) {
+				this.showPhotoDetail = false
+				this.showVideoDetail = false
+			} else if (!this.isRoot) {
+				//非root 路径后退
+				this.goBack()
+			} else {
+				this.$router.go(-1)
+			}
+		},
+		onPageScroll() {
+			//滚动的时候清空计时器 防止触发菜单
+			if (this.longPressTimeout) {
+				clearTimeout(this.longPressTimeout);
+				this.longPressTimeout = null
+			}
+		},
+		onRenameInput(newName) {
+			// 重命名输入后
+			this.api.post('/api/file/operationFolder',
+				{
+					sourcePath: this.getDealedPath(this.selectedFile.fileFullPath),
+					targetPath: this.getDealedPath(this.selectedFile.parent),
+					newName: newName,
+					type: 'rename'
+				}).then((res) => {
+					if (!res.code) {
+						if (res.isOver && res.isOver == 1) {
+							//操作已完成
+							this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.operationSuccess'))
+						} else {
+							//操作未完成
+							this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.checkAfter'))
+						}
+						this.getFileTree(this.parent)
+					}
+				})
+		},
+		refresh() {
+			//刷新当前列表
+			this.getFileTree(this.parent)
+		},
+		getDealedPath(path) {
+			//处理路径
+			let ppath = encodeURIComponent(path)
+			ppath = base64.encode(ppath)
+			return ppath
+		},
+		zipApi(targetFolder) {//调用压缩文件接口
+			this.api
+				.post("/api/file/zipFile", {
+					sourcePath: this.selectedFile.fileFullPath,
+					targetPath: targetFolder,
+					type: this.currentOperationType.toLowerCase()
+				}).then((res) => {
+					if (!res.code) {
+						this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.checkAfter'))
+					}
+				})
+		},
+		copy() {
+			if (!localStorage.copyPath || !localStorage.operationType) {
+				//没选中目录不能复制
+				return this.showVsAlertDialog(this.$t('common.alert'), this.$t('file.noSelectAnything'))
+			}
+			let copyPathList = JSON.parse(localStorage.copyPath)
+			console.log("copyPathList", copyPathList)
+			let operationType = localStorage.operationType
+			if (this.isRoot || !this.parent) {
+				//不能复制到根目录
+				return this.showVsAlertDialog(this.$t('common.alert'), this.$t('file.canNotCopyToHere'))
+			}
+			//复制剪切板中的内容
+			let alertPathTitle = copyPathList.length < 10 ? copyPathList : this.$t("file.fileCount", { count: copyPathList.length })
+			let alertTile = operationType == 'cut' ? this.$t("file.cutToHere", { path: alertPathTitle }) : this.$t("file.copyToHere", { path: alertPathTitle })
+			this.showVsConfirmDialog(this.$t('common.confirm'), alertTile, () => {
+				if (copyPathList.length <= 1) {
+					this.api.post('/api/file/operationFolder',
+						{
+							sourcePath: this.getDealedPath(copyPathList),
+							targetPath: this.getDealedPath(this.parent),
+							type: operationType
+						}).then((res) => {
+							if (!res.code) {
+								localStorage.removeItem("copyPath")
+								this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.checkAfter'))
+								this.getFileTree(this.parent)
+								this.$bus.$emit("onShowPaste", false);
+							}
+						})
+				} else {
+					this.api.post('/api/file/operationFileList',
+						{
+							sourcePathList: copyPathList,
+							targetPath: this.parent,
+							type: operationType
+						}).then((res) => {
+							if (!res.code) {
+								localStorage.removeItem("copyPath")
+								this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.checkAfter'))
+								this.getFileTree(this.parent)
+								this.$bus.$emit("onShowPaste", false);
+							}
+						})
+				}
+			})
+		},
 		scrollToTop() {
 			console.log('scrollToTop')
 			this.$refs.wrapper.scrollTo({ top: 0, behavior: 'smooth' })
@@ -171,15 +456,97 @@ export default {
 		onLongPress(item, index) {
 			this.selectedFile = item
 			this.selectedIndex = index
+			this.initRightMenuList(this.selectedFile)
 			this.showLongPressMenu = true
 		},
-		initRightMenuList() {
-			this.rightMenuList = []
-			this.rightMenuList.push({
-				text: this.$t('file.check'),
-				type: "CHECK",
-			})
 
+		getFileStatApi() {//获取文件属性
+			this.api
+				.post("/api/file/getPathState", {
+					fullPath: this.selectedFile.tipName
+				}).then((res) => {
+					if (!res.code) {
+						this.selectedFileAttr = res.data
+					}
+				})
+		},
+
+		deleteFileApi(deletePath, onSuc, onErr) {//获取文件属性
+			this.api
+				.post("/api/file/deleteByPath", {
+					fullPath: deletePath
+				}).then((res) => {
+					if (!res.code) {
+						if (onSuc) onSuc()
+					} else {
+						if (onErr) onErr()
+					}
+				}).catch(err => {
+					if (onErr) onErr()
+				})
+		},
+		showRightMenu(event, root, file, index) {
+			if (this.doingSelect) {
+				//当前正在多选模式 只显示一个取消多选的菜单
+				this.rightMenuList = [{
+					text: this.$t('file.cancelMutipleSelect'),
+					type: "CANCEL_SELECT",
+				}]
+			} else {
+				if (this.isMobile) return event.preventDefault()
+				this.selectedIndex = index
+				this.selectedFile = file
+				this.initRightMenuList(this.selectedFile)
+			}
+			this.$easycm(event, root, this.parent)
+
+		},
+		showRightMenuBg(event, root) {
+			if (this.isMobile || this.doingSelect) return event.preventDefault()
+			this.initRightMenuListBg()
+			this.$easycm(event, root, this.parent)
+		},
+		initRightMenuListBg() {//右键点击背景时候的菜单
+			this.rightMenuList = [{
+				text: this.$t('file.newFolder'),
+				type: "CREATE_NEW_FOLDER",
+			}, {
+				text: this.$t('common.refresh'),
+				type: "REFRESH",
+			}]
+			if (localStorage.copyPath) {
+				this.rightMenuList.push({
+					text: this.$t('file.paste'),
+					type: "PASTE",
+				})
+			}
+			this.rightMenuList.push({//排列方式
+				text: this.$t('file.showType'),
+				type: "SHOW_TYPE",
+				children: [
+					{
+						text: this.$t('movie.gridView'),
+						type: "SHOW_TYPE_GRID",
+					}, {
+						text: this.$t('movie.listView'),
+						type: "SHOW_TYPE_LIST",
+					}
+				]
+			})
+		},
+		initRightMenuList(file) {
+			this.rightMenuList = []
+			if (file.type == 2 && !this.selectMode && !this.isMobile) {
+				this.rightMenuList.push({
+					text: this.$t('file.openInNewWindow'),
+					type: "OPEN_NEW_WINDOW",
+				})
+			} else {
+				this.rightMenuList.push({
+					text: this.$t('file.check'),
+					type: "CHECK",
+				})
+			}
 			if (!(this.source == 'collect' && this.isRoot)) {
 				this.rightMenuList.push({
 					text: this.$t('file.collect'),
@@ -200,53 +567,150 @@ export default {
 			}
 			//删除
 			if (this.parent && this.parent != "/") {
+				// 多选
+				this.rightMenuList.push({
+					text: this.$t('common.multiSelect'),
+					type: "MULTIPLE_SELECT",
+				})
+				// 剪切
+				this.rightMenuList.push({
+					text: this.$t('file.cut'),
+					type: "CUT",
+				})
+				// 复制
+				this.rightMenuList.push({
+					text: this.$t('file.copy'),
+					type: "COPY",
+				})
 				this.rightMenuList.push({
 					text: this.$t('common.delete'),
 					type: "DELETE",
 				})
-			}
+				// 重命名
+				this.rightMenuList.push({
+					text: this.$t('common.rename'),
+					type: "RENAME",
+				})
 
+				// 解压缩
+				let isZipFile = false
+				for (let i in this.supportUnzipFormat) {
+					if (this.selectedFile.name.endsWith(this.supportUnzipFormat[i])) {
+						isZipFile = true
+						break
+					}
+				}
+				if (isZipFile) {
+					this.rightMenuList.push({
+						text: this.$t('file.unzip'),
+						type: "UNZIP",
+					})
+				} else {
+					// 压缩
+					this.rightMenuList.push({
+						text: this.$t('file.zip'),
+						type: "ZIP",
+					})
+				}
+			}
+			// 文件的话加一个下载
+			if (file.type == 1) {
+				this.rightMenuList.push({
+					text: this.$t('common.download'),
+					type: "DOWNLOAD",
+				})
+			}
 			// 属性
 			this.rightMenuList.push({
 				text: this.$t('file.attr'),
 				type: "ATTR",
 			})
-		},
-		getFileStatApi() {//获取文件属性
-			this.api
-				.post("/api/file/getPathState", {
-					fullPath: this.selectedFile.tipName
-				}).then((res) => {
-					if (!res.code) {
-						this.selectedFileAttr = res.data
+
+			this.rightMenuList.push({//排列方式
+				text: this.$t('file.showType'),
+				type: "SHOW_TYPE",
+				children: [
+					{
+						text: this.$t('movie.gridView'),
+						type: "SHOW_TYPE_GRID",
+					}, {
+						text: this.$t('movie.listView'),
+						type: "SHOW_TYPE_LIST",
 					}
-				})
+				]
+			})
+
 		},
-		deleteFileApi() {//获取文件属性
-			this.api
-				.post("/api/file/deleteByPath", {
-					fullPath: this.selectedFile.fileFullPath
-				}).then((res) => {
-					if (!res.code) {
-						this.showVsNotification(this.$t('common.deleteSuccess'))
-						this.getFileTree(this.parent)
-					}
-				})
+		//递归调用删除接口进行删除
+		deleteBySelectedIndexOnByOne(dealingIndex, sucCount, errCount) {
+			if ((sucCount + errCount) >= this.selectedFileList.length) {
+				//全部调用完成了
+				this.showVsNotification(this.$t('common.deleteSuccessWithCount', { sucCount: sucCount, errCount: errCount }))
+				this.getFileTree(this.parent)
+				return
+			}
+			this.deleteFileApi(this.selectedFileList[dealingIndex].fileFullPath, () => {
+				this.deleteBySelectedIndexOnByOne(dealingIndex + 1, sucCount + 1, errCount)
+			}, () => {
+				this.deleteBySelectedIndexOnByOne(dealingIndex + 1, sucCount, errCount + 1)
+			})
 		},
-		showRightMenu(event, root, file, index) {
-			if (this.isMobile) return event.preventDefault()
-			this.selectedIndex = index
-			this.selectedFile = file
-			this.$easycm(event, root)
+		//删除已选
+		deleteSelectedList() {
+			if (this.selectedFileList.length < 1) return
+			this.showVsConfirmDialog(this.$t('common.alert'), this.$t('file.fileDeleteSure'), () => {
+				this.deleteBySelectedIndexOnByOne(0, 0, 0)
+			}, null, this.$t('common.delete'), this.$t('common.cancel'), 300, true)
+
+		},
+		//复制或者剪切已选列表
+		copyCutSelectedList(operationType) {
+			if (this.selectedFileList.length < 1) return
+			let pathList = []
+			for (let i in this.selectedFileList) {
+				let operationFullPath = this.getFileFullPath(this.selectedFileList[i])
+				pathList.push(operationFullPath)
+			}
+			localStorage.setItem("copyPath", JSON.stringify(pathList))
+			localStorage.setItem("operationType", operationType)
+			this.showVsNotification(operationType == 'cut' ? this.$t('file.cutted', { count: pathList.length }) : this.$t('file.copied', { count: pathList.length }))
+			this.$bus.$emit("onShowPaste", true);
+			this.cancelMultipleSelect()
 		},
 		//右键菜单点击
 		rightMenuClick(indexList, clickType) {
 			this.showLongPressMenu = false
+
 			let type = clickType ? clickType : this.rightMenuList[indexList[0]].type
-			if (type == 'CHECK') { //查看
+			if (indexList && indexList.length == 2) {
+				type = clickType ? clickType : this.rightMenuList[indexList[0]].children[[indexList[1]]].type
+			}
+			this.currentOperationType = type
+			if (type == "CREATE_NEW_FOLDER") {
+				this.$refs.newFolderDialog.setShow(true)
+			} else if (type == "PASTE") {
+				this.copy()
+			} else if (type == "REFRESH") {
+				this.refresh()
+			} else if (type == "OPEN_NEW_WINDOW") {
+				console.log("this.newWindowList", this.newWindowList)
+				this.newWindowList.push({
+					show: true,
+					initPath: this.getFileFullPath(this.selectedFile)
+				})
+			} else if (type == 'CHECK') { //查看
 				this.onDoubleClick(this.selectedFile, this.selectedIndex)
 			} else if (type == 'COLLECT') { //收藏
 				this.addFileRecord('collect', this.selectedFile)
+			} else if (type == 'CUT') { //剪切
+				this.selectedFileList.push(this.selectedFile)
+				this.copyCutSelectedList('cut')
+			} else if (type == 'COPY') { //复制
+				this.selectedFileList.push(this.selectedFile)
+				this.copyCutSelectedList('copy')
+			} else if (type == 'RENAME') { //重命名
+				localStorage.setItem("operationType", "rename")
+				this.$refs.renameDialog.setShow(true)
 			} else if (type == 'CANCEL_COLLECT') { //取消收藏
 				this.deleteFileRecord('collect', this.selectedFile, false)
 			} else if (type == 'DELETE_RECENT') { //从最近中删除
@@ -258,8 +722,43 @@ export default {
 			} else if (type == 'DELETE') { //删除文件
 				this.showVsConfirmDialog(this.$t('common.alert'), this.$t('file.fileDeleteSure'), () => {
 					// 调用删除的api
-					this.deleteFileApi()
-				}, null, this.$t('common.delete'), this.$t('common.cancel'), 2500, true)
+					this.deleteFileApi(this.selectedFile.fileFullPath, () => {
+						this.showVsNotification(this.$t('common.deleteSuccess'))
+						this.getFileTree(this.parent)
+					})
+				}, null, this.$t('common.delete'), this.$t('common.cancel'), 300, true)
+			} else if (type == "DOWNLOAD") {
+				//下载this.selectedFile
+				this.downloadFile(this.getRawUrl(this.selectedIndex))
+			} else if (type == "CANCEL_SELECT") {
+				console.log("取消多选被点击")
+				this.cancelMultipleSelect()
+			} else if (type == "MULTIPLE_SELECT") {
+				console.log("进入多选")
+				this.selectFileItem(this.selectedFile, this.selectedIndex)
+			} else if (type == "SHOW_TYPE_GRID") {
+				this.showType = 'grid'
+			} else if (type == "SHOW_TYPE_LIST") {
+				this.showType = 'list'
+			} else if (type == "SHOW_TYPE") {
+				this.showType = this.showType == 'list' ? 'grid' : 'list'
+			} else if (type == "ZIP") {
+				//压缩
+				this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('file.zipAlert'), () => {
+					this.showChooseTargetFolder = true
+				})
+			} else if (type == "UNZIP") {
+				//压缩
+				this.showChooseTargetFolder = true
+			}
+			localStorage.setItem("folderBrowerShowType", this.showType)
+		},
+		downloadFile(url) {
+			let fullUrl = window.location.protocol + "//" + window.location.host + url
+			if (this.isFromApp) {
+				jsBridge.openInBrowser(fullUrl)
+			} else {
+				window.open(url, "_blank")
 			}
 		},
 		setItemBaseWidth(baseWidth) {
@@ -291,7 +790,7 @@ export default {
 			this.selectedFile = null
 			this.init()
 		},
-		parentPathClick(pathSeg, index) {
+		parentPathClick(pathSep, index) {
 			let enterPath = ''
 			for (let i = 0; i <= index; i++) {
 				enterPath += this.parentPathList[i]
@@ -304,19 +803,20 @@ export default {
 
 		},
 		parseParentPath() {
-			console.log(this.parent)
 			this.parentPathList = []
 			let pathArr = this.parent.split(this.pathSep)
-			console.log(pathArr)
 			for (let i in pathArr) {
 				if (this.platform == "win32") {
 					let pushItem = pathArr[i]
+					console.log("pushItem", pushItem)
+
 					if (!pushItem) {
 						continue
 					}
 					if (i != pathArr.length - 1) {
 						pushItem += this.pathSep
 					}
+					console.log("push", pushItem)
 					this.parentPathList.push(pushItem)
 				} else {
 					if (pathArr[i]) {
@@ -327,11 +827,12 @@ export default {
 		},
 		init() {
 			this.isRoot = true
-			this.parent = ''
+			this.parent = this.initPath
+			console.log("this.parent", this.parent)
 			this.fileTree = []
 
 			if (this.source == 'list') {
-				this.getFileTree('')
+				this.getFileTree(this.parent)
 			} else {
 				//collect recent
 				this.getFileRecord(this.source)
@@ -343,33 +844,34 @@ export default {
 				}
 				this.$emit('onParentChange', showTitle, true)
 			}
-
+		},
+		onSearch(searchStr) {
+			if (!this.isRoot) {
+				console.log("文件浏览器搜索当前路径", searchStr)
+				this.getFileTree(this.parent, false, searchStr)
+			}
 		},
 		//双击触发
 		onDoubleClick(data, index) {
 			if (data.type == 2) {
 				this.enterPath(data)
 			} else if (data.type == 1) {
-				this.addFileRecord('recent', data)
-				if (data.fileType == "image") {
-					this.goPreviewImage(index)
-				} else if (data.fileType == 'video') {
-					this.goPreviewVideo(index)
+				if (this.selectMode) {
+					//选择模式
+					this.$emit('onSelect', this.getFileFullPath(data))
 				} else {
-					window.open(this.getRawUrl(index, this.fileTree[index].name), '_blank');
+					this.addFileRecord('recent', data)
+					if (data.fileType == "image") {
+						this.goPreviewImage(index)
+					} else if (data.fileType == 'video') {
+						this.goPreviewVideo(index)
+					} else {
+						this.downloadFile(this.getRawUrl(index, this.fileTree[index].name))
+					}
 				}
 			}
 		},
-		//目录点击事件
-		clickTree(e, data, index) {
 
-			if (this.selectedIndex == index) {
-				//双击
-				this.onDoubleClick(data, index)
-			}
-			this.selectedIndex = index
-			this.selectedFile = data
-		},
 		getRawUrl(index) {
 			//分享文件
 			let filePath = this.fileTree[index].parent + this.fileTree[index].pathSep + this.fileTree[index].name
@@ -421,7 +923,7 @@ export default {
 				lastPath = ''
 			}
 			console.log('lastPath', lastPath)
-			this.getFileTree(lastPath)
+			this.getFileTree(lastPath, true)
 		},
 		enterPath(fileObj) {
 			// 进入文件夹
@@ -453,6 +955,7 @@ export default {
 			this.$nextTick(() => {
 				this.$refs.photoDetail.showImg(useList, showIndex);
 			});
+			this.pushState()
 		},
 		//点击了图片 跳转到图片详情
 		goPreviewVideo(index) {
@@ -464,8 +967,7 @@ export default {
 					continue
 				}
 				let filePath = this.getFileFullPath(this.fileTree[i])
-				filePath = encodeURI(filePath)
-				filePath = base64.encode(filePath)
+				filePath = this.getDealedPath(filePath)
 				this.fileTree[i].filePath = filePath
 				this.fileTree[i].rawUrl = this.getRawUrl(i, this.fileTree[i].name)
 				this.fileTree[i].id = i
@@ -482,6 +984,8 @@ export default {
 				console.log(useList)
 				this.$refs.videoPlayer.playVideo(useList, showIndex);
 			});
+			this.pushState()
+
 		},
 		//添加到最近访问或者收藏
 		addFileRecord(type, fileObj) {
@@ -570,7 +1074,6 @@ export default {
 
 						}
 						this.fileTree = res.data
-						this.initRightMenuList()
 
 					}
 				})
@@ -580,8 +1083,7 @@ export default {
 			if (!this.parent) {
 				return this.showVsNotification('无法在当前位置创建')
 			}
-			let ppath = encodeURI(this.parent)
-			ppath = base64.encode(ppath)
+			let ppath = this.getDealedPath(this.parent)
 			this.api
 				.post("/api/file/addNewFolder", {
 					parentPath: ppath,
@@ -600,36 +1102,44 @@ export default {
 			switch (typeSign) {
 				case 1:
 					return "image"
-					break;
 				case 2:
 					return "video"
-					break;
 				case 3:
 					return "text"
-					break;
 				default:
 					return "file"
 			}
 		},
-		getFileTree(parentPath) {
+		getFileTree(parentPath, isGoBack, searchStr) {
+
+			let params = {
+				parent: parentPath,
+				type: this.fileType
+			}
+			if (searchStr) {
+				params.searchStr = searchStr
+			}
 			this.api
-				.post("/api/file/getPathTree", {
-					parent: parentPath,
-					type: this.fileType
-				}).then((res) => {
+				.post("/api/file/getPathTree", params).then((res) => {
 					console.log(res)
 					this.selectedIndex = null
 					this.selectedFile = null
+					this.cancelMultipleSelect()
 					if (!res.code) {
 						if (parentPath == "" || parentPath == "/" || parentPath == this.pathSep) {
 							this.isRoot = true
 						} else {
 							this.isRoot = false
+							if (!isGoBack) {
+								//非后退的情况下 pushstate
+								this.pushState()
+							}
 						}
 						this.parent = res.data.parent
-						this.parseParentPath()
 						this.pathSep = res.data.sep
 						this.platform = res.data.platform
+						this.parseParentPath()
+
 						let children = res.data.children
 						//根据文件名字判断不同类型 显示不同图标
 						for (let i = 0; i < children.length; i++) {
@@ -658,7 +1168,6 @@ export default {
 						this.$nextTick(() => {
 							this.calImageWidth()
 						})
-						this.initRightMenuList()
 					} else if (res.code == 2) {
 						this.showVsAlertDialog(
 							this.$t('common.alert'), this.$t('common.noAccess'));
@@ -670,95 +1179,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.browser-root {
-	width: 100%;
-	position: static;
-	display: flex;
-	flex-direction: column;
-}
-
-.item-icon-folder {
-	text-align: center;
-	color: $nas-main;
-}
-
-.list-root {
-	height: 100%;
-	width: 100%;
-	display: flex;
-	flex-wrap: wrap;
-	flex-direction: row;
-	position: relative;
-	display: inline-flex;
-	overflow-y: auto;
-
-	@media all and (max-width:640px) {
-		-webkit-overflow-scrolling: touch;
-	}
-}
-
-.clean-icon {
-	position: fixed;
-	right: 60px;
-	bottom: 30px;
-	cursor: pointer;
-}
-
-.list-item {
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-}
-
-.item-img {
-	pointer-events: none;
-	border-radius: 10px;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-}
-
-.img-root {
-	position: relative;
-}
-
-.item-more {
-	right: 10px;
-	top: 10px;
-	position: absolute;
-}
-
-.filename {
-	color: $nas-text-title;
-	margin-top: 10px;
-	text-align: center;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-line-clamp: 3;
-	word-break: break-all;
-}
-
-.item-attr {
-	font-weight: bold;
-	text-align: left;
-	margin-top: 10px;
-
-	span {
-		font-weight: normal;
-	}
-}
-
-.path-root {
-	width: calc(100% - 30px);
-	margin-bottom: 20px;
-	padding-left: 10px;
-	position: absolute;
-	top: 80px;
-	padding-right: 50px;
-	overflow-x: auto;
-}
+@import './folder-brower.scss'
 </style>

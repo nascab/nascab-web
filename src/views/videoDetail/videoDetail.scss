@@ -1,6 +1,9 @@
 ::v-deep .vjs-text-track-display div div{
 	font-size: var(--subtitleFontSize, 20px);
 	display: block !important;
+	text-shadow: 2px 2px 2px #000; /* horizontal-offset vertical-offset 'blur' colour */
+	-moz-text-shadow: 2px 2px 2px #000;
+	-webkit-text-shadow: 2px 2px 2px #000;
 }
 
 //加粗slider bar

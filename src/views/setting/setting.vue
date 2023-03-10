@@ -21,17 +21,15 @@
 			</div>
 			<div class="setting-list-root">
 				<!-- 通用设置 -->
-				<common-set v-if="leftIndex == 1"></common-set>
-				<source-set-photo v-if="leftIndex == 2" sourceType="photo"></source-set-photo>
-				<source-set-movie v-if="leftIndex == 3" sourceType="movie"></source-set-movie>
+				<common-set v-if="leftIndex == 'commonSetting'"></common-set>
 				<!-- 用户管理 -->
-				<user-manage v-if="leftIndex == 4"></user-manage>
+				<user-manage v-if="leftIndex == 'userManage'"></user-manage>
 				<!-- 系统设置 -->
-				<system-set v-if="leftIndex == 5"></system-set>
+				<system-set v-if="leftIndex == 'systemSetting'"></system-set>
 				<!-- 远程访问 -->
-				<remote-access v-if="leftIndex == 6" @onToLogin="switchToNasLogin"></remote-access>
+				<remote-access v-if="leftIndex == 'remoteAccess'" @onToLogin="switchToNasLogin"></remote-access>
 				<!-- nascab账号 -->
-				<nascab-account ref="nasAccount" v-if="leftIndex == 7"></nascab-account>
+				<nascab-account ref="nasAccount" v-if="leftIndex =='nasAccount'"></nascab-account>
 			</div>
 		</div>
 	</div>
@@ -42,25 +40,25 @@ import userManage from "@/components/user-manage/user-manage.vue"
 import fileSelect from "@/components/file-select/file-select.vue"
 import commonSet from "@/views/setting/commonSet.vue"
 import systemSet from "@/views/setting/systemSet.vue"
-import sourceSetPhoto from "@/views/setting/sourceSet.vue"
-import sourceSetMovie from "@/views/setting/sourceSet.vue"
 import nascabAccount from "@/views/setting/nascabAccount.vue"
 import remoteAccess from "@/views/setting/remoteAccess.vue"
 
 export default {
 	mounted() {
 		// 默认选中通用设置
-		if (this.$route.query && this.$route.query.index) {
+		if (this.$route.query && this.$route.query.pageName) {
 			this.$nextTick(() => {
-				this.$refs.sidebar.setIndex(parseInt(this.$route.query.index) - 1)
+				this.$refs.sidebar.setSelectById(this.$route.query.pageName)
+				this.$refs.sidebarMobile.setSelectById(this.$route.query.pageName)
 				this.leftIndex = this.$route.query.index
 			})
 		}
 
 		if (this.$route.query.newToken && this.$route.query.newToken.length > 0) {
 			//从微信内部网页登录跳转回来的
-			this.$refs.sidebar.setIndex(6)
-			this.leftIndex = 7
+			this.$refs.sidebar.setSelectById("nasAccount")
+			this.$refs.sidebarMobile.setSelectById("nasAccount")
+			this.leftIndex = "nasAccount"
 			this.$nextTick(() => {
 				//使用token去登录
 				this.$refs.nasAccount.userToken = this.$route.query.newToken
@@ -77,46 +75,36 @@ export default {
 		fileSelect,
 		commonSet,
 		systemSet,
-		sourceSetPhoto,
-		sourceSetMovie,
 		nascabAccount,
 		remoteAccess
 	},
 	data() {
 		return {
 			sideOptionList: [{
-				id: '1',
+				id: 'commonSetting',
 				title: this.$t('setting.commonSetting'),
 				font: "nasIcons icon-setting-common"
 			}, {
-				id: '2',
-				title: this.$t('setting.photoSourceSetting'),
-				font: "nasIcons icon-photos-source"
-			}, {
-				id: '3',
-				title: this.$t('setting.movieSourceSetting'),
-				font: "nasIcons icon-movies-source"
-			}, {
-				id: '4',
+				id: 'userManage',
 				title: this.$t('setting.userManage'),
 				font: "nasIcons icon-setting-user"
 			},
 			{
-				id: '5',
+				id: 'systemSetting',
 				title: this.$t('setting.systemSetting'),
 				font: "nasIcons icon-setting-system"
 			},
 			{
-				id: '6',
+				id: 'remoteAccess',
 				title: this.$t('nascab.remoteAccessMenu'),
 				font: "nasIcons icon-download"
 			},
 			{
-				id: '7',
+				id: 'nasAccount',
 				title: this.$t('nascab.account'),
 				font: "nasIcons icon-vip"
 			}],
-			leftIndex: '1',
+			leftIndex: 'commonSetting',
 		}
 	},
 	computed: {
@@ -124,12 +112,13 @@ export default {
 	},
 	methods: {
 		switchToNasLogin() {
-			this.$refs.sidebar.setIndex(parseInt(6))
-			this.leftIndex = 7
+			this.$refs.sidebar.setSelectById("nasAccount")
+			this.$refs.sidebarMobile.setSelectById("nasAccount")
+			this.leftIndex = "nasAccount"
 		},
 
-		setLeftMenuId(menuId) {
-			this.leftIndex = menuId
+		setLeftMenuId(menu) {
+			this.leftIndex = menu.id
 		},
 	}
 }
@@ -141,7 +130,6 @@ export default {
 	width: 100%;
 	height: 100%;
 }
-
 
 .main-layout {
 	position: relative;

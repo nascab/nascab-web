@@ -93,6 +93,5 @@
 </script>
 
 <style lang="scss" scoped>
-	::v-deep .vs-select {
-	}
+	
 </style>

@@ -1,7 +1,7 @@
 <template>
-	<div class="my-sidebar-root" :style="{'background-image': `url(${bgUrl})`}">
+	<div class="my-bg-root" :style="{ 'background-image': `url(${bgUrl})` }">
+		<div class="subBox"></div>
 	</div>
-
 </template>
 
 <script>
@@ -26,29 +26,25 @@ export default {
 			bgIndex: 1
 		};
 	},
-	mounted() {
+	created() {
 		let bgIndex = localStorage.getItem('bgIndex')
 		if (bgIndex) {
 			bgIndex = parseInt(bgIndex)
 			this.bgIndex = bgIndex
 		}
 		if (this.registeSwitchBg) {
-			console.log('mybg注册bus')
 			this.$bus.$on('onChangeBg', () => {
-				console.log('onChangeBg')
 				if (this.bgIndex < 15) {
 					this.bgIndex = this.bgIndex + 1
 				} else {
 					this.bgIndex = 1
 				}
-				console.log(this.bgIndex)
 				localStorage.setItem('bgIndex', this.bgIndex)
 				this.$forceUpdate()
 			})
 		}
 	},
 	beforeDestroy() {
-
 	},
 	methods: {
 
@@ -57,7 +53,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.my-sidebar-root {
+.my-bg-root {
 	z-index: 0;
 	background-size: cover;
 	position: fixed;
@@ -65,5 +61,12 @@ export default {
 	top: 0;
 	height: 100%;
 	width: 100%;
+}
+
+.subBox {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	backdrop-filter: blur(5px);
 }
 </style>

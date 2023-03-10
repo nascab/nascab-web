@@ -16,22 +16,34 @@ if (process.env.NODE_ENV === 'development') {
 } else {
     console.log('生产环境')
 }
-
+let webSocketUrl=""
+if (process.env.NODE_ENV === 'development') {
+    webSocketUrl = "ws://localhost:80"
+} else {
+    webSocketUrl="ws://"+window.location.host
+}
 let uploadUrl = function () {
     return baseUrl + '/api/uploadApi/regularUpload?token=' + store.state.token
 }
 let privateSpaceUploadUrl = function () {
     return baseUrl + '/api/privateSpaceApi/regularUpload?token=' + store.state.token
 }
-let mapUrl = baseUrl + '/api/mapApi/tile?zoom={z}&x={x}&y={y}'
+// let mapUrl = baseUrl + '/api/mapApi/tile?zoom={z}&x={x}&y={y}'
+let mapUrl="https://down.nascab.cn/mapTiles/{z}/{x}/{y}/tile.png"
 let homePageUrl = "https://nascab.cn"
 let nasRemoteUrl = 'nas-cab.com'
 // 创建 axios 实例
-const requests = axios.create({
-    baseURL: baseUrl, // 基础url,如果是多环境配置这样写，也可以像下面一行的写死。
-    // baseURL: 'http://168.192.0.123',
-    timeout: 30000 // 请求超时时间
-})
+let requests
+
+//重新创建请求实例 切换网络的时候用
+function createRequestInstance(baseUrl,timeout){
+    requests = axios.create({
+        baseURL: baseUrl, // 基础url,如果是多环境配置这样写，也可以像下面一行的写死。
+        timeout: timeout // 请求超时时间
+    })
+}
+
+createRequestInstance(baseUrl,15000)
 
 // 错误处理函数
 const err = (error) => {
@@ -76,8 +88,10 @@ requests.interceptors.response.use((response) => {
         } else if (res.code === 101) {
             // 101:Token过期,请重新登录
             Vue.prototype.showVsAlertDialog(null, i18n.t('common.tokenExpire'), () => {
-                sessionStorage.removeItem('token')
-                sessionStorage.removeItem('currentUser')
+                localStorage.removeItem('token')
+                localStorage.removeItem('currentUser')
+                store.state.token=''
+
                 router.push({
                     path: '/login'
                 })
@@ -90,7 +104,9 @@ requests.interceptors.response.use((response) => {
             Vue.prototype.showVsNotification(i18n.t('photo.stillIndexTryLater'))
         } else if (res.code == 104) {
             //token过期
-            Vue.prototype.showVsAlertDialog(null, i18n.t('private.tokenExpired'))
+            if( utils.getToken()){
+                Vue.prototype.showVsAlertDialog(null, i18n.t('private.tokenExpired'))
+            }
         } else if (res.code == 188) {
             //账号无权限使用此功能 需开通高级版
             Vue.prototype.showVsAlertDialog(null, i18n.t('nascab.needUpgrade'))
@@ -141,7 +157,7 @@ function getImgFullPath(indexId, tiny, fileName, serverType) {
 
 //根据文件物理路径获取缩略图
 function getTinyUrlByFilePath(filePath) {
-    filePath = encodeURI(filePath)
+    filePath = encodeURIComponent(filePath)
     filePath = base64.encode(filePath)
     return baseUrl + `/api/fileApi/tinyImgByPath/tiny.webp?fullPath=${filePath}&token=${utils.getToken()}`
 }
@@ -167,7 +183,7 @@ function getRawFileUrl(filePath, fileName, serverType) {
         serverType = 'photo'
     }
     let token = store.state.token
-    filePath = encodeURI(filePath)
+    filePath = encodeURIComponent(filePath)
     filePath = base64.encode(filePath)
     if (fileName) {
         //处理特殊字符 防止url无法访问
@@ -180,11 +196,12 @@ function getRawFileUrl(filePath, fileName, serverType) {
 
 
 function encodePath(path) {
-    path = encodeURI(path)
+    path = encodeURIComponent(path)
     path = base64.encode(path)
     return path
 }
 export default {
+    createRequestInstance,
     getPrivateSpaceFileUrl,
     getImgFullPath,
     baseUrl,
@@ -198,5 +215,6 @@ export default {
     getFaceImageUrl,
     nasCabBaseUrl,
     nasRemoteUrl,
-    getTinyUrlByFilePath
+    getTinyUrlByFilePath,
+    webSocketUrl
 }

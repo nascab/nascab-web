@@ -9,32 +9,48 @@
 //ie不支持
 
 import axios from "@/plugins/axios";
-import WhichBrowser from "which-browser";
 
 let formatUtil = {}
 formatUtil.usingM3u8 = false//是否正在播放m3u8
 formatUtil.usingRawFile = false//是否正在播放源文件
 formatUtil.isRemoteMode = false//是否正在远程连接
 
-
-let browserInfo = new WhichBrowser(navigator.userAgent);
-console.log('当前浏览器信息', browserInfo.toString())
 if (window.location.href.indexOf(axios.nasRemoteUrl) != -1) {
     formatUtil.isRemoteMode = true//当前在使用远程连接
+}
+formatUtil.getCanPlayRawFile=function(videoStream,indexObj){
+    if(indexObj.filename){
+        let extionName=formatUtil.getFileExtension(indexObj.filename)
+        if(extionName=="mov"||extionName=="MOV"){
+            if(indexObj.is_livephoto==1&&!formatUtil.isSafari()&&!formatUtil.isChrome()){
+                return false
+            }
+        }
+    }
+    return true
 }
 //设置当前播放的格式状态
 formatUtil.setFormatState = function (format) {
     formatUtil.usingM3u8 = format == 'm3u8'
     formatUtil.usingRawFile = format == false
 }
-formatUtil.getTranscodeFormat = function () {
-    return 'm3u8'
+formatUtil.getTranscodeFormat = function (indexObj) {
+    if(indexObj&&indexObj.duration&&indexObj.duration<10){
+        //10秒以下的使用mp4
+        return "mp4"
+    }else{
+        return 'm3u8'
+    }
+   
 }
 formatUtil.isIos = function () {//判断是否为ios
     return /(iPhone|iOS)/i.test(navigator.userAgent)
 }
 formatUtil.isSafari = function () {//判断是否为ios
     return /(Safari)/i.test(navigator.userAgent) && !/(Chrome)/i.test(navigator.userAgent)
+}
+formatUtil.isChrome = function () {//判断是否为chrome
+    return /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 }
 formatUtil.isAndroid = function () {//判断是否为手机浏览器
     return /(Android)/i.test(navigator.userAgent)
@@ -52,34 +68,4 @@ formatUtil.getFileExtension = function (path) {
     return '';
 };
 
-function getBrowserInfo() {
-    navigator.browserSpecs = (function () {
-        var ua = navigator.userAgent, tem,
-            M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-        if (/trident/i.test(M[1])) {
-            tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-            return { name: 'IE', version: (tem[1] || '') };
-        }
-        if (M[1] === 'Chrome') {
-            tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
-            if (tem != null) return { name: tem[1].replace('OPR', 'Opera'), version: tem[2] };
-        }
-        M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
-        if ((tem = ua.match(/version\/(\d+)/i)) != null)
-            M.splice(1, 1, tem[1]);
-        return { name: M[0], version: M[1] };
-    })();
-
-    console.log(navigator.browserSpecs); //Object { name: "Firefox", version: "42" }
-
-    if (navigator.browserSpecs.name == 'Firefox') {
-        // Do something for Firefox.
-        if (navigator.browserSpecs.version > 42) {
-            // Do something for Firefox versions greater than 42.
-        }
-    }
-    else {
-        // Do something for all other browsers.
-    }
-}
 export default formatUtil

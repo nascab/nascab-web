@@ -34,15 +34,27 @@ export default {
 
 <style lang="scss" scoped>
 .primary {
-	background-color: #5b86f2
+	background-color: $nas-main;
+	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+
 }
 
 .red {
 	background-color: red;
+	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+
 }
 
 .white {
 	color: $nas-main;
 	background-color: white;
+	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+
+}
+
+.grey {
+	color: white;
+	background-color:  $nas-grey;
+	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
 }
 </style>

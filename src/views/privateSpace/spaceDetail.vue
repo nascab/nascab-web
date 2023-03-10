@@ -9,8 +9,9 @@
 					<div
 						style="font-size: 18px;font-weight: bold;height: 100%;margin-left: 20px;display: flex;align-items: center;">
 						<p style="margin-right: 20px;">{{ selectedSpace ? selectedSpace.space_name : "" }} </p>
-						<p style="word-break: break-all">{{ $t('private.spaceFolder') }}:{{ selectedSpace ?
-								selectedSpace.folder_path : ""
+						<p style="word-break: break-all">{{ $t('private.spaceFolder') }}:{{
+							selectedSpace ?
+							selectedSpace.folder_path : ""
 						}}</p>
 					</div>
 				</div>
@@ -70,7 +71,7 @@
 											<!-- 播放按钮 -->
 											<div class="icon-play-root">
 												<!-- 视频的时长 -->
-												<img src="@/static/icon_play_white.png" />
+												<span style="color: white;font-size: 30px;" class="nasIcons icon-play"></span>
 												<p class="icon-duration">{{ utils.formatSeconds(file.duration) }}
 												</p>
 
@@ -83,14 +84,11 @@
 
 										<!-- hover层 -->
 										<div class="photo-hover-mask" v-show="file.hover && !file.selected">
-											<img @click.stop="hoverSelect(index)"
-												src="@/static/photo/icon-img-select.png"
-												class="photo-select-icon-hover" />
+											<span @click.stop="hoverSelect(index)" class="photo-select-icon-hover nasIcons icon-radio-unchecked"></span>
 										</div>
 										<!-- 选择层 -->
 										<div class="photo-select-mask" v-if="file.selected">
-											<img src="@/static/photo/icon-img-selected.png"
-												class="photo-select-icon-hover" />
+											<span class="photo-select-icon-hover nasIcons icon-radio-checked"></span>
 										</div>
 									</div>
 									<p class="filename"
@@ -105,12 +103,12 @@
 								style="display: flex;justify-content: center;width: 100%;flex-direction:column;align-items:center">
 								<Button v-if="hasMore && dataList.length > 0" @click="loadNextPage()" type="default"
 									style="width: 500px;margin-top: 30px;height:45px;border-radius:20px">{{
-											$t('common.loadmore')
+										$t('common.loadmore')
 									}}</Button>
 
 								<Spin size="large" v-if="loading" style="margin-top:30px"></Spin>
 								<span v-if="!loading && !hasMore" style="margin-top: 30px;">{{
-										$t('common.noMore')
+									$t('common.noMore')
 								}}</span>
 								<div style="height:160px"></div>
 
@@ -157,11 +155,10 @@
 			</div>
 		</Modal>
 		<!-- 返回顶部按钮 -->
-		<my-btn-icon v-if="showToTopBtn" style="position:fixed;right:10px;bottom:55px;z-index:9999;" iIcon="md-arrow-up"
+		<my-btn-icon v-if="showToTopBtn && !showVideoDetail && !showPhotoDetail"
+			style="position:fixed;right:10px;bottom:55px;z-index:9999;" iIcon="md-arrow-up"
 			@click="$refs.photoWrapper.scrollTo({ top: 0, behavior: 'smooth' })"></my-btn-icon>
 	</div>
-
-
 </template>
 
 <script>
@@ -170,6 +167,8 @@ import axios from "@/plugins/axios";
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import photoDetail from "@/views/photos/components/photoDetail.vue";
 import { Base64 } from "js-base64"
+import jsBridge from "@/plugins/jsBridge"
+
 export default {
 	watch: {
 		showUploadModal: function (newVal, oldVal) {
@@ -247,11 +246,11 @@ export default {
 	mounted() {
 		let passParams = this.$route.params
 		if (this.propsSelectedSpace) {
-			this.spaceId =this.propsSelectedSpace.id+''
+			this.spaceId = this.propsSelectedSpace.id + ''
 			this.selectedSpace = this.propsSelectedSpace
 		} else {
 			this.openAsPage = true
-			this.spaceId = passParams.selectedSpace.id+''
+			this.spaceId = passParams.selectedSpace.id + ''
 			this.selectedSpace = passParams.selectedSpace
 		}
 
@@ -264,12 +263,25 @@ export default {
 		window.addEventListener("scroll", this.onPageScroll, true);
 		//窗口变化监听
 		window.addEventListener("resize", this.onWindowResize);
+		window.addEventListener('popstate', this.onPopstate)
+
 	},
 	beforeDestroy() {
 		window.removeEventListener("scroll", this.onPageScroll, true);
 		window.removeEventListener("resize", this.onWindowResize);
+		window.removeEventListener('popstate', this.onPopstate);
+
 	},
 	methods: {
+		onPopstate() {
+			//后退按钮被点击 如果当前正在播放视频 则关闭视频 如果每播放 则后退
+			if (this.showPhotoDetail || this.showVideoDetail) {
+				this.showPhotoDetail = false
+				this.showVideoDetail = false
+			} else {
+				this.$router.go(-1)
+			}
+		},
 		goBack() {
 			if (this.openAsPage) {
 				this.$router.go(-1)
@@ -290,7 +302,7 @@ export default {
 			clearTimeout(this.longPressTimeout); //再次清空定时器，防止重复注册定时器
 			this.longPressTimeout = setTimeout(() => {
 				this.hoverSelect(index)
-			}, 1000);
+			}, 800);
 		},
 		touchend() {
 			clearTimeout(this.longPressTimeout); //清空定时器，防止重复注册定时器
@@ -434,6 +446,8 @@ export default {
 			this.$nextTick(() => {
 				this.$refs.photoDetail.showImg(useList, showIndex);
 			});
+			this.pushState()
+
 		},
 		//点击了视频跳转到图片详情
 		goPreviewVideo(index) {
@@ -461,6 +475,7 @@ export default {
 				console.log('useList', useList)
 				this.$refs.videoPlayer.playVideo(useList, showIndex);
 			}, 500);
+			this.pushState()
 		},
 		clickFile(idx) {
 			if (this.editMode) {
@@ -480,45 +495,37 @@ export default {
 			if (this.showPhotoDetail || this.showVideoDetail || this.loading) {
 				return
 			}
-			let scrollTop = null;
-			let scrollHeight = null;
-			if (e.srcElement.scrollingElement) {
-				scrollTop = e.srcElement.scrollingElement.scrollTop
-				scrollHeight = e.srcElement.scrollingElement.scrollHeight
-			} else if (e.srcElement) {
-				scrollTop = e.srcElement.scrollTop
-				scrollHeight = e.srcElement.scrollHeight
-			} else if (e.target) {
-				scrollTop = e.target.scrollTop
-				scrollHeight = e.target.scrollHeight
-			}
-			this.scrollTop = scrollTop
-			let windowHeight = document.documentElement.clientHeight;
 
-			if (this.scrollTop > windowHeight) {
-				this.showToTopBtn = true
-			} else {
-				this.showToTopBtn = false
+			//滚动的时候清空计时器 防止触发菜单
+			if (this.longPressTimeout) {
+				clearTimeout(this.longPressTimeout);
+				this.longPressTimeout = null
 			}
-			if (this.scrollTop + windowHeight >= scrollHeight - 5) {
-				//加载下一页
+
+			this.dealOnPageScroll(e, () => {
 				this.getFileList(true)
-			}
+			}, (showTopBtn) => {
+				this.showToTopBtn = showTopBtn
+			})
+
 		},
 		uploadFiles() {
-			this.selectedFileIds = []
-			this.editMode = false
-			for (let i in this.dataList) {
-				this.dataList[i].selected = false
+			if (this.isFromApp && jsBridge) {
+				jsBridge.onClickSpaceUpload(parseInt(this.spaceId), this.$store.state.privateSpace[this.spaceId])
+			} else {
+				this.selectedFileIds = []
+				this.editMode = false
+				for (let i in this.dataList) {
+					this.dataList[i].selected = false
+				}
+				this.showUploadModal = true
 			}
-			this.showUploadModal = true
 		},
 
 		getFileList(append) {
 			if (this.loading || !this.hasMore) {
 				return
 			}
-			console.log(this.orderType)
 			this.loading = true
 			this.api
 				.post("/api/privateSpaceApi/getFileList", {
@@ -716,6 +723,8 @@ export default {
 }
 
 .photo-select-icon-hover {
+	color: white;
+	font-size: 20px;
 	border-radius: 10px;
 	right: 10px;
 	bottom: 10px;
@@ -792,9 +801,7 @@ export default {
 	flex-direction: column;
 	position: absolute;
 	justify-content: center;
-	img {
-		width: 25px;
-	}
+
 
 	.icon-duration {
 		margin-right: 8px;

@@ -133,7 +133,7 @@
 			</template>
 			<div style="max-width: 500px;">{{ $t('backup.excludeExample') }}</div>
 			<Input v-if="showAddExclude" style="margin-top: 10px;margin-bottom: 10px;" v-model="excludeValue" />
-			<vs-button style="margin-top: 10px;margin-bottom: 10px;width: 100%;" @click="addExclude">
+			<vs-button style="margin-top: 10px;margin-bottom: 10px;width: 100%;border-radius: 20px;" @click="addExclude">
 				{{ $t('common.ok') }}
 			</vs-button>
 		</vs-dialog>

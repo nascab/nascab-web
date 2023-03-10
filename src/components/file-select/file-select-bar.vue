@@ -38,7 +38,6 @@ export default {
 			disableBack: false
 		}
 	},
-	mounted() { },
 	methods: {
 		createNewFolder(folderName) {
 			this.$emit('create', folderName)

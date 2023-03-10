@@ -7,7 +7,12 @@ import myViewDesign from '@/plugins/myViewDesign';
 import i18n from '@/plugins/i18n' // 导入vue-i18n
 import './plugins/myViewDesign/styles/index.less';
 import moment from 'moment'
+
 import '@/plugins/longpress'
+//导入jsbridge 挂在全局
+import Bridge from './plugins/jsBridge'
+Vue.prototype.$bridge = Bridge
+
 //新手指引库
 import VueTour from 'vue-tour'
 require('vue-tour/dist/vue-tour.css')
@@ -17,12 +22,12 @@ Vue.use(VueTour)
 import VueLazyload from 'vue-lazyload'
 // or with options
 const loadimage = require('./assets/loading.gif')
-const errorimage = require('./assets/error.jpg')
+const errorimage = require('./assets/error.png')
 Vue.use(VueLazyload, {
 	preLoad: 1.3,
 	error: errorimage,
 	loading: loadimage,
-	attempt: 2
+	attempt: 1
 })
 
 
@@ -100,6 +105,9 @@ Vue.config.productionTip = false
 import mySideBar from '@/components/my-components/my-sidebar/my-sidebar'
 Vue.component('my-sidebar', mySideBar)
 
+import myHeader from '@/components/my-header/my-header.vue'
+Vue.component('my-header', myHeader)
+
 import mySideBarMobile from '@/components/my-components/my-sidebar/my-sidebar-mobile'
 Vue.component('my-sidebar-mobile', mySideBarMobile)
 
@@ -133,6 +141,15 @@ Vue.component('my-dialog-input', myDialogInput)
 import myDialogSelect from '@/components/my-components/my-dialog/my-dialog-select'
 Vue.component('my-dialog-select', myDialogSelect)
 
+import mySelectorPhone from '@/components/my-components/my-selector-phone/my-selector-phone'
+Vue.component('my-selector-phone', mySelectorPhone)
+
+
+import fileSelect from "@/components/file-select/file-select.vue"
+Vue.component('file-select', fileSelect)
+
+import fileSelectBar from "@/components/file-select/file-select-bar.vue"
+Vue.component('file-select-bar', fileSelectBar)
 
 
 new Vue({

@@ -41,19 +41,26 @@ export default {
 	},
 	data() {
 		return {
+			timer: null,
 			taskList: [],
+			loading: false,
 			popedTaskIdList: [],//已经弹出过得运行中任务就不再弹出了
 		};
 	},
-	mounted() {
-		// 每隔一段时间获取一次背景任务状态
-		setInterval(() => {
+	created() {
+
+		this.timer = setInterval(() => {
 			if (this.$store.state.token) this.getBgTaskList(1)
-		}, 10000);
+		}, 8000)
+
 		if (this.$store.state.token) this.getBgTaskList(1)
 	},
-	destroyed() {
 
+	beforeDestroy() {
+		if (this.timer) {
+			clearInterval(this.timer)
+			this.timer = null
+		}
 	},
 	methods: {
 		//删除任务的接口
@@ -71,6 +78,10 @@ export default {
 				})
 		},
 		getBgTaskList(taskState) {
+			if (this.loading) {
+				return
+			}
+			this.loading = true
 			let params =
 			{
 				taskState: taskState,
@@ -79,7 +90,7 @@ export default {
 				hideLoading: true
 			}
 			let playerCount = sessionStorage.getItem('player-count')
-			if (!playerCount||playerCount<1) {
+			if (!playerCount || playerCount < 1) {
 				//如果当前没有在执行播放 那么查看下是否有残留的 停止失败的playid 有的话一起发送给服务器 让服务区停止转码
 				let playIdList = sessionStorage.getItem('play-id-list')
 				console.log('bgtask 取出保存的playIdList', playIdList)
@@ -92,6 +103,8 @@ export default {
 			}
 			//获取正在执行的背景任务
 			this.api.post('/api/commonApi/getBgTask', params).then((res) => {
+				this.loading = false
+
 				if (!res.code) {
 					if (params.playIdList && params.playIdList.length > 0) {
 						sessionStorage.setItem('play-id-list', [])
@@ -105,6 +118,39 @@ export default {
 							this.taskList[i].showDelete = true
 						} else if (this.taskList[i].task_type == "BACKUP") {
 							this.taskList[i].taskTypeStr = this.$t('home.backup') + " " + this.taskList[i].task_name
+						} else if (this.taskList[i].task_type == "FILE_OPERATION") {
+							//复制或者剪切
+							this.taskList[i].showDelete = true
+							let taskParams = JSON.parse(this.taskList[i].task_json)
+							console.log('taskParams', taskParams)
+							if (taskParams.type == 'copy') {
+								this.taskList[i].taskTypeStr = this.$t('file.copy') + " " + taskParams.sourcePath
+								this.taskList[i].sizeStr = this.utils.getSizeStr(item.size_current) + this.$t('backup.copied') + "..."
+							} else if (taskParams.type == 'cut') {
+								this.taskList[i].taskTypeStr = this.$t('file.cut') + " " + taskParams.sourcePath
+								this.taskList[i].sizeStr = this.utils.getSizeStr(item.size_current) + this.$t('file.cuttedSize') + "..."
+							} else if (taskParams.type == 'zip') {
+								this.taskList[i].taskTypeStr = this.$t('file.zip') + " " + taskParams.sourcePath
+								this.taskList[i].sizeStr = this.utils.getSizeStr(item.size_current) + this.$t('file.ziped') + "..."
+							} else if (taskParams.type == 'unzip') {
+								this.taskList[i].taskTypeStr = this.$t('file.unzip') + " " + taskParams.sourcePath
+								this.taskList[i].sizeStr = this.utils.getSizeStr(item.size_current) + "..."
+							}
+						} else if (this.taskList[i].task_type == "PACKAGE_UPDATE") {
+							//安装包更新
+							this.taskList[i].taskTypeStr = this.$t('setting.downloadPackage')
+							if (item.progress_current && item.progress_current > 95) {
+								this.taskList[i].taskTypeStr = this.$t('setting.downloadPackage')
+							}
+						} else if (this.taskList[i].task_type == 'GEN_TINY_IMAGE') {
+							//生成缩略图
+							this.taskList[i].taskTypeStr = this.$t('photo.genningTinyImage')
+						} else if (this.taskList[i].task_type == 'AI_FACES') {
+							//人脸识别
+							this.taskList[i].taskTypeStr = this.$t('photo.doingAiFaces')
+						} else if (this.taskList[i].task_type == 'AI_CLASSES') {
+							//物体识别
+							this.taskList[i].taskTypeStr = this.$t('photo.doingAiClasses')
 						}
 						// 设置任务执行百分比
 						if (item.size_current && item.size_all && item.size_current > 0) {
@@ -118,11 +164,9 @@ export default {
 								this.taskList[i].sizeStr = this.utils.getSizeStr(item.size_current) + this.$t('backup.copied') + "..."
 							}
 						}
-						console.log(item)
-						console.log(this.taskList[i].percent)
 					}
-					//有新任务会自动弹出列表 弹出过得id就不弹了
-					if (this.taskList.length > 0) {
+					//有新任务会自动弹出列表 弹出过得id就不弹了 只有首页弹
+					if (this.taskList.length > 0 && window.location.href.includes("/home")) {
 						let shoulePopBgTask = false
 						for (let i in this.taskList) {
 							if (!this.popedTaskIdList.includes(this.taskList[i].id)) {
@@ -137,6 +181,8 @@ export default {
 						this.popedTaskIdList = []
 					}
 				}
+			}).catch((err) => {
+				this.loading = false
 			})
 		},
 	}

@@ -1,0 +1,408 @@
+{
+  "id": "3592611",
+  "name": "nascab",
+  "font_family": "nasIcons",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "12579446",
+      "name": "radio-checked",
+      "font_class": "radio-checked",
+      "unicode": "e763",
+      "unicode_decimal": 59235
+    },
+    {
+      "icon_id": "12579447",
+      "name": "radio-unchecked",
+      "font_class": "radio-unchecked",
+      "unicode": "e764",
+      "unicode_decimal": 59236
+    },
+    {
+      "icon_id": "5618795",
+      "name": "live照片",
+      "font_class": "livezhaopian",
+      "unicode": "e679",
+      "unicode_decimal": 59001
+    },
+    {
+      "icon_id": "23680397",
+      "name": "远程控制",
+      "font_class": "yuanchengkongzhi",
+      "unicode": "e716",
+      "unicode_decimal": 59158
+    },
+    {
+      "icon_id": "7831427",
+      "name": "编辑",
+      "font_class": "bianji",
+      "unicode": "e62f",
+      "unicode_decimal": 58927
+    },
+    {
+      "icon_id": "31778496",
+      "name": "icon人脸识别",
+      "font_class": "face-detect",
+      "unicode": "e62d",
+      "unicode_decimal": 58925
+    },
+    {
+      "icon_id": "31778497",
+      "name": "icon智能分类",
+      "font_class": "coco-class",
+      "unicode": "e62e",
+      "unicode_decimal": 58926
+    },
+    {
+      "icon_id": "31772140",
+      "name": "管理员",
+      "font_class": "bg-admin",
+      "unicode": "e62b",
+      "unicode_decimal": 58923
+    },
+    {
+      "icon_id": "31772101",
+      "name": "icon播放",
+      "font_class": "play",
+      "unicode": "e630",
+      "unicode_decimal": 58928
+    },
+    {
+      "icon_id": "31772102",
+      "name": "icon全屏",
+      "font_class": "fullscreen",
+      "unicode": "e631",
+      "unicode_decimal": 58929
+    },
+    {
+      "icon_id": "31772103",
+      "name": "icon上一个",
+      "font_class": "video-last",
+      "unicode": "e632",
+      "unicode_decimal": 58930
+    },
+    {
+      "icon_id": "31772104",
+      "name": "icon文件元信息",
+      "font_class": "exif-info",
+      "unicode": "e633",
+      "unicode_decimal": 58931
+    },
+    {
+      "icon_id": "31772105",
+      "name": "icon分享",
+      "font_class": "download",
+      "unicode": "e634",
+      "unicode_decimal": 58932
+    },
+    {
+      "icon_id": "31772106",
+      "name": "icon音量",
+      "font_class": "volumn",
+      "unicode": "e635",
+      "unicode_decimal": 58933
+    },
+    {
+      "icon_id": "31772107",
+      "name": "icon下一个",
+      "font_class": "video-next",
+      "unicode": "e636",
+      "unicode_decimal": 58934
+    },
+    {
+      "icon_id": "31772108",
+      "name": "icon暂停",
+      "font_class": "pause",
+      "unicode": "e637",
+      "unicode_decimal": 58935
+    },
+    {
+      "icon_id": "31772109",
+      "name": "icon缩小屏幕",
+      "font_class": "exit-fullscreen",
+      "unicode": "e638",
+      "unicode_decimal": 58936
+    },
+    {
+      "icon_id": "31772110",
+      "name": "icon字幕",
+      "font_class": "subtitles",
+      "unicode": "e639",
+      "unicode_decimal": 58937
+    },
+    {
+      "icon_id": "31772069",
+      "name": "icon错误未选中备份",
+      "font_class": "msg-error",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
+      "icon_id": "31772070",
+      "name": "icon补充照片位置",
+      "font_class": "position",
+      "unicode": "e629",
+      "unicode_decimal": 58921
+    },
+    {
+      "icon_id": "31772071",
+      "name": "头像",
+      "font_class": "avatar",
+      "unicode": "e62a",
+      "unicode_decimal": 58922
+    },
+    {
+      "icon_id": "31772068",
+      "name": "icon消息选中",
+      "font_class": "msg-list",
+      "unicode": "e616",
+      "unicode_decimal": 58902
+    },
+    {
+      "icon_id": "31727821",
+      "name": "icon文件夹",
+      "font_class": "img-folder",
+      "unicode": "e614",
+      "unicode_decimal": 58900
+    },
+    {
+      "icon_id": "31727822",
+      "name": "icon返回上一级不可点",
+      "font_class": "back",
+      "unicode": "e615",
+      "unicode_decimal": 58901
+    },
+    {
+      "icon_id": "31718990",
+      "name": "icon用户管理未选中备份",
+      "font_class": "setting-user",
+      "unicode": "e617",
+      "unicode_decimal": 58903
+    },
+    {
+      "icon_id": "31719020",
+      "name": "icon文件列表",
+      "font_class": "file-list",
+      "unicode": "e618",
+      "unicode_decimal": 58904
+    },
+    {
+      "icon_id": "31718964",
+      "name": "icon最近选中",
+      "font_class": "file-recent",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    },
+    {
+      "icon_id": "31718965",
+      "name": "icon收藏选中",
+      "font_class": "file-collect",
+      "unicode": "e612",
+      "unicode_decimal": 58898
+    },
+    {
+      "icon_id": "31718966",
+      "name": "icon上传选中",
+      "font_class": "upload",
+      "unicode": "e613",
+      "unicode_decimal": 58899
+    },
+    {
+      "icon_id": "31718741",
+      "name": "icon添加智能相册",
+      "font_class": "add-album",
+      "unicode": "e61a",
+      "unicode_decimal": 58906
+    },
+    {
+      "icon_id": "31718892",
+      "name": "white-list",
+      "font_class": "white-list",
+      "unicode": "e61b",
+      "unicode_decimal": 58907
+    },
+    {
+      "icon_id": "31718893",
+      "name": "icon日志选中",
+      "font_class": "log",
+      "unicode": "e61c",
+      "unicode_decimal": 58908
+    },
+    {
+      "icon_id": "31718894",
+      "name": "ftp",
+      "font_class": "ftp",
+      "unicode": "e61d",
+      "unicode_decimal": 58909
+    },
+    {
+      "icon_id": "31718895",
+      "name": "black-list",
+      "font_class": "black-list",
+      "unicode": "e61e",
+      "unicode_decimal": 58910
+    },
+    {
+      "icon_id": "31718896",
+      "name": "folder",
+      "font_class": "folder",
+      "unicode": "e61f",
+      "unicode_decimal": 58911
+    },
+    {
+      "icon_id": "31718897",
+      "name": "security",
+      "font_class": "security",
+      "unicode": "e620",
+      "unicode_decimal": 58912
+    },
+    {
+      "icon_id": "31718898",
+      "name": "backup",
+      "font_class": "backup",
+      "unicode": "e621",
+      "unicode_decimal": 58913
+    },
+    {
+      "icon_id": "31718899",
+      "name": "pro-version",
+      "font_class": "vip",
+      "unicode": "e622",
+      "unicode_decimal": 58914
+    },
+    {
+      "icon_id": "31718900",
+      "name": "setting-common",
+      "font_class": "setting-common",
+      "unicode": "e623",
+      "unicode_decimal": 58915
+    },
+    {
+      "icon_id": "31718901",
+      "name": "movies-source",
+      "font_class": "movies-source",
+      "unicode": "e624",
+      "unicode_decimal": 58916
+    },
+    {
+      "icon_id": "31718902",
+      "name": "photos-source",
+      "font_class": "photos-source",
+      "unicode": "e625",
+      "unicode_decimal": 58917
+    },
+    {
+      "icon_id": "31718903",
+      "name": "movies-library",
+      "font_class": "movies-library",
+      "unicode": "e626",
+      "unicode_decimal": 58918
+    },
+    {
+      "icon_id": "31718904",
+      "name": "webdav",
+      "font_class": "webdav",
+      "unicode": "e627",
+      "unicode_decimal": 58919
+    },
+    {
+      "icon_id": "31718905",
+      "name": "setting-system",
+      "font_class": "setting-system",
+      "unicode": "e628",
+      "unicode_decimal": 58920
+    },
+    {
+      "icon_id": "14863540",
+      "name": "search",
+      "font_class": "search",
+      "unicode": "e62c",
+      "unicode_decimal": 58924
+    },
+    {
+      "icon_id": "31669064",
+      "name": "icon-img-selected",
+      "font_class": "img-selected",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "31669065",
+      "name": "icon-timeline",
+      "font_class": "timeline",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "31669066",
+      "name": "icon-recent",
+      "font_class": "recent",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "31669067",
+      "name": "icon-img-layout-b",
+      "font_class": "img-layout-b",
+      "unicode": "e609",
+      "unicode_decimal": 58889
+    },
+    {
+      "icon_id": "31669068",
+      "name": "icon-folder-iew",
+      "font_class": "folder-iew",
+      "unicode": "e60a",
+      "unicode_decimal": 58890
+    },
+    {
+      "icon_id": "31669069",
+      "name": "icon-normal-album",
+      "font_class": "normal-album",
+      "unicode": "e60b",
+      "unicode_decimal": 58891
+    },
+    {
+      "icon_id": "31669070",
+      "name": "icon-trash",
+      "font_class": "trash",
+      "unicode": "e60c",
+      "unicode_decimal": 58892
+    },
+    {
+      "icon_id": "31669071",
+      "name": "icon-tools",
+      "font_class": "tools",
+      "unicode": "e60e",
+      "unicode_decimal": 58894
+    },
+    {
+      "icon_id": "31669072",
+      "name": "icon-footprint",
+      "font_class": "footprint",
+      "unicode": "e60f",
+      "unicode_decimal": 58895
+    },
+    {
+      "icon_id": "31669073",
+      "name": "icon-img-layout-a",
+      "font_class": "img-layout-a",
+      "unicode": "e610",
+      "unicode_decimal": 58896
+    },
+    {
+      "icon_id": "31669074",
+      "name": "icon-ai-album",
+      "font_class": "ai-album",
+      "unicode": "e611",
+      "unicode_decimal": 58897
+    },
+    {
+      "icon_id": "31644356",
+      "name": "icon向右可点击备份",
+      "font_class": "iconxiangyoukedianjibeifen",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    }
+  ]
+}

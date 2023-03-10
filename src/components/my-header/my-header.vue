@@ -1,9 +1,10 @@
 <template>
 	<div class="my-header-root" :style="{ 'background-color': bgColor, 'position': fixed ? 'fixed' : 'relative' }">
-		<div class="my-header-left" @click="goPath('/home')">
+		<div class="my-header-left">
 			<img src="@/static/common/naslogo.png" class="logo">
 			<!-- pc端显示在左边 -->
-			<vs-button v-if="showHome" class="iconBtn" style="margin-left: 30px;" animation-type="vertical">
+			<vs-button v-if="showHome" @click="goPath('/home')" class="iconBtn" style="margin-left: 30px;"
+				animation-type="vertical">
 				<img class="btnImg" src="@/static/home/icon-home.png" />
 				<template #animate v-if="!isMobile">
 					Home
@@ -27,6 +28,7 @@
 				</template>
 			</vs-button>
 			<!-- 背景任务 -->
+
 			<vs-button id="switchBg" class="iconBtn" v-if="currentUser" @click="switchBgTask" animation-type="vertical">
 				<Icon type="md-pulse" size="25" class="btnIconFont" />
 				<template #animate v-if="!isMobile">
@@ -34,15 +36,17 @@
 				</template>
 			</vs-button>
 			<!-- 上传 -->
-			<vs-button class="iconBtn" v-if="currentUser" @click="switchUpload" animation-type="vertical">
+			<vs-button class="iconBtn" v-if="currentUser" @click="uploadClick" animation-type="vertical">
 				<Icon type="md-arrow-round-up" size="25" class="btnIconFont" />
 				<template #animate v-if="!isMobile">
 					{{ $t('common.upload') }}
 				</template>
 			</vs-button>
 			<!-- 消息 -->
-			<Badge dot :offset="[7, 7]" overflow-count="99" :count="$store.state.unreadMsgCount">
-				<vs-button id="checkMsg" class="iconBtn" @click="goPath('/noticeCenter')" animation-type="vertical">
+			<Badge dot :offset="[7, 7]" overflow-count="99" :count="$store.state.unreadMsgCount"
+				v-if="$store.state.currentUser.is_admin == 1">
+				<vs-button id="checkMsg" class="iconBtn" @click="goPathNewWebView('/noticeCenter', $t('notice.info'))"
+					animation-type="vertical">
 					<img class="btnImg" src="@/static/home/icon-msg.png" />
 					<template #animate v-if="!isMobile">
 						{{ $t('notice.info') }}
@@ -76,6 +80,7 @@
 <script>
 import userSetting from "./user-setting.vue"
 import login from "@/views/index/login.vue"
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
 	props: {
@@ -92,6 +97,9 @@ export default {
 		userSetting,
 		login
 	},
+	computed: {
+
+	},
 	data() {
 		return {
 			showHome: true,
@@ -106,33 +114,41 @@ export default {
 		} else {
 			this.showHome = true
 		}
-		this.currentUser = JSON.parse(sessionStorage.getItem("currentUser"))
+		this.currentUser = JSON.parse(localStorage.getItem("currentUser"))
 	},
 	methods: {
+		uploadClick() {
+			if (this.isFromApp) {
+				this.switchUpload(true)
+			} else {
+				this.switchUpload()
+			}
+		},
 		switchBg() {
 			console.log('点击切换背景')
 			this.$bus.$emit('onChangeBg')
-		},
-		goPath(path) {
-			this.$router.push({
-				path: path
-			})
 		},
 		lockScreen() {
 			this.lockScreenIsShow = true
 		},
 		goLogout() {
 			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('header.okLogout'), () => {
-				sessionStorage.removeItem('token')
-				sessionStorage.removeItem('currentUser')
+				localStorage.removeItem('token')
+				localStorage.removeItem('currentUser')
+				localStorage.removeItem('autoLogin')
 				this.showVsNotification(this.$t('header.logoutSuccess'))
 				setTimeout(() => {
-					this.$router.push({
-						path: '/login'
-					})
+					if (this.isFromApp && jsBridge) {
+						jsBridge.onClickLogout()
+					} else {
+						this.$router.push({
+							path: '/login'
+						})
+					}
 				}, 500)
 			})
 		}
+
 	}
 }
 </script>

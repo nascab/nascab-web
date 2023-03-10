@@ -32,9 +32,8 @@
 			</div>
 		</div>
 
-		<Button @click="searchMovieInfo(true)" size="large" style="width:80%;margin-top:20px;height: 40px;border-radius: 20px;"
-			v-if="hasMore && searchResultList.length > 0">{{ $t('common.loadmore') }}</Button>
-		<div v-if="!hasMore" style="margin-top:10px;margin-bottom:10px">{{ $t('common.noMore') }}</div>
+		<my-btn style="width:300px" @click="searchMovieInfo(true)" type="white" v-if="hasMore && searchResultList.length > 0" :title="$t('common.loadmore')"></my-btn>
+		<div v-if="!hasMore" style="margin-top:10px;margin-bottom:10px;">{{ $t('common.noMore') }}</div>
 	</div>
 
 </template>
@@ -55,7 +54,9 @@
 			}
 		},
 		mounted() {
-
+			if(this.movieIndexObj){
+				this.searchStr=this.movieIndexObj.filename
+			}
 		},
 		methods: {
 			selectMovieInfo(movieInfo) {
@@ -100,6 +101,7 @@
 							} else {
 								this.searchResultList = res.data
 							}
+							console.log("结果已经返回")
 
 						}
 					})

@@ -1,5 +1,5 @@
 <template>
-	<div class="cm-container" :style="axisComputed" v-if="show">
+	<div class="cm-container" :style="axisComputed" v-if="show&&list.length>0">
 		<svg aria-hidden="true" style="position: absolute; width: 0px; height: 0px; overflow: hidden;">
 			<symbol id="icon-youjiantou" viewBox="0 0 1024 1024">
 				<path d="M288.791335 65.582671l446.41733 446.417329-446.41733 446.417329z"></path>
@@ -101,19 +101,18 @@
 			}
 		},
 		mounted() {
+			console.log("easy mounted")
 			this.$nextTick(()=>{
 				document.addEventListener('click', () => {
 					this.show = false
 				})
 			})
 			this.$root.$on('easyAxis', (axis) => {
-				console.log('easyAxis')
 				if (axis.tag == this.tag) {
 					this.show = true
 					this.axis = axis
 				}
 			})
-			
 		},
 		watch: {
 			axis() {
@@ -174,7 +173,6 @@
 				}
 			},
 			onMenuClick(indexList) {
-				console.log('callback!!')
 				this.show=false
 				this.$emit('ecmcb', indexList)
 			}

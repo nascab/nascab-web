@@ -85,8 +85,8 @@ export default {
 	beforeDestroy() {
 	},
 	methods: {
-		setLeftMenuId(menuId) {
-			this.selectMenu = menuId
+		setLeftMenuId(menu) {
+			this.selectMenu = menu.id
 		},
 	}
 }

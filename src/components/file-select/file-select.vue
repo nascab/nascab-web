@@ -30,7 +30,6 @@ export default {
 			disableBack: false
 		}
 	},
-	mounted() { },
 	methods: {
 		goBack() {
 			this.$refs.fileBrower.goBack()

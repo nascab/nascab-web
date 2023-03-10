@@ -46,18 +46,21 @@ export default {
 }
 
 .my-bt-red {
-	p{
+	p {
 		color: white;
 	}
+
 	color: white;
 	background-color: $nas-red;
 }
 
 .my-bt-white {
 	border: 1px solid $nas-main;
-	p{
+
+	p {
 		color: $nas-main;
 	}
+
 	color: $nas-main;
 	background-color: white;
 	border: 1px solid $nas-main;
@@ -66,27 +69,27 @@ export default {
 		color: $nas-main ;
 	}
 
-	.ivu-btn{
-	border: 0px;
-	border-color: transparent !important;
-}
+	.ivu-btn {
+		border: 0px;
+		border-color: transparent !important;
+	}
 }
 
 .my-bt-primary {
-	p{
+	p {
 		margin-left: 5px;
 		margin-right: 5px;
 		color: white;
 	}
+
 	color: white;
 	background-color: #386DF2;
 
-	.ivu-btn{
-	border: 0px;
-	border-color: transparent !important;
-}
-}
+	.ivu-btn {
+		border: 0px;
+		border-color: transparent !important;
+	}
 
-// 覆盖iview按钮的自带border颜色
+}
 
 </style>

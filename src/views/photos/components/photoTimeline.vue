@@ -1,6 +1,6 @@
 <template>
-	<div class="timeline-root" ref="timeLineRoot" @mouseenter="mouseEnter" @mouseleave="mouseLeave"
-		@mousemove="mouseMove" @touchmove.prevent="barTouchMove" @touchstart="barTouchStart" @touchend="barTouchEnd">
+	<div class="timeline-root" ref="timeLineRoot" @mouseenter="mouseEnter" @mouseleave="mouseLeave" @mousemove="mouseMove"
+		@touchmove.prevent="barTouchMove" @touchstart="barTouchStart" @touchend="barTouchEnd">
 		<div v-if="showTimeLine" class="date-list" ref="dateList">
 			<div class="item" v-for="(item, index) in dateList" :style="{ height: item.height + 'px' }"
 				@click="onTimeClick(index)" @mouseenter="itemMouseEnter(item)">
@@ -112,6 +112,7 @@ export default {
 			this.scrolling = true
 			this.showTimeLine = true
 			this.setTimeoutInvisiable()
+
 		},
 		mouseMove(e) {
 			if (!this.rootWrapper) {
@@ -133,11 +134,11 @@ export default {
 				if (!this.mouseInTimeLine && !this.scrolling) {
 					this.showTimeLine = false
 				}
-			}, 1000)
+			},1000)
 		},
 		onTimeClick(index) {
 			console.log('onTimeClick')
-			this.hadMoved=false
+			this.hadMoved = false
 			this.$emit('onTimeChoose', this.dateList[index].original_time)
 		},
 		onWindowResize() {

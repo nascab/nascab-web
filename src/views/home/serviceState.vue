@@ -4,10 +4,12 @@
       <div style="display: flex; flex-direction: row; justify-content: flex-start;  align-items: center;">
         <p class="top-title">{{ $t("state.serverState") }}</p>
         <!-- 版本提示 -->
-        <a @click="goToSetting(7)" v-if="!nasAccountInfo.vipInfo" class="versionStr">{{ $t("nascab.versionFree") }}</a>
-        <a @click="goToSetting(7)" v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.type == 1"
+        <a @click="goToSetting('nasAccount')" v-if="!nasAccountInfo.vipInfo" class="versionStr">{{
+          $t("nascab.versionFree")
+        }}</a>
+        <a @click="goToSetting('nasAccount')" v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.type == 1"
           class="versionStr">{{ $t("nascab.versionPro") }}</a>
-        <a @click="goToSetting(7)" v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.type == 2"
+        <a @click="goToSetting('nasAccount')" v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.type == 2"
           class="versionStr">{{ $t("nascab.versionTeam") }}</a>
         <div class="max-line-one" style="margin-left:10px">{{ hostName }}</div>
       </div>
@@ -19,18 +21,19 @@
     <div class="content-root">
       <div class="card-root">
         <!-- 局域网访问地址 -->
-        <!-- <vs-tooltip style="width:100%"> -->
-        <Card id="lanIp" class="card-item">
+        <Card id="lanIp" class="card-item ">
           <p class="card-title">
             {{ apiServerStateStr }}
           </p>
-          <div @click="showQrCodeDialog(lanIpAndPort)" class="card-item-title access-link">{{ lanIpAndPort }}
+          <div v-if="ipv4List.length > 0" v-for="lanIp in ipv4List"
+            @click="showQrCodeDialog('http://' + lanIp.ip + ':' + apiServer.port)" class="card-item-title access-link enable-text-select">
+            {{ 'http://' + lanIp.ip + ":" + apiServer.port }}
+          </div>
+          <div v-if="ipv4List.length < 1" class="card-item-title access-link">
+            {{ $t("state.netStateNoFound") }}
           </div>
         </Card>
-        <!-- <template #tooltip>
-            {{ $t('nascab.lanAccessAlert') }}
-          </template>
-        </vs-tooltip> -->
+
 
         <!-- 外网访问地址 -->
         <Card class="card-item">
@@ -38,26 +41,52 @@
             {{ $t("nascab.remoteAccess") }}
           </p>
           <div class="card-item-title access-link">
-            <a v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.subdomain"
+            <a v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.subdomain" class=" enable-text-select"
               @click="showQrCodeDialog('http://' + nasAccountInfo.vipInfo.subdomain + nasAccountInfo.vipInfo.proxyDomain)">
-              http:// {{ nasAccountInfo.vipInfo.subdomain }}{{ nasAccountInfo.vipInfo.proxyDomain }}</a>
+              http://{{ nasAccountInfo.vipInfo.subdomain }}{{ nasAccountInfo.vipInfo.proxyDomain }}</a>
             <!-- 去设置 -->
-            <span v-if="!nasAccountInfo.vipInfo || !nasAccountInfo.vipInfo.subdomain" @click="goToSetting(6)"
+            <span v-if="!nasAccountInfo.vipInfo || !nasAccountInfo.vipInfo.subdomain" @click="goToSetting('remoteAccess')"
               class="card-item-title access-link">
               {{ $t('photo.goToSet') }}
             </span>
           </div>
         </Card>
-
+        <!-- IPV6地址 -->
+        <Card id="lanIp6" class="card-item">
+          <p class="card-title">
+            {{ $t("state.ipv6url") }}<Icon @click="showVsAlertDialog($t('common.alert'), $t('state.ipv6alert'))" style="cursor: pointer;" size="16" type="ios-help-circle-outline" />
+          </p>
+          <div v-if="ipv6List.length > 0" v-for="lanIp in ipv6List"
+            @click="showQrCodeDialog('http://[' + lanIp.ip + ']:' + apiServer.port)"
+            class="card-item-title access-link max-line-one  enable-text-select">
+            {{ 'http://[' + lanIp.ip + "]:" + apiServer.port }}
+          </div>
+          <div v-if="ipv6List.length < 1" class="card-item-title access-link"
+            @click="showVsAlertDialog($t('common.alert'), $t('state.ipv6alert'))">
+            {{ $t("state.netStateNoFound") }}
+          </div>
+        </Card>
         <!-- ftp服务状态 -->
         <Card class="card-item" v-if="ftpServer && ftpServer.state == 'run'">
           <p class="card-title">FTP{{ ftpServerStr }}</p>
-          <div class="card-item-title"><a>{{ ftpServerSub }}</a></div>
+          <div v-if="ipv4List.length > 0" v-for="lanIp in ipv4List"
+            @click="lanIpClick('ftp://' + lanIp + ':' + ftpServer.port)" class="card-item-title access-link  enable-text-select">
+            {{ 'ftp://' + lanIp.ip + ":" + ftpServer.port }}
+          </div>
+          <div v-else class="card-item-title access-link">
+            {{ $t("state.netStateNoFound") }}
+          </div>
         </Card>
         <!-- webdav服务状态 -->
         <Card class="card-item" v-if="webDavServer && webDavServer.state == 'run'">
           <p class="card-title">WebDav{{ webDavServerStr }}</p>
-          <div class="card-item-title"><a>{{ webDavServerSub }}</a></div>
+          <div v-if="ipv4List.length > 0" v-for="lanIp in ipv4List"
+            @click="lanIpClick('http://' + lanIp + ':' + webDavServer.port)" class="card-item-title access-link enable-text-select">
+            {{ 'http://' + lanIp.ip + ":" + webDavServer.port }}
+          </div>
+          <div v-else class="card-item-title access-link">
+            {{ $t("state.netStateNoFound") }}
+          </div>
         </Card>
       </div>
     </div>
@@ -93,18 +122,19 @@ export default {
   },
   data() {
     return {
+      loading: false,
       showUrlDialog: false,
       showUrl: "",
       intervalSystemState: null,
       ftpServer: null,
       ftpServerStr: "",
-      ftpServerSub: "",
-      webDavServerSub: "",
       webDavServerStr: "",
       apiServerStateStr: "",
       apiServer: null,
       webDavServer: null,
       lanIpAndPort: "",
+      ipv4List: [],//局域网ip列表
+      ipv6List: [],
       hostName: ""
     };
   },
@@ -120,9 +150,17 @@ export default {
   beforeDestroy() {
     if (this.intervalSystemState) {
       clearInterval(this.intervalSystemState);
+      this.intervalSystemState = null
     }
   },
   methods: {
+    goToSetting(pageName) {
+      if (this.$store.state.currentUser.is_admin == 1) {
+        this.goPathNewWebView("/setting?pageName=" + pageName, this.$t('home.settingCenter'), { pageName: pageName })
+      } else {
+        this.showVsNotification(this.$t('common.noPermission'))
+      }
+    },
     lanIpClick(url) {
       let clip = navigator.clipboard
       if (clip) {
@@ -137,41 +175,21 @@ export default {
         this.showQrCode(url, 'lanQrcode')
       })
     },
-    goToSetting(index) {
-      if (this.$store.state.currentUser.is_admin == 1) {
-        this.$router.push({
-          path: "/setting",
-          query: {
-            index: index,
-          },
-        });
-      } else {
-        this.showVsNotification(this.$t('common.noPermission'))
-      }
-    },
+
     getIp(ipList) {
       let ipStrList = []
       let useIp = ''
       for (var key in ipList) {
         // 先把ip过滤出来
+        if (key.indexOf('VMware') != -1) {
+          //过滤虚拟网卡
+          continue
+        }
         if (ipList[key] && ipList[key].length > 0) {
           ipStrList.push(ipList[key][0])
         }
       }
-      for (let i in ipStrList) {
-        let ip = ipStrList[i]
-        console.log(ip)
-        //有192.168开头的优先使用 避免虚拟网卡的172开头的排在前面
-        if (ip.startsWith('192.168')) {
-          useIp = ip
-          break
-        }
-      }
-      if (!useIp && ipStrList.length > 0) {
-        //找不到的话使用第一个
-        useIp = ipStrList[0]
-      }
-      return useIp
+      return ipStrList
     },
     showQrCode(qrdata, tagId) {
       var typeNumber = 4;
@@ -186,12 +204,16 @@ export default {
       if (!this.$store.state.token) {
         return;
       }
+      if (this.loading) return
+      this.loading = true
       this.api
         .post("/api/commonApi/getServerState", {
           serverName: "all",
           hideLoading: true,
         })
         .then((res) => {
+          this.loading = false
+
           this.$store.state.unreadMsgCount = res.unreadMsgCount;
           let ipList = [];
           this.hostName = res.hostName
@@ -209,6 +231,8 @@ export default {
                 this.webDavServer.state == "run"
                   ? this.$t("state.run")
                   : this.$t("state.error");
+
+
             } else if (res.data[i].title == "FTPServer") {
               //设置服务运行状态字符串
               this.ftpServer = JSON.parse(res.data[i].value);
@@ -221,29 +245,33 @@ export default {
             } else if (res.data[i].title == "globalIpList") {
               //设置服务运行状态字符串
               ipList = JSON.parse(res.data[i].value);
-              console.log(ipList)
+              console.log("ipList", ipList)
             }
           }
-          let lanIp = this.getIp(ipList);
-          if (ipList && lanIp) {
-            this.lanIpAndPort = "http://" + lanIp;
-            if (this.apiServer.port != 80) {
-              this.lanIpAndPort = this.lanIpAndPort + ":" + this.apiServer.port
+          this.ipv4List = []
+          this.ipv6List = []
+
+          for (let i = 0; i < ipList.length; i++) {
+            if (ipList[i].type == "ipv4") {
+              this.ipv4List.push(ipList[i])
+            } else if (ipList[i].type == "ipv6") {
+              this.ipv6List.push(ipList[i])
             }
-            this.ftpServerSub = "ftp://" + lanIp + ":" + this.ftpServer.port;
-            let webDavUrl = "http://" + lanIp + ":" + this.webDavServer.port;
-            this.webDavServerSub = webDavUrl;
-            sessionStorage.setItem('webDavUrl', webDavUrl)
-            sessionStorage.setItem('ftpUrl', this.ftpServerSub)
-          } else {
-            this.lanIpAndPort = this.$t("state.netStateNoFound");
-            this.ftpServerSub = this.$t("state.netStateNoFound");
-            this.webDavServerSub = this.$t("state.netStateNoFound");
           }
 
+          if (this.ipv4List.length > 0) {
+            if (this.webDavServer && this.webDavServer.state == "run" && this.ipv4List.length > 0) {
+              localStorage.setItem("webDavUrl", 'http://' + this.ipv4List[0].ip + ":" + this.webDavServer.port)
+            }
+            if (this.ftpServer && this.ftpServer.state == "run" && this.ipv4List.length > 0) {
+              localStorage.setItem("ftpUrl", 'ftp://' + this.ipv4List[0].ip + ":" + this.ftpServer.port)
+            }
+          }
 
         })
-        .catch((error) => { });
+        .catch((error) => {
+          this.loading = false
+        });
     },
   },
 };
@@ -290,7 +318,7 @@ export default {
 
 .top-title {
   color: $nas-text-title;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   flex-shrink: 0;
 }
@@ -311,18 +339,17 @@ export default {
 .card-item {
   margin-top: 10px;
   border-radius: 20px;
-  height: 100px;
   width: 100%;
 
   .card-title {
     text-align: left;
-    font-size: 16px;
+    font-size: 14px;
     color: $nas-text-title;
   }
 
   .card-item-title {
     text-align: left;
-    margin-top: 10px;
+    margin-top: 8px;
     font-size: 14px;
     color: $nas-text-grey;
   }
@@ -345,5 +372,4 @@ export default {
 .access-link {
   cursor: pointer;
   color: $nas-main !important;
-}
-</style>
+}</style>

@@ -8,7 +8,7 @@
 			<my-header></my-header>
 		</div>
 
-		<my-btn-icon class="nas-mobile-show" iIcon="md-home" style="position:fixed;bottom:50px;left:15px;"
+		<my-btn-icon v-if="!isFromApp" class="nas-mobile-show" iIcon="md-home" style="position:fixed;bottom:50px;left:15px;"
 			@click="goPath('/home')"></my-btn-icon>
 
 		<!-- 无数据提示 -->
@@ -126,10 +126,7 @@
 		<vs-dialog v-model="showLongPressMenu">
 			<h4 v-if="selectedSpace" class="max-line-one" style="word-break:break-all">{{ selectedSpace.space_name }}
 			</h4>
-			<vs-button border v-for="menu in rightMenuList" @click="rightMenuClick(null, menu.type)"
-				style="width:100%;margin-top:15px">
-				{{ menu.text }}
-			</vs-button>
+			<my-selector-phone :optionList="rightMenuList" @onItemClick="(item)=>(rightMenuClick(null, item.type))"></my-selector-phone>
 		</vs-dialog>
 	</div>
 </template>

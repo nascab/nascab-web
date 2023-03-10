@@ -1,5 +1,5 @@
 let getToken = () => {
-    return sessionStorage.getItem('token')
+    return localStorage.getItem('token')
 }
 let formatSeconds = (value) => {
     //秒转为时分秒
