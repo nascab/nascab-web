@@ -3,18 +3,18 @@
 		<!-- 修改密码 -->
 		<Form ref="formValidate" :model="formValidate" :rules="ruleValidate" style="width:100%">
 			<FormItem :label="$t('common.username')" prop="username">
-				<Input disabled v-model="currentUser.username"></Input>
+				<Input autocapitalize="off" autocorrect="off"  disabled v-model="currentUser.username"></Input>
 			</FormItem>
 			<FormItem :label="$t('header.rawPassword')" prop="oldPassword">
-				<Input type="password" v-model="formValidate.oldPassword"
+				<Input autocapitalize="off" autocorrect="off"  type="password" v-model="formValidate.oldPassword"
 					:placeholder="$t('header.rawPassword')"></Input>
 			</FormItem>
 			<FormItem :label="$t('header.newPassword')" prop="newPassword">
-				<Input type="password" v-model="formValidate.newPassword"
+				<Input autocapitalize="off" autocorrect="off"  type="password" v-model="formValidate.newPassword"
 					:placeholder="$t('header.newPassword')"></Input>
 			</FormItem>
 			<FormItem :label="$t('header.newPasswordConfirm')" prop="newPasswordConfirm">
-				<Input type="password" v-model="formValidate.newPasswordConfirm"
+				<Input autocapitalize="off" autocorrect="off"  type="password" v-model="formValidate.newPasswordConfirm"
 					:placeholder="$t('header.newPasswordConfirm')"></Input>
 			</FormItem>
 		</Form>

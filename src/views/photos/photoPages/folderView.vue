@@ -12,8 +12,7 @@
 				<div class="nas-mobile-show">
 					<my-btn-icon style="margin-right:10px;" iIcon="md-arrow-back" @click="returnLast"></my-btn-icon>
 				</div>
-				<my-menu-select v-if="currentParentPath" @onItemClick="onChooseFileType"
-					:optionList="typeMenuOptionList">
+				<my-menu-select v-if="currentParentPath" @onItemClick="onChooseFileType" :optionList="typeMenuOptionList">
 				</my-menu-select>
 				<!-- 改变图片大小 -->
 				<div>
@@ -21,7 +20,6 @@
 						:step="10" @on-input="onSizeChange">
 					</Slider>
 				</div>
-
 
 				<div class="search-root">
 					<!-- 搜索栏 -->
@@ -34,23 +32,21 @@
 			<div class="file-list" ref="photoWrapper">
 
 				<div style="cursor: pointer;" v-for="(file, index) in indexFileList"
-					:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }" :key="file.id">
+					:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }" :key="file.id"
+					@touchstart="touchstart($event, file, index)" @touchend="touchend"
+					@contextmenu="showRightMenu($event, $root, file, index)">
 
 					<!-- 文件夹类型 -->
 					<div v-if="parseInt(file.is_file) == 0" class="item-folder" @click="clickFolder(index)">
-						<span class="nasIcons icon-img-folder item-folder"
-							:style="{ 'font-size': itemWidth / 3 * 2 + 'px' }"></span>
-
+						<img :style="{ 'width': itemWidth + 'px' }" src="@/static/folder/icon_folder.png" />
 						<p class="filename" style="width: 100%;">{{ file.root ? file.path : file.filename }}</p>
 					</div>
 					<vs-tooltip>
 						<!-- 图片 -->
 						<div v-if="parseInt(file.is_file) == 1" class="item-folder" @click="clickFile(index)">
 							<div style="display: flex;align-items: center;justify-content: center;">
-								<div
-									style="position: relative;display: flex;align-items: center;justify-content: center;">
-									<img @dragstart.prevent v-lazy="file.url"
-										style="object-fit: cover;border-radius: 10px;"
+								<div style="position: relative;display: flex;align-items: center;justify-content: center;">
+									<img @dragstart.prevent v-lazy="file.url" style="object-fit: cover;border-radius: 10px;"
 										:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }" />
 
 
@@ -79,7 +75,7 @@
 						}}</Button>
 					<Spin size="large" v-if="loading" style="margin-top:30px"></Spin>
 					<span v-if="!loading && !hasMore" style="margin-top: 30px;">{{
-							$t('common.noMore')
+						$t('common.noMore')
 					}}</span>
 					<div style="height:80px"></div>
 				</div>
@@ -100,6 +96,37 @@
 		<my-btn-icon v-if="showToTopBtn" style="position:fixed;right:10px;bottom:55px;z-index:9999;" iIcon="md-arrow-up"
 			@click="$refs.photoWrapper.scrollTo({ top: 0, behavior: 'smooth' })"></my-btn-icon>
 
+
+		<!-- 右键菜单 -->
+		<easy-cm @ecmcb="rightMenuClick" :list="rightMenuList"></easy-cm>
+
+
+		<!-- 手机端长按条目的时候弹出的菜单 -->
+		<vs-dialog v-model="showLongPressMenu">
+			<h4 v-if="selectedFile" class="max-line-one" style="word-break:break-all">{{ selectedFile.filename }}</h4>
+			<my-selector-phone :optionList="rightMenuList"
+				@onItemClick="(item) => (rightMenuClick(null, item.type))"></my-selector-phone>
+		</vs-dialog>
+
+		<!-- 新建相册 -->
+		<my-dialog-input @onOkClick="createAlbumByFolderApi" :placeholder="$t('album.albumName')" :showCloseBtn="true"
+			ref="addAlbumDialog" :content="$t('album.albumName')" :title="$t('album.addAOrdinaryAlbum')">
+		</my-dialog-input>
+
+		<!-- 选择影集的对话框 -->
+		<vs-dialog scroll v-model="showCollectionSelectDialog">
+			<template #header>
+				<h4 class="not-margin">
+					{{ $t('movie.whichCollectionWantoMove') }}
+				</h4>
+			</template>
+			<div v-for="collection in collectionList">
+				<div class="collection-item" @click="onSelectCollection(collection)">
+					{{ collection.title }}
+				</div>
+			</div>
+			<div v-if="collectionList&&collectionList.length<1" class="collection-item">{{ $t('movie.noCollection') }}</div>
+		</vs-dialog>
 	</div>
 </template>
 
@@ -109,6 +136,7 @@ import axios from "@/plugins/axios";
 import photoDetail from "@/views/photos/components/photoDetail.vue";
 //视频点击详情
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
 	props: {
@@ -123,6 +151,8 @@ export default {
 	},
 	data() {
 		return {
+			showCollectionSelectDialog: false,//选择影集的对话框
+			collectionList: null,
 			showToTopBtn: false,
 			typeMenuOptionList: [{
 				title: this.$t('photo.all'),
@@ -134,7 +164,7 @@ export default {
 				title: this.$t('photo.video'),
 				id: "2"
 			}, {
-				title: this.$t('movie.viewFolder'),
+				title: this.$t('common.folder'),
 				id: "3"
 			}],
 			sliderMin: 130,
@@ -146,7 +176,8 @@ export default {
 			indexFileList: [],
 			showFileType: '0',
 			systemSep: '/', //系统路径分隔符
-			selectedFile: '',
+			selectedIndex: null,
+			selectedFile: null,
 			showPhotoDetail: false,
 			showVideoDetail: false,
 			scrollTop: 0,
@@ -154,7 +185,14 @@ export default {
 			loading: false,
 			hasMore: true,
 			sourcePathList: [],
-			searchStr: ""
+			longPressTimeout: null,
+			showLongPressMenu: false,
+			searchStr: "",
+			rightMenuList: [{
+				text: this.$t('file.check'),
+				type: "CHECK",
+			}]
+
 		}
 	},
 	created() {
@@ -179,6 +217,120 @@ export default {
 		if (this.sliderValue) localStorage.setItem('folderImageSize', this.sliderValue)
 	},
 	methods: {
+		touchstart(event, item, index) {
+			clearTimeout(this.longPressTimeout); //再次清空定时器，防止重复注册定时器
+			this.longPressTimeout = setTimeout(() => {
+				this.onLongPress(item, index)
+			}, 800);
+		},
+		touchend() {
+			clearTimeout(this.longPressTimeout); //清空定时器，防止重复注册定时器
+		},
+		onLongPress(item, index) {
+			this.selectedFile = item
+			this.selectedIndex = index
+			this.initRightMenu(item)
+			this.showLongPressMenu = true
+		},
+		showRightMenu(event, root, file, index) {
+			if (this.isMobile) return event.preventDefault()
+			this.selectedFile = file
+			this.selectedIndex = index
+			this.initRightMenu()
+			this.$easycm(event, root)
+		},
+		initRightMenu(file) {
+			this.rightMenuList = [{
+				text: this.$t('file.check'),
+				type: "CHECK",
+			}]
+			// 创建相册
+			if (this.serverType == 'photo' && this.selectedFile.is_file != 1) {
+				this.rightMenuList.push({
+					text: this.$t('photo.createAlbumByFolder'),
+					type: "CREATE_ALBUM"
+				})
+			}
+			// 添加到影集
+			if (this.serverType == 'movie') {
+				this.rightMenuList.push({
+					text: this.$t('movie.addToCollection'),
+					type: "ADD_TO_COLLECTION"
+				})
+			}
+
+		},
+		//右键菜单点击
+		rightMenuClick(indexList, clickType) {
+			let type = clickType ? clickType : this.rightMenuList[indexList[0]].type
+			if (type == 'CHECK') { //查看
+				this.clickFolder(this.selectedIndex)
+			} else if (type == 'CREATE_ALBUM') { //以文件夹创建相册
+				this.$refs.addAlbumDialog.setShow(true)
+			} else if (type == "ADD_TO_COLLECTION") {//添加到影集
+				this.showChooseCollection()
+			}
+		},
+		showChooseCollection() {
+			this.showCollectionSelectDialog = true
+			if (this.collectionList == null) {
+				this.api.post('/api/movieApi/getCollection', {
+				}).then((res) => {
+					if (!res.code) {
+						this.collectionList = res.data
+					}
+				}).catch((error) => { })
+			}
+		},
+		onSelectCollectionApi(collection) {
+			// 移动到影集
+			let params={
+				collectionId: collection.id
+
+			}
+			if(this.selectedFile.id){
+				params.indexId=this.selectedFile.id
+			}else{
+				params.filepath=this.selectedFile.path
+				params.filename=this.selectedFile.filename
+			}
+			this.api.post('/api/movieApi/addIndexToCollection',params ).then((res) => {
+				if (!res.code) {
+					this.showCollectionSelectDialog = false
+					this.showVsNotification(this.$t('common.operationSuccess'))
+					this.removeSelectedFileFromList()
+				}
+			}).catch((error) => { })
+		},
+		onSelectCollection(collection) {
+			if (this.selectedFile.is_file != 1) {
+				this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
+					'movie.addToCollectionFolderAlert'), () => {
+						this.onSelectCollectionApi(collection)
+					})
+			} else {
+				this.onSelectCollectionApi(collection)
+			}
+		},
+		createAlbumByFolderApi(albumName) {
+			if (!albumName) {
+				return
+			}
+			//以文件夹创建相册
+			let parentPath = this.selectedFile.path
+			if (!this.selectedFile.root) {
+				parentPath = this.selectedFile.path + this.systemSep + this.selectedFile.filename
+			}
+			this.api
+				.post("/api/ordinaryAlbumApi/addAlbum", {
+					name: albumName,
+					parentPath: parentPath
+				})
+				.then((res) => {
+					if (!res.code) this.showVsNotification(this.$t('common.operationSuccess'))
+					this.showLongPressMenu = false
+				})
+		},
 		onPopstate() {
 			//后退按钮被点击 如果当前正在播放视频 则关闭视频 如果每播放 则后退
 			if (this.showPhotoDetail || this.showVideoDetail) {
@@ -220,10 +372,14 @@ export default {
 			if (this.showPhotoDetail || this.showVideoDetail || this.loading) {
 				return
 			}
-
-			this.dealOnPageScroll(e,()=>{
+			//滚动的时候清空计时器 防止触发菜单
+			if (this.longPressTimeout) {
+				clearTimeout(this.longPressTimeout);
+				this.longPressTimeout = null
+			}
+			this.dealOnPageScroll(e, () => {
 				this.loadNextPage();
-			},(showTopBtn)=>{
+			}, (showTopBtn) => {
 				this.showToTopBtn = showTopBtn
 			})
 		},
@@ -276,16 +432,25 @@ export default {
 					this.$refs.photoDetail.showImg(this.indexFileList, index);
 				});
 				this.pushState()
-
 			} else if (this.indexFileList[index].type == 2) {
-				this.showVideoDetail = true;
-				this.$nextTick(() => {
-					this.$refs.videoPlayer.playVideo(this.indexFileList, index);
-				});
-				this.pushState()
-
+				if (localStorage.getItem("rawPlayer") == "1") {
+					//调用原生播放器
+					jsBridge.playVideo(JSON.stringify({
+						playIndex: index,
+						playList: this.indexFileList,
+						token: this.$store.state.token,
+						fromFileBrower: false,
+						serverType: this.serveType
+					}))
+				} else {
+					//继续使用网页播放器
+					this.showVideoDetail = true;
+					this.$nextTick(() => {
+						this.$refs.videoPlayer.playVideo(this.indexFileList, index);
+					});
+					this.pushState()
+				}
 			}
-
 		},
 		//获取文件树
 		getFileTree(parent, append) {
@@ -369,10 +534,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.item-folder {
-	color: $nas-main;
-}
-
 .filename {
 	color: $nas-text-title;
 	word-break: break-all;
@@ -485,6 +646,7 @@ export default {
 	align-items: center;
 	display: flex;
 	flex-direction: column;
+
 }
 
 
@@ -501,6 +663,7 @@ export default {
 	flex-direction: column;
 	position: absolute;
 	justify-content: center;
+
 	img {
 		width: 25px;
 	}
@@ -512,5 +675,17 @@ export default {
 		color: white;
 		// font-weight: bold;
 	}
+}
+
+.collection-item {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	background-color: #eee;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	cursor: pointer;
+	font-size: 16px;
+	border-radius: 5px;
+	color: $nas-text-grey;
 }
 </style>

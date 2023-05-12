@@ -17,14 +17,14 @@
 					<div v-if="hostName">{{ $t('system.hostName') }}:{{ hostName }}</div>
 				</div>
 				<!-- 用户名 -->
-				<vs-input type="text" color="#F6FAFF" v-model="formInline.username"
+				<vs-input autocapitalize="off" autocorrect="off" type="text" color="#F6FAFF" v-model="formInline.username"
 					:placeholder="$t('registerAdmin.placeholderUsername')">
 					<template #icon>
 						<img src="@/static/login/icon-username.png" class="input-icon" />
 					</template>
 				</vs-input>
 				<!-- 密码 -->
-				<vs-input @keyup.enter="handleSubmit()" type="password" style="margin-top: 30px;" color="#F6FAFF"
+				<vs-input autocapitalize="off" autocorrect="off" @keyup.enter="handleSubmit()" type="password" style="margin-top: 30px;" color="#F6FAFF"
 					v-model="formInline.password" :placeholder="$t('registerAdmin.placeholderPassword')">
 					<template #icon>
 						<img src="@/static/login/icon-password.png" class="input-icon" />
@@ -65,7 +65,7 @@
 				}}</a>
 
 				<!-- 使用专属域名时显示这个选择连接通道 -->
-				<a style="margin-top:10px" v-if="isNasCabDomain && !isFromApp" @click="showConnectChannel()">{{
+				<a style="margin-top:10px" v-if="!isFromApp" @click="showConnectChannel()">{{
 					$t('login.checkConChannel')
 				}}</a>
 			</div>
@@ -87,6 +87,9 @@
 			<div v-for="ip in waitCheckIpList" style="margin-top:10px;">
 				<div style="display:flex;flex-direction:row;align-items: center;justify-content: center;">
 					<div @click="goUrl(ip)"><b>{{ ip.type }}</b><a> {{ ip.url }}</a> </div>
+				</div>
+				<div v-if="ip.urlHttps" style="display:flex;flex-direction:row;align-items: center;justify-content: center;">
+					<div @click="goUrl(ip,true)"><b>{{ ip.type }}</b><a> {{ ip.urlHttps }}</a> </div>
 				</div>
 			</div>
 		</vs-dialog>
@@ -130,21 +133,7 @@ export default {
 	mounted() {
 		this.currentProtocol = window.location.protocol
 		// 请求服务器 获得ip列表
-		if (this.isFromApp) {
-			this.init()
-		} else {
-			if (window.location.hostname.endsWith("nas-cab.com")) {
-				this.isNasCabDomain = true
-			}
-			if (this.isNasCabDomain && !sessionStorage.hadShownUrlDialog) {
-				//这个对话框每次会话只显示一次
-				sessionStorage.hadShownUrlDialog = true
-				this.showConnectChannel()
-			} else {
-				this.init()
-			}
-			
-		}
+		this.init()
 	},
 	methods: {
 		showConnectChannel() {
@@ -164,11 +153,14 @@ export default {
 							res.ipList[i].state = "loading"
 							if (ipItem.type == "ipv4") {
 								ipItem.url = `http://${ipItem.ip}:${res.apiPort}`
+								ipItem.urlHttps = `https://${ipItem.ip}:${res.apiPortHttps}`
 							} else if (ipItem.type == "ipv6") {
 								if(hasIpv6){//ipv6只显示一个就行了
 									continue
 								}
 								ipItem.url = `http://[${ipItem.ip}]:${res.apiPort}`
+								ipItem.urlHttps =  `https://[${ipItem.ip}]:${res.apiPortHttps}`
+
 								hasIpv6=true
 							} else if (ipItem.type == "domain") {
 								ipItem.url = `${this.currentProtocol}//${ipItem.ip}`
@@ -185,12 +177,16 @@ export default {
 				this.init()
 			});
 		},
-		goUrl(ipItem) {
+		goUrl(ipItem,isHttps) {
 			console.log("ipItem.url", ipItem.url)
 			if (window.location.origin == ipItem.url) {
 				this.showUrlDetectDialog = false
 			} else {
-				window.location.href = ipItem.url
+				if(isHttps){
+					window.location.href = ipItem.urlHttps
+				}else{
+					window.location.href = ipItem.url
+				}
 			}
 		},
 		addDetectCountAndCheckIsFinish() {
@@ -332,9 +328,7 @@ export default {
 
 						setTimeout(() => {
 							// 跳转到首页
-							this.$router.push({
-								path: '/home'
-							})
+							this.goHome()
 						}, 500)
 
 						//通知app登陆成功

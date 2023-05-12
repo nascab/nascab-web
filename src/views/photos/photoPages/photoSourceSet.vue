@@ -1,85 +1,107 @@
 <template>
 	<photo-base :initIndex="8">
-	<div class="source-setting-root">
+		<div class="source-setting-root">
+			<!-- 来源设置 -->
+			<div class="content-root">
+				
+				<div class="flex-row" style="justify-content: right;flex-wrap: wrap;">
+					<p class="add-title">{{ $t('setting.photoSourceSettingAlert') }}</p>
+					<vs-button style="margin-left:15px;height:25px" @click="showAddExclude('excludePathPhoto')" border>{{ $t('setting.excludePath') }}</vs-button>
+					<vs-button style="margin-left:5px;height:25px" @click="showAddExclude('excludeFilenamePhoto')" border>{{ $t('setting.excludeFilename') }}</vs-button>
+				</div>
+				<Divider></Divider>
+				<div v-if="pathList.length > 0" style="width: 100%;overflow: auto;height: 100%;">
+					<Card style="margin-bottom: 20px; width: 100%;border-radius: 10px;" v-for="(item, index) in pathList">
+						<!-- 当前路径 -->
+						<div class="item-title">
+							<span style="font-weight:bold">{{ $t('common.path') }} : </span>{{ item.path }}
+						</div>
+						<!-- 当前状态 -->
+						<div class="item-title">
+							<span style="font-weight:bold">{{ $t('common.state') }} : </span><span
+								:style="{ color: item.exist == 0 ? '#DE4545' : '#386DF2' }" style="font-weight: bold;">{{
+									item.exist == 0
+									? $t('common.unavailable') : $t('common.available')
+								}}</span>
+							<!-- 目录已经移动到其他位置 -->
+							<a v-if="item.exist == 0" @click="onShowRelocate(item)" style="margin-left: 30px;">{{
+								$t('setting.source.directoryMoved')
+							}}</a>
+						</div>
+						<!-- 删除按钮 -->
+						<span @click="deletePath(item)"
+							style="position: absolute;right: 10px;bottom: 10px;font-size: 20px;cursor: pointer;color: #99AABF;"
+							class="nasIcons icon-trash"></span>
+					</Card>
+					<!-- 新增按钮 -->
+					<Card style="margin-bottom: 20px; width: 100%;border-radius: 10px;cursor: pointer;">
+						<div @click="selectPath"
+							style="width: 100%;height: 100%;display: flex;justify-content: center;align-items: center;padding-left:30px;padding-right: 30px;">
+							<span class="nasIcons icon-add-album"
+								style="color: #386DF2;font-size: 50px;margin-right: 20px;"></span>
+							<p class="add-text">{{ $t('setting.btAddSource') }}</p>
+						</div>
+					</Card>
 
 
-		<!-- 来源设置 -->
-		<div class="content-root">
-			<p  class="add-title">{{ $t('setting.photoSourceSettingAlert') }}</p>
-			<Divider></Divider>
-			<my-nodata v-if="pathList.length < 1" @onBtnClick="selectPath"
-				:title="$t('setting.photoSourceSettingAlert')"
+				</div>
+			</div>
+			<my-nodata v-if="pathList.length < 1" @onBtnClick="selectPath" :title="$t('setting.photoSourceSettingAlert')"
 				:btnTitle="$t('setting.btAddSource')" style="position: absolute;width: 100%;margin-top: 150px;">
 			</my-nodata>
+			<!-- 文件树 -->
+			<vs-dialog v-model="showChooseFolder" prevent-close scroll :full-screen="isMobile">
+				<template #header>
+					<h4 style="font-size: 16px;">
+						{{ $t('file.chooseFolder') + '[' + $t('file.doubleClickFolderEnter') + ']' }}
+					</h4>
+				</template>
+				<file-select ref="fileSelector" @cancel="showChooseFolder = false" v-if="showChooseFolder" parent="root"
+					:type="2" @onSelect='onSelectPath' @onCancel="showChooseFolder = false"></file-select>
+				<template #footer>
+					<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
+						@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
+				</template>
+			</vs-dialog>
 
-			<div v-else style="width: 100%;overflow: auto;height: 100%;">
-				<Card style="margin-bottom: 20px; width: 100%;border-radius: 10px;" v-for="(item, index) in pathList">
-					<!-- 当前路径 -->
-					<div class="item-title">
-						<span style="font-weight:bold">{{ $t('common.path') }} : </span>{{ item.path }}
-					</div>
-					<!-- 当前状态 -->
-					<div class="item-title">
-						<span style="font-weight:bold">{{ $t('common.state') }} : </span><span
-							:style="{ color: item.exist == 0 ? '#DE4545' : '#386DF2' }" style="font-weight: bold;">{{
-									item.exist == 0
-										? $t('common.unavailable') : $t('common.available')
-							}}</span>
-						<!-- 目录已经移动到其他位置 -->
-						<a v-if="item.exist == 0" @click="onShowRelocate(item)" style="margin-left: 30px;">{{
-								$t('setting.source.directoryMoved')
-						}}</a>
-					</div>
-					<!-- 删除按钮 -->
-					<span @click="deletePath(item)"
-						style="position: absolute;right: 10px;bottom: 10px;font-size: 20px;cursor: pointer;color: #99AABF;"
-						class="nasIcons icon-trash"></span>
-				</Card>
-				<!-- 新增按钮 -->
-				<Card style="margin-bottom: 20px; width: 100%;border-radius: 10px;cursor: pointer;">
-					<div @click="selectPath"
-						style="width: 100%;height: 100%;display: flex;justify-content: center;align-items: center;padding-left:30px;padding-right: 30px;">
-						<span class="nasIcons icon-add-album"
-							style="color: #386DF2;font-size: 50px;margin-right: 20px;"></span>
-						<p class="add-text">{{ $t('setting.btAddSource') }}</p>
-					</div>
-				</Card>
+			<!-- 变更来源文件夹位置 -->
+			<vs-dialog v-model="showChangeSourcePosition" prevent-close scroll :full-screen="isMobile">
+				<template #header>
+					<h4 style="font-size: 16px;">
+						{{ $t('setting.source.reChoose') + selectedItem.path }}
+					</h4>
+				</template>
+				<file-select ref="fileSelector" v-if="showChangeSourcePosition" parent="root" :type="2"
+					@onSelect='onSelectPathRelocate' @onCancel="showChangeSourcePosition = false"></file-select>
+				<template #footer>
+					<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
+						@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
+				</template>
+			</vs-dialog>
 
+
+			<!-- 路径排除对话框 -->
+		<vs-dialog v-model="showAddExcludeDialog"  scroll :full-screen="isMobile">
+			<template #header>
+				<h4 v-if="excludeType" style="font-size: 16px;">
+				{{ excludeType=='excludePathPhoto'?$t('setting.excludePath'):$t('setting.excludeFilename') }}
+				</h4>
+			</template>
+			<!-- 添加路径排除 -->
+			<Input  autocapitalize="off" autocorrect="off" search :enter-button="$t('common.add')" :placeholder="$t('setting.addExcludePathPlaceholder')"
+				@on-search="onAddExcludePath" />
+
+			<p v-if="excludePathList.length > 0" style="text-align: left;margin-top: 15px;color:#999999">
+				{{ excludeType=='excludePathPhoto'?$t('setting.excludePathAlert'):$t('setting.excludeFilenameAlert') }}
+				</p>
+			<div class="flex-row" style="margin-top: 5px;flex-wrap: wrap;">
+				<Tag v-for="item in excludePathList" type="dot" closable color="primary"
+					@on-close="onDeleteExcludePath(item)">{{ item }}</Tag>
 			</div>
+		</vs-dialog>
+
 		</div>
-
-		<!-- 文件树 -->
-		<vs-dialog v-model="showChooseFolder" prevent-close scroll  :full-screen="isMobile">
-			<template #header>
-				<h4 style="font-size: 16px;">
-					{{ $t('file.chooseFolder') + '[' + $t('file.doubleClickFolderEnter') + ']' }}
-				</h4>
-			</template>
-			<file-select ref="fileSelector" @cancel="showChooseFolder = false" v-if="showChooseFolder" parent="root"
-				:type="2" @onSelect='onSelectPath' @onCancel="showChooseFolder = false"></file-select>
-			<template #footer>
-				<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
-					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
-			</template>
-		</vs-dialog>
-
-		<!-- 变更来源文件夹位置 -->
-		<vs-dialog v-model="showChangeSourcePosition" prevent-close scroll  :full-screen="isMobile">
-			<template #header>
-				<h4 style="font-size: 16px;">
-					{{ $t('setting.source.reChoose') + selectedItem.path }}
-				</h4>
-			</template>
-			<file-select ref="fileSelector" v-if="showChangeSourcePosition" parent="root" :type="2" @onSelect='onSelectPathRelocate'
-				@onCancel="showChangeSourcePosition = false"></file-select>
-			<template #footer>
-				<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
-					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
-			</template>
-		</vs-dialog>
-
-	</div>
-</photo-base>
+	</photo-base>
 </template>
 
 <script>
@@ -97,6 +119,8 @@ export default {
 	},
 	mounted() {
 		this.getPathList()
+		this.getExcludeConfig()
+
 	},
 	components: {
 		photoBase,
@@ -107,6 +131,9 @@ export default {
 
 	data() {
 		return {
+			excludeType:"",
+			excludePathList: [],//排除路径列表
+			showAddExcludeDialog: false,//路径排除对话框 
 			showChangeSourcePosition: false,
 			canAddPath: true, //在electron内选文件夹会短时间内回调两次 弄个标记做一下防重
 			showChooseFolder: false,
@@ -119,6 +146,59 @@ export default {
 
 	},
 	methods: {
+		showAddExclude(type){
+			this.excludeType=type
+			this.excludePathList=[]
+			this.getExcludeConfig()
+			this.showAddExcludeDialog=true
+		},
+		onAddExcludePath(newPath) {
+			if (!newPath) return
+			if(newPath.length>35){
+				this.showVsAlertDialog(this.$t('common.alert'),this.$t('common.textTooLong'))
+				return
+			}
+			for (let i in this.excludePathList) {
+				if (this.excludePathList[i] == newPath) {
+					return
+				}
+			}
+			this.excludePathList.push(newPath)
+			this.saveConfig()
+		},
+		onDeleteExcludePath(delPath) {
+			if (!delPath) return
+			for (let i in this.excludePathList) {
+				if (this.excludePathList[i] == delPath) {
+					this.excludePathList.splice(i, 1)
+					break
+				}
+			}
+			this.saveConfig()
+		},
+		getExcludeConfig() {
+			this.api.post('/api/commonApi/getAllConfig', {
+				hideLoading: true,
+				keys: `('${this.excludeType}')`
+			}).then((res) => {
+				for (let i = 0; i < res.data.allConfig.length; i++) {
+					let configItem = res.data.allConfig[i]
+					if (configItem.title == this.excludeType) {
+						this.excludePathList = JSON.parse(configItem.value)
+					}
+				}
+			}).catch((error) => { })
+		},
+		saveConfig() {
+			let params = {}
+			params[this.excludeType]=this.excludePathList
+			this.api.post('/api/commonApi/saveConfig', params).then((res) => {
+				if (!res.code) {
+					this.showVsNotification(this.$t('common.operationSuccess'))
+					this.getExcludeConfig()
+				}
+			}).catch((error) => { })
+		},
 		onFolderBack() {
 			console.log('onFolderBack')
 			console.log(this.$refs.fileSelector)
@@ -181,7 +261,10 @@ export default {
 					id: path.id
 				}).then((res) => {
 					if (!res.code) {
-						this.getPathList()
+						this.showVsAlertDialog(this.$t('common.alert'), this.$t('setting.sourceFolderDeleteInBg'), () => {
+							this.getPathList()
+						})
+
 					}
 				}).catch((error) => { })
 			})
@@ -191,10 +274,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
-
 .source-setting-root {
-	background-color: rgba(255, 255, 255,0.6);
+	background-color: rgba(255, 255, 255, 0.6);
 	padding: 10px;
 	border-top-left-radius: 20px;
 	border-top-right-radius: 20px;
@@ -230,6 +311,7 @@ export default {
 	height: 100%;
 	position: relative;
 }
+
 .item-title {
 	word-break: break-all;
 	margin-top: 10px;
@@ -242,5 +324,4 @@ export default {
 .add-text {
 	color: $nas-grey;
 	font-size: 20px;
-}
-</style>
+}</style>

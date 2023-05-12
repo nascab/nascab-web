@@ -13,14 +13,14 @@
 				<!-- title -->
 				<div style="font-size:40px;margin-bottom: 50px;">{{ $t('registerAdmin.registerAdmin') }}</div>
 				<!-- 用户名 -->
-				<vs-input type="text" color="#F6FAFF" v-model="formInline.username"
+				<vs-input autocapitalize="off" autocorrect="off" type="text" color="#F6FAFF" v-model="formInline.username"
 					:placeholder="$t('registerAdmin.placeholderUsername')">
 					<template #icon>
 						<img src="@/static/login/icon-username.png" class="input-icon" />
 					</template>
 				</vs-input>
 				<!-- 密码 -->
-				<vs-input type="password" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.password"
+				<vs-input autocapitalize="off" autocorrect="off" type="password" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.password"
 					:placeholder="$t('registerAdmin.placeholderPassword')">
 					<template #icon>
 						<img src="@/static/login/icon-password.png" class="input-icon" />
@@ -28,7 +28,7 @@
 				</vs-input>
 
 				<!-- 密保问题 -->
-				<vs-input style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.question"
+				<vs-input autocapitalize="off" autocorrect="off" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.question"
 					:placeholder="$t('registerAdmin.placeholderQuestion')">
 					<template #icon>
 						<img src="@/static/login/icon-question.png" class="input-icon" />
@@ -36,7 +36,7 @@
 				</vs-input>
 
 				<!-- 密保答案 -->
-				<vs-input type="text" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.answer"
+				<vs-input autocapitalize="off" autocorrect="off" type="text" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.answer"
 					:placeholder="$t('registerAdmin.placeholderAnswer')">
 					<template #icon>
 						<img src="@/static/login/icon-answer.png" class="input-icon" />
@@ -77,11 +77,7 @@ export default {
 		};
 	},
 	methods: {
-		goHome() {
-			this.$router.push({
-				path: '/home'
-			})
-		},
+
 		handleSubmit() {
 			if (this.formInline.username.length < 6) {
 				return this.showVsNotification(this.$t('registerAdmin.usernameLengthLimit'))

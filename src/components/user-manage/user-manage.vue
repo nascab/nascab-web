@@ -27,7 +27,7 @@
 				</div>
 			</div>
 
-			<!-- 添加相册 -->
+			<!-- 添加用户 -->
 			<div @click="showAddDialog" :style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }"
 				style="background-color: white;border-radius: 10px;display: flex;flex-direction: column;justify-content: center;cursor: pointer;">
 				<span class="nasIcons icon-add-album icon-add"></span>
@@ -48,7 +48,7 @@
 
 
 		<!-- 权限设置modal -->
-		<vs-dialog prevent-close blur v-model="showPowerSet">
+		<vs-dialog prevent-close blur v-model="showPowerSet" scroll>
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ $t('user.powerSet') + ':' + selectedUser.username }}

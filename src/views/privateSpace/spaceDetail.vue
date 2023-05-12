@@ -71,7 +71,8 @@
 											<!-- 播放按钮 -->
 											<div class="icon-play-root">
 												<!-- 视频的时长 -->
-												<span style="color: white;font-size: 30px;" class="nasIcons icon-play"></span>
+												<span style="color: white;font-size: 30px;"
+													class="nasIcons icon-play"></span>
 												<p class="icon-duration">{{ utils.formatSeconds(file.duration) }}
 												</p>
 
@@ -84,7 +85,8 @@
 
 										<!-- hover层 -->
 										<div class="photo-hover-mask" v-show="file.hover && !file.selected">
-											<span @click.stop="hoverSelect(index)" class="photo-select-icon-hover nasIcons icon-radio-unchecked"></span>
+											<span @click.stop="hoverSelect(index)"
+												class="photo-select-icon-hover nasIcons icon-radio-unchecked"></span>
 										</div>
 										<!-- 选择层 -->
 										<div class="photo-select-mask" v-if="file.selected">
@@ -467,15 +469,25 @@ export default {
 				}
 				this.dataList[i].type = 2
 				useList.push(this.dataList[i])
-
 			}
-			this.showVideoDetail = true;
-			console.log(this.dataList)
-			setTimeout(() => {
-				console.log('useList', useList)
-				this.$refs.videoPlayer.playVideo(useList, showIndex);
-			}, 500);
-			this.pushState()
+			console.log("useList",useList)
+			if (localStorage.getItem("rawPlayer") == "1") {
+				//调用原生播放器
+				jsBridge.playVideo(JSON.stringify({
+					playIndex: showIndex,
+					playList: useList,
+					token: this.$store.state.token,
+					fromFileBrower: false,
+					serverType: "photo"
+				}))
+			} else {
+				//继续使用网页播放器
+				this.showVideoDetail = true;
+				setTimeout(() => {
+					this.$refs.videoPlayer.playVideo(useList, showIndex);
+				}, 500);
+				this.pushState()
+			}
 		},
 		clickFile(idx) {
 			if (this.editMode) {

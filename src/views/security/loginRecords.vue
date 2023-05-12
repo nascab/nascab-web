@@ -5,19 +5,19 @@
 				<template #thead>
 					<vs-tr>
 						<vs-th>
-							{{$t('security.username')}}
+							{{ $t('security.username') }}
 						</vs-th>
 						<vs-th>
-							{{$t('security.type')}}
+							{{ $t('security.type') }}
 						</vs-th>
 						<vs-th>
 							IP
 						</vs-th>
 						<vs-th>
-							{{$t('security.client')}}
+							{{ $t('security.client') }}
 						</vs-th>
 						<vs-th>
-							{{$t('security.time')}}
+							{{ $t('security.time') }}
 						</vs-th>
 					</vs-tr>
 				</template>
@@ -33,7 +33,7 @@
 							{{ tr.ip }}
 						</vs-td>
 						<vs-td style="text-align: left;">
-							<vs-tooltip >
+							<vs-tooltip>
 								{{ tr.client }}
 								<template #tooltip>
 									{{ tr.remark }}
@@ -46,8 +46,7 @@
 					</vs-tr>
 				</template>
 				<template #notFound>
-					<my-nodata 
-						:title="$t('common.noMore')" >
+					<my-nodata :title="$t('common.noMore')">
 					</my-nodata>
 				</template>
 
@@ -60,69 +59,73 @@
 
 	</div>
 </template>
+
+
 <script>
-	export default {
-		mounted() {
+import utils from "@/plugins/utils";
+
+export default {
+	mounted() {
+		this.getRecordList()
+	},
+	components: {
+
+	},
+	watch: {
+		currentPage: function (newVal, oldVal) {
+			this.oldPage = oldVal
 			this.getRecordList()
-		},
-		components: {
+		}
+	},
+	data() {
+		return {
+			loading: false,
+			oldPage: 1,
+			currentPage: 1,
+			pageCount: 1,
+			recordList: [],
+			pageSize: 10,
+			type: ''
+		}
+	},
+	computed: {
 
-		},
-		watch: {
-			currentPage: function(newVal, oldVal) {
-				this.oldPage = oldVal
-				this.getRecordList()
-			}
-		},
-		data() {
-			return {
-				loading: false,
-				oldPage: 1,
-				currentPage: 1,
-				pageCount: 1,
-				recordList: [],
-				pageSize: 10,
-				type: ''
-			}
-		},
-		computed: {
-
-		},
-		methods: {
-			getRecordList() {
-				this.loading = true
-				this.api.post('/api/usersApi/getRecordList', {
-					page: this.currentPage,
-					pageSize: this.pageSize,
-					type: this.type
-				}).then((res) => {
-					this.recordList = res.data
-					for (let i in this.recordList) {
-						if (this.recordList[i].type == 'login') {
-							this.recordList[i].typeStr = this.$t('security.login')
-						} else if (this.recordList[i].type == 'changePassword') {
-							this.recordList[i].typeStr = this.$t('security.changePwd')
-						}else{
-							this.recordList[i].typeStr=this.recordList[i].type
-						}
-
-						this.recordList[i].create_time=this.$moment(this.recordList[i].create_time).local().format('YYYY-MM-DD HH:mm:ss')
-
+	},
+	methods: {
+		getRecordList() {
+			this.loading = true
+			this.api.post('/api/usersApi/getRecordList', {
+				page: this.currentPage,
+				pageSize: this.pageSize,
+				type: this.type
+			}).then((res) => {
+				this.recordList = res.data
+				for (let i in this.recordList) {
+					if (this.recordList[i].type == 'login') {
+						this.recordList[i].typeStr = this.$t('security.login')
+					} else if (this.recordList[i].type == 'changePassword') {
+						this.recordList[i].typeStr = this.$t('security.changePwd')
+					} else {
+						this.recordList[i].typeStr = this.recordList[i].type
 					}
-					this.loading = false
-					this.pageCount = res.pageCount
-				}).catch((error) => {
-					this.currentPage = this.oldPage
-					this.loading = false
-				})
-			}
+
+					this.recordList[i].create_time = utils.formatTimeStamp(this.recordList[i].create_time)
+
+				}
+				this.loading = false
+				this.pageCount = res.pageCount
+			}).catch((error) => {
+				this.currentPage = this.oldPage
+				this.loading = false
+			})
 		}
 	}
+}
 </script>
 <style lang="scss" scoped>
-	.root {
-		flex-direction: column;
-		display: flex;
-		align-items: center;
-	}
+.root {
+	flex-direction: column;
+	display: flex;
+	align-items: center;
+}
 </style>

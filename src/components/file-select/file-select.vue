@@ -1,7 +1,7 @@
 <template>
 	<div class="select-root">
 		<div style="padding-bottom:80px">
-			<folder-brower @onSelect="onSelect" :fileType="fileType" :selectMode="true" ref="fileBrower"
+			<folder-brower @onSelect="onSelect" :fileType="fileType" :initPath="initPath" :selectMode="true" ref="fileBrower"
 				@onParentChange="onParentChange">
 			</folder-brower>
 		</div>
@@ -15,6 +15,10 @@ import fileSelectBar from "@/components/file-select/file-select-bar.vue"
 
 export default {
 	props: {
+		initPath: {
+			default: '',
+			type: String
+		},
 		fileType: { //显示的类型 0全部  2文件夹
 			default: 2,
 			type: Number

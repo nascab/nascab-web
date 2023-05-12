@@ -2,7 +2,7 @@
 	<div>
 		<Form prop="taskName" ref="taskData" :model="taskData">
 			<FormItem :label="$t('backup.taskName')">
-				<Input v-model="taskData.taskName"></Input>
+				<Input autocapitalize="off" autocorrect="off"  v-model="taskData.taskName"></Input>
 			</FormItem>
 			<!-- 备份频率 1：一次 2:每天 3:每周 4:每月-->
 			<FormItem :label="$t('backup.backupRate') + ':'">
@@ -71,8 +71,8 @@
 			<Divider></Divider>
 			<!-- 备份文件夹 -->
 			<FormItem>
-				<Button style="border-radius: 20px;" type="primary"
-					@click="choosePath('source')">{{ $t('backup.choosePathWantBakcup') }}</Button>
+				<Button style="border-radius: 20px;" type="primary" @click="choosePath('source')">{{
+					$t('backup.choosePathWantBakcup') }}</Button>
 			</FormItem>
 
 			<h4 v-if="taskData.sourceList.length > 0">{{ $t('backup.backupPath') }}：</h4>
@@ -84,11 +84,11 @@
 			<Divider></Divider>
 			<!-- 目标文件夹 -->
 			<FormItem>
-				<Button style="border-radius: 20px;" type="primary"
-					@click="choosePath('target')">{{ $t("backup.chooseTargetPath") }}</Button>
+				<Button style="border-radius: 20px;" type="primary" @click="choosePath('target')">{{
+					$t("backup.chooseTargetPath") }}</Button>
 			</FormItem>
 
-			<!-- <h4 v-if="taskData.targetPath" style="color:red">{{$t('backup.youFileWillBeHere')}}</h4> -->
+			<h4 v-if="taskData.targetPath" style="color:red">{{ $t('backup.youFileWillBeHere') }}</h4>
 			<h4 style="margin-top:10px" v-if="taskData.targetPath">{{ $t('backup.youFileWillBeHereB') }}</h4>
 
 			<Tag v-if="taskData.targetPath && showTargetPathList.length < 1" style="margin-top: 5px;">
@@ -99,8 +99,8 @@
 
 			<Divider></Divider>
 			<!-- 排除选项 -->
-			<Button style="width: 100px;border-radius: 20px;" type="primary"
-				@click="showAddExclude = true">{{ $t("backup.addExclude") }}</Button>
+			<Button style="width: 100px;border-radius: 20px;" type="primary" @click="showAddExclude = true">{{
+				$t("backup.addExclude") }}</Button>
 			<!-- 已经添加的排除列表 -->
 			<h4 v-if="taskData.excludeList.length > 0">{{ $t('backup.excludeList') }}：</h4>
 			<Tag @on-close="taskData.excludeList.splice(index, 1)" closable style="margin-top: 5px;"
@@ -110,7 +110,7 @@
 			<Divider></Divider>
 		</Form>
 
-		<vs-dialog v-model="showChooseFolder" prevent-close scroll  :full-screen="isMobile">
+		<vs-dialog v-model="showChooseFolder" prevent-close scroll :full-screen="isMobile">
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ $t('file.chooseFolder') + '[' + $t('file.doubleClickFolderEnter') + ']' }}
@@ -132,7 +132,7 @@
 				</h4>
 			</template>
 			<div style="max-width: 500px;">{{ $t('backup.excludeExample') }}</div>
-			<Input v-if="showAddExclude" style="margin-top: 10px;margin-bottom: 10px;" v-model="excludeValue" />
+			<Input  autocapitalize="off" autocorrect="off" v-if="showAddExclude" style="margin-top: 10px;margin-bottom: 10px;" v-model="excludeValue" />
 			<vs-button style="margin-top: 10px;margin-bottom: 10px;width: 100%;border-radius: 20px;" @click="addExclude">
 				{{ $t('common.ok') }}
 			</vs-button>
@@ -283,15 +283,19 @@ export default {
 			if (this.type == "update") {
 				params.id = this.taskId
 			}
-			this.api
-				.post("/api/backupApi/createTask", params)
-				.then((res) => {
-					if (!res.code) {
-						this.showVsNotification(this.$t('common.operationSuccess'))
-						this.$emit('onClose')
-					}
-				})
-				.catch((error) => { });
+
+			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
+				'backup.youFileWillBeHere'), () => {
+					this.api
+						.post("/api/backupApi/createTask", params)
+						.then((res) => {
+							if (!res.code) {
+								this.showVsNotification(this.$t('common.operationSuccess'))
+								this.$emit('onClose')
+							}
+						})
+						.catch((error) => { });
+				},null,this.$t('common.iKnow'))
 		},
 		choosePath(pathType) {
 			this.selectPathType = pathType
@@ -305,17 +309,17 @@ export default {
 			}
 			for (let i in this.taskData.sourceList) {
 				let sourcePath = this.taskData.sourceList[i]
-				if(sourcePath.indexOf('/')!=-1){
+				if (sourcePath.indexOf('/') != -1) {
 					this.showTargetPathList.push(this.taskData.targetPath + sourcePath.substring(sourcePath.lastIndexOf('/')))
-				}else if(sourcePath.indexOf('\\')!=-1){
+				} else if (sourcePath.indexOf('\\') != -1) {
 					//windows
 					this.showTargetPathList.push(this.taskData.targetPath + sourcePath.substring(sourcePath.lastIndexOf('\\')))
 				}
 			}
 		},
 		onSelectPath(path) {
-			if(path.length==3||path.length==4){
-				if(path.endsWith('\\')){
+			if (path.length == 3 || path.length == 4) {
+				if (path.endsWith('\\')) {
 					return this.showVsNotification(this.$t('backup.cannotUseRoot'))
 				}
 			}
@@ -338,6 +342,4 @@ export default {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

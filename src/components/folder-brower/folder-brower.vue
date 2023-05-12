@@ -26,8 +26,12 @@
 						@click="(e) => { clickTree(e, file, index) }">
 						<div style="display: flex;justify-content: center;align-items: center;"
 							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px', 'margin': itemMargin / 2 + 'px' }">
-							<span v-if="file.type == 2" class="nasIcons icon-img-folder item-icon-folder"
-								:style="{ 'font-size': itemWidth + 'px' }"></span>
+
+							<img v-if="file.type == 2 && !file.isCustomPath" :style="{ 'width': itemWidth + 'px' }"
+								src="@/static/folder/icon_folder.png">
+							<img v-if="file.type == 2 && file.isCustomPath" :style="{ 'width': itemWidth + 'px' }"
+								src="@/static/folder/icon_custom.png">
+
 							<!-- 视频和图片显示缩略图 -->
 							<img @dragstart.prevent class="item-img"
 								v-if="file.type == 1 && (file.fileType == 'image' || file.fileType == 'video')"
@@ -40,8 +44,11 @@
 							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'file'"
 								src="@/static/icon-folder-file.png" />
 						</div>
+
+
 						<!-- 文件名称 -->
-						<p class="filename" :style="{ 'width': itemWidth + 'px' }">{{ file.name }}</p>
+						<p class="filename" :style="{ 'width': itemWidth + 'px' }">{{
+							file.isCustomPath && file.remark ? `[${file.remark}] ${file.name}` : file.name }}</p>
 						<div class="mask-root" v-if="!selectMode && selectedIndex != index">
 							<!-- hover层 -->
 							<div class="hover-mask" v-if="!selectMode && file.hover">
@@ -58,9 +65,29 @@
 						</div>
 					</div>
 				</div>
+
+				<div @click="$refs.addLocalPathDialog.setShow(true)"
+					v-if="isRoot && $store.state.currentUser.is_admin == 1 && source == 'list'"
+					:class="{ 'list-item-root-list': showType == 'list' }" :style="{ 'padding': itemMargin / 2 + 'px' }">
+					<div :class="{ 'list-item-list': showType == 'list', 'list-item-grid': showType == 'grid' }">
+						<div style="cursor: pointer; display: flex;justify-content: center;align-items: center;"
+							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px', 'margin': itemMargin / 2 + 'px' }">
+							<img :style="{ 'width': itemWidth + 'px' }" src="@/static/folder/icon_custom_add.png">
+						</div>
+						<!-- 文件名称 -->
+						<p class="filename" :style="{ 'width': itemWidth + 'px' }">{{ $t('common.add') }}</p>
+					</div>
+				</div>
+				<!-- 最大显示数量提示 -->
 				<div v-if="fileTree.length >= 1000" class="max-count">{{ $t("file.maxShowCountAlert") }}</div>
 			</div>
 		</div>
+		<!-- 手动新增本地路径 -->
+		<my-dialog-input v-if="isRoot && $store.state.currentUser.is_admin == 1"
+			@onOkClick="(inputPath, pathName) => operationLocalPath('add', inputPath, null, pathName)" :showCloseBtn="true"
+			ref="addLocalPathDialog" :title="$t('file.addLocalPath')" :content="$t('file.addLocalPathAlert')"
+			:placeholder="$t('file.inputPath')" :contentB="$t('common.name')">
+		</my-dialog-input>
 
 		<!-- 底部多选操作条 -->
 		<div class="bottom-select-root" v-if="doingSelect">
@@ -104,29 +131,23 @@
 				style="display: flex;flex-direction: column;justify-content: flex-start;max-width: 600px;">
 				<div class="item-attr" v-if="selectedFile">{{ $t('file.location') }}:<span>{{ selectedFile.tipName
 				}}</span></div>
-				<div class="item-attr">{{ $t('movie.createTime') }}:<span>{{ selectedFileAttr.ctime |
-					dateFormat('YYYY-MM-DD HH: mm')
+				<div class="item-attr">{{ $t('movie.createTime') }}:<span>{{ utils.formatTimeStamp(selectedFileAttr.ctime)
 				}}</span></div>
-				<div class="item-attr">{{ $t('file.modifyTime') }}:<span>{{ selectedFileAttr.mtime |
-					dateFormat('YYYY-MM-DD HH: mm')
+				<div class="item-attr">{{ $t('file.modifyTime') }}:<span>{{ utils.formatTimeStamp(selectedFileAttr.mtime)
 				}}</span></div>
 				<div v-if="selectedFileAttr.sizeStr" class="item-attr">
 					{{ $t('file.size') }}:<span>{{ selectedFileAttr.sizeStr }}</span></div>
 			</div>
 		</vs-dialog>
 
-		<!-- 返回顶部按钮 -->
-		<!-- <my-btn-icon v-if="showToTopBtn && !selectMode" style="position:fixed;right:30px;bottom:10px;" iIcon="md-arrow-up"
-			@click="scrollToTop"></my-btn-icon> -->
 
 
 		<!-- 手机端长按条目的时候弹出的菜单 -->
 		<vs-dialog v-model="showLongPressMenu">
-			<h4 v-if="selectedFile" class="max-line-one" style="word-break:break-all">{{ selectedFile.name }}</h4>
-
+			<h3 v-if="selectedFile" class="max-line-one" style="word-break:break-all;margin-top: 10px;">{{ selectedFile.name
+			}}</h3>
 			<my-selector-phone :optionList="rightMenuList"
 				@onItemClick="(item) => (rightMenuClick(null, item.type))"></my-selector-phone>
-
 		</vs-dialog>
 		<!-- 新建文件夹 -->
 		<my-dialog-input @onOkClick="createNewFolder" :showCloseBtn="true" ref="newFolderDialog"
@@ -172,6 +193,7 @@ import axios from "@/plugins/axios";
 import base64 from '@/plugins/base64/index.js'
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import jsBridge from "@/plugins/jsBridge"
+import utils from "@/plugins/utils";
 
 //照片点击详情
 import photoDetail from "@/views/photos/components/photoDetail.vue";
@@ -188,6 +210,7 @@ export default {
 			default: false,
 			type: Boolean
 		},
+		//sourceFolderPhoto或sourceFolderMovie为选择来源文件夹 用户给子用户授权来源文件夹子目录的时候使用
 		initPath: {
 			default: '',
 			type: String
@@ -203,6 +226,7 @@ export default {
 	},
 	data() {
 		return {
+			showAddLocalPath: false,//新增本地路径的对话框是否显示
 			supportUnzipFormat: ['.tar', '.gzip', '.tgz', '.zip'],//支持的解压缩格式
 			currentOperationType: "",//当前正在进行的文件操作类型
 			showChooseTargetFolder: false,//选择目的地文件夹的dialog是否显示 现在用于zip和unzip
@@ -213,7 +237,6 @@ export default {
 			newWindowList: [],//新窗口列表
 			showLongPressMenu: false,
 			showPhotoDetail: false,
-			showToTopBtn: false,
 			attrDialogIsShow: false,//属性对话框是否显示
 			rightMenuList: [],
 			itemBaseWidth: 100,
@@ -241,9 +264,13 @@ export default {
 		this.init()
 		//当接收到这个事件 证明要上传到当前文件夹 这时候应该呼出上传组件 
 		//如果是手机端 应该调用手机上传页面并且传入路径
-		this.$bus.$on("onUploadToCurrentPath", () => {
-			this.switchUpload(true, this.parent)
-		})
+		if (!this.showInWindow) {
+			this.$bus.$on("onUploadToCurrentPath", () => {
+				console.log("onUploadToCurrentPath")
+				this.switchUpload(true, this.parent)
+			})
+		}
+
 		window.addEventListener("scroll", this.onPageScroll, true);
 		//监听后退事件
 		window.addEventListener('popstate', this.onPopstate)
@@ -252,22 +279,58 @@ export default {
 		}
 	},
 	beforeDestroy() {
-		this.$bus.$off("onUploadToCurrentPath")
+		console.log("beforeDestroy")
+		if (!this.showInWindow) {
+			this.$bus.$off("onUploadToCurrentPath")
+		}
 		window.removeEventListener("scroll", this.onPageScroll, true);
 		window.removeEventListener('popstate', this.onPopstate);
 
 	},
 	methods: {
-		//压缩 解压选择目的地文件夹
+		operationLocalPath(operationType, localPath, pathId, pathName) {
+			this.api.post('/api/file/operationPathMount',
+				{
+					url: localPath,
+					type: 'local',
+					id: pathId,
+					pathName: pathName,
+					operationType: operationType
+				}).then((res) => {
+					if (!res.code) {
+						//操作已完成
+						if (operationType == 'get') {
+							console.log(res.data)
+							if (res.data) {
+								//把自定义的路径添加到现有列表
+								for (let i in res.data) {
+									this.fileTree.push({
+										parent: "",
+										pathSep: this.pathSep,
+										name: res.data[i].url,
+										fileFullPath: res.data[i].url,
+										type: 2,
+										isCustomPath: true,
+										customPathId: res.data[i].id,
+										remark: res.data[i].remark
+									})
+								}
+							}
+						} else {
+							this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.operationSuccess'))
+							this.getFileTree(this.parent)
+						}
+					}
+				})
+		},
+		//压缩 解压选择目的地文件夹后回调
 		onSelectTargetFolder(targetFolder) {
-			console.log("this.currentOperationType", this.currentOperationType)
 			if (this.currentOperationType == 'ZIP' || this.currentOperationType == 'UNZIP') {
 				this.zipApi(targetFolder)
 			}
 			this.showChooseTargetFolder = false
 		},
 		onSelectAll(isSelectAll) {
-			console.log("onSelectAll", isSelectAll)
 			if (isSelectAll) {
 				for (let i in this.fileTree) {
 					this.fileTree[i].selected = true
@@ -311,7 +374,6 @@ export default {
 		},
 		//目录点击事件
 		clickTree(e, data, index) {
-			console.log("clickTree", index)
 			if (this.doingSelect) {
 				this.selectFileItem(data, index)
 			} else {
@@ -399,7 +461,6 @@ export default {
 				return this.showVsAlertDialog(this.$t('common.alert'), this.$t('file.noSelectAnything'))
 			}
 			let copyPathList = JSON.parse(localStorage.copyPath)
-			console.log("copyPathList", copyPathList)
 			let operationType = localStorage.operationType
 			if (this.isRoot || !this.parent) {
 				//不能复制到根目录
@@ -441,7 +502,6 @@ export default {
 			})
 		},
 		scrollToTop() {
-			console.log('scrollToTop')
 			this.$refs.wrapper.scrollTo({ top: 0, behavior: 'smooth' })
 		},
 		touchstart(item, index) {
@@ -639,7 +699,13 @@ export default {
 					}
 				]
 			})
-
+			//自定义路径 添加一个删除
+			if (file.isCustomPath) {
+				this.rightMenuList.push({
+					text: this.$t('file.deletePath'),
+					type: "DELETE_CUSTOM_PATH",
+				})
+			}
 		},
 		//递归调用删除接口进行删除
 		deleteBySelectedIndexOnByOne(dealingIndex, sucCount, errCount) {
@@ -693,7 +759,6 @@ export default {
 			} else if (type == "REFRESH") {
 				this.refresh()
 			} else if (type == "OPEN_NEW_WINDOW") {
-				console.log("this.newWindowList", this.newWindowList)
 				this.newWindowList.push({
 					show: true,
 					initPath: this.getFileFullPath(this.selectedFile)
@@ -731,10 +796,8 @@ export default {
 				//下载this.selectedFile
 				this.downloadFile(this.getRawUrl(this.selectedIndex))
 			} else if (type == "CANCEL_SELECT") {
-				console.log("取消多选被点击")
 				this.cancelMultipleSelect()
 			} else if (type == "MULTIPLE_SELECT") {
-				console.log("进入多选")
 				this.selectFileItem(this.selectedFile, this.selectedIndex)
 			} else if (type == "SHOW_TYPE_GRID") {
 				this.showType = 'grid'
@@ -750,6 +813,9 @@ export default {
 			} else if (type == "UNZIP") {
 				//压缩
 				this.showChooseTargetFolder = true
+			} else if (type == "DELETE_CUSTOM_PATH") {
+				//删除自定义路径
+				this.operationLocalPath('delete', null, this.selectedFile.customPathId)
 			}
 			localStorage.setItem("folderBrowerShowType", this.showType)
 		},
@@ -795,7 +861,6 @@ export default {
 			for (let i = 0; i <= index; i++) {
 				enterPath += this.parentPathList[i]
 			}
-			console.log('enterPath', enterPath)
 			if (enterPath.length > 3 && enterPath.endsWith(this.pathSep)) {
 				enterPath = enterPath.substring(0, enterPath.lastIndexOf(this.pathSep))
 			}
@@ -808,15 +873,12 @@ export default {
 			for (let i in pathArr) {
 				if (this.platform == "win32") {
 					let pushItem = pathArr[i]
-					console.log("pushItem", pushItem)
-
 					if (!pushItem) {
 						continue
 					}
 					if (i != pathArr.length - 1) {
 						pushItem += this.pathSep
 					}
-					console.log("push", pushItem)
 					this.parentPathList.push(pushItem)
 				} else {
 					if (pathArr[i]) {
@@ -828,7 +890,6 @@ export default {
 		init() {
 			this.isRoot = true
 			this.parent = this.initPath
-			console.log("this.parent", this.parent)
 			this.fileTree = []
 
 			if (this.source == 'list') {
@@ -847,7 +908,6 @@ export default {
 		},
 		onSearch(searchStr) {
 			if (!this.isRoot) {
-				console.log("文件浏览器搜索当前路径", searchStr)
 				this.getFileTree(this.parent, false, searchStr)
 			}
 		},
@@ -892,6 +952,9 @@ export default {
 			}
 		},
 		getFileFullPath(fileObj) {
+            if (this.parent == "sourceFolderPhoto" || this.parent == "sourceFolderMovie") {
+				return fileObj.fileFullPath
+			}
 			//根据文件对象拼接完整访问物理路径
 			let fileName = fileObj.name
 			let prix = fileObj.parent == fileObj.pathSep ? fileObj.parent : fileObj.parent + fileObj.pathSep
@@ -909,11 +972,14 @@ export default {
 			return prix + fileName
 		},
 		goBack() {
+			//选择来源文件夹状态 直接返回到根目录
+			if(this.initPath=="sourceFolderPhoto"||this.initPath=="sourceFolderMovie"){
+				return this.getFileTree(this.initPath, true)
+			}
 			//点击了返回上一级
 			let lastSepIndex = this.parent.lastIndexOf(this.pathSep) > 0 ? this.parent.lastIndexOf(this.pathSep) :
 				1
 			let lastPath = this.parent.substring(0, lastSepIndex)
-			console.log('this.parent', this.parent)
 			if (this.platform == "win32" && lastPath.length == 2 && lastPath[1] == ':') {
 				//处理特殊情况 就是返回的上一级是个盘符如 D: 需要后面拼接一下分隔符
 				lastPath += this.pathSep
@@ -922,12 +988,13 @@ export default {
 				//处理特殊情况 当前处于某个盘的根目录 D:\ 返回上级的话要返回根目录
 				lastPath = ''
 			}
-			console.log('lastPath', lastPath)
 			this.getFileTree(lastPath, true)
 		},
 		enterPath(fileObj) {
 			// 进入文件夹
-			this.getFileTree(this.getFileFullPath(fileObj))
+			let enterFullPath = this.getFileFullPath(fileObj)
+			console.log("enterFullPath", enterFullPath)
+			this.getFileTree(enterFullPath)
 		},
 
 		//点击了图片 跳转到图片详情
@@ -979,13 +1046,23 @@ export default {
 					type: 2
 				})
 			}
-			this.showVideoDetail = true;
-			this.$nextTick(() => {
-				console.log(useList)
-				this.$refs.videoPlayer.playVideo(useList, showIndex);
-			});
-			this.pushState()
-
+			if (localStorage.getItem("rawPlayer") == "1") {
+				//调用原生播放器
+				jsBridge.playVideo(JSON.stringify({
+					playIndex: showIndex,
+					playList: useList,
+					token: this.$store.state.token,
+					fromFileBrower:true,
+					serverType:"photo"
+				}))
+			} else {
+				//继续使用网页播放器
+				this.showVideoDetail = true;
+				this.$nextTick(() => {
+					this.$refs.videoPlayer.playVideo(useList, showIndex);
+				});
+				this.pushState()
+			}
 		},
 		//添加到最近访问或者收藏
 		addFileRecord(type, fileObj) {
@@ -1004,7 +1081,6 @@ export default {
 				.post("/api/fileRecordApi/addFileRecord", params).then((res) => {
 					if (!res.code) {
 						if (type == 'collect') {
-							console.log('collectSuccess')
 							this.showVsNotification(this.$t('file.collectSuccess'));
 						}
 					}
@@ -1121,7 +1197,6 @@ export default {
 			}
 			this.api
 				.post("/api/file/getPathTree", params).then((res) => {
-					console.log(res)
 					this.selectedIndex = null
 					this.selectedFile = null
 					this.cancelMultipleSelect()
@@ -1161,10 +1236,14 @@ export default {
 							}
 							children[i].url = axios.getTinyUrlByFilePath(children[i].fileFullPath)
 						}
-						console.log(children)
 						this.fileTree = children
-						this.showToTopBtn = this.fileTree.length > 100
 						this.$emit('onParentChange', this.parent, this.isRoot)
+
+						if (this.isRoot) {
+							//获取用户自定义路径
+							console.log("获取用户自定义路径")
+							this.operationLocalPath('get', null)
+						}
 						this.$nextTick(() => {
 							this.calImageWidth()
 						})

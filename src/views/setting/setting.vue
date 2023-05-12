@@ -26,10 +26,14 @@
 				<user-manage v-if="leftIndex == 'userManage'"></user-manage>
 				<!-- 系统设置 -->
 				<system-set v-if="leftIndex == 'systemSetting'"></system-set>
+				<!-- 个性化 -->
+				<custom v-if="leftIndex == 'custom'" @onToLogin="switchToNasLogin"></custom>
+				<!-- ddns -->
+				<ddns v-if="leftIndex == 'ddns'" @onToLogin="switchToNasLogin"></ddns>
 				<!-- 远程访问 -->
-				<remote-access v-if="leftIndex == 'remoteAccess'" @onToLogin="switchToNasLogin"></remote-access>
+				<!-- <remote-access v-if="leftIndex == 'remoteAccess'" @onToLogin="switchToNasLogin"></remote-access> -->
 				<!-- nascab账号 -->
-				<nascab-account ref="nasAccount" v-if="leftIndex =='nasAccount'"></nascab-account>
+				<nascab-account v-if="leftIndex == 'nasAccount'"></nascab-account>
 			</div>
 		</div>
 	</div>
@@ -42,6 +46,8 @@ import commonSet from "@/views/setting/commonSet.vue"
 import systemSet from "@/views/setting/systemSet.vue"
 import nascabAccount from "@/views/setting/nascabAccount.vue"
 import remoteAccess from "@/views/setting/remoteAccess.vue"
+import ddns from "@/views/setting/ddns.vue"
+import custom from "@/views/setting/custom.vue"
 
 export default {
 	mounted() {
@@ -70,6 +76,8 @@ export default {
 	beforeDestroy() {
 	},
 	components: {
+		custom,
+		ddns,
 		myHeader,
 		userManage,
 		fileSelect,
@@ -94,10 +102,20 @@ export default {
 				title: this.$t('setting.systemSetting'),
 				font: "nasIcons icon-setting-system"
 			},
+			// {
+			// 	id: 'remoteAccess',
+			// 	title: this.$t('nascab.remoteAccessMenu'),
+			// 	font: "nasIcons icon-download"
+			// },
 			{
-				id: 'remoteAccess',
-				title: this.$t('nascab.remoteAccessMenu'),
-				font: "nasIcons icon-download"
+				id: 'custom',
+				title: this.$t('setting.custom'),
+				font: "nasIcons icon-custome"
+			},
+			{
+				id: 'ddns',
+				title: "DDNS",
+				font: "nasIcons icon-link"
 			},
 			{
 				id: 'nasAccount',

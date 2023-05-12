@@ -4,17 +4,21 @@
 
 		<!-- 来源设置 -->
 		<div class="content-root">
-			<p v-if="sourceType == 'movie'" class="add-title">{{ $t('setting.movieSourceSettingAlert') }}</p>
+			<div class="flex-row" style="justify-content: right;flex-wrap: wrap;">
+					<p class="add-title">{{ $t('setting.movieSourceSettingAlert') }}</p>
+					<vs-button style="margin-left:15px;height:25px" @click="showAddExclude('excludePathMovie')" border>{{ $t('setting.excludePath') }}</vs-button>
+					<vs-button style="margin-left:5px;height:25px" @click="showAddExclude('excludeFilenameMovie')" border>{{ $t('setting.excludeFilename') }}</vs-button>
+			</div>
 			<Divider></Divider>
 			<div v-if="pathList.length > 0" style="width: 100%;overflow: auto;height: 100%;">
 				<Card style="margin-bottom: 20px; width: 100%;border-radius: 10px;" v-for="(item, index) in pathList">
 					<!-- 当前路径 -->
 					<div class="item-title">
-						<span style="font-weight:bold">{{ $t('common.path') }} : </span>{{ item.path }}
+						<span class="item-label">{{ $t('common.path') }} : </span>{{ item.path }}
 					</div>
 					<!-- 当前状态 -->
 					<div class="item-title">
-						<span style="font-weight:bold">{{ $t('common.state') }} : </span><span
+						<span class="item-label">{{ $t('common.state') }} : </span><span
 							:style="{ color: item.exist == 0 ? '#DE4545' : '#386DF2' }" style="font-weight: bold;">{{
 								item.exist == 0
 								? $t('common.unavailable') : $t('common.available')
@@ -24,10 +28,19 @@
 							$t('setting.source.directoryMoved')
 						}}</a>
 					</div>
+					<!-- 电影 电视剧切换 -->
+					<div class="item-title">
+						<span class="item-label">{{ $t('movie.mediaType') }} : </span>
+						<RadioGroup v-model="item.media_type" @on-change="(value) => onChooseMediaType(value, item)">
+							<Radio label="movie">{{ $t('movie.movie') }}</Radio>
+							<Radio label="tvplay">{{ $t('movie.tvdrama') }}</Radio>
+						</RadioGroup>
+					</div>
 					<div class="item-title">
 						<!-- 是否禁用自动信息匹配 -->
-						<span style="font-weight:bold">{{ $t('movie.enableInfoMatch') }} : </span> 
-						<i-switch v-model="item.ignore_match_info" :true-value="0" :false-value="1" @on-change="(value)=>matchInfoSwitch(item,value)"/>
+						<span class="item-label">{{ $t('movie.enableInfoMatch') }} : </span>
+						<i-switch v-model="item.ignore_match_info" :true-value="0" :false-value="1"
+							@on-change="(value) => matchInfoSwitch(item, value)" />
 					</div>
 
 					<!-- 删除按钮 -->
@@ -35,6 +48,7 @@
 						style="position: absolute;right: 10px;bottom: 10px;font-size: 20px;cursor: pointer;color: #99AABF;"
 						class="nasIcons icon-trash"></span>
 				</Card>
+
 				<!-- 新增按钮 -->
 				<Card style="margin-bottom: 20px; width: 100%;border-radius: 10px;cursor: pointer;">
 					<div @click="selectPath"
@@ -44,10 +58,10 @@
 						<p class="add-text">{{ $t('setting.btAddSource') }}</p>
 					</div>
 				</Card>
+
 			</div>
 		</div>
-		<my-nodata v-if="pathList.length < 1" @onBtnClick="selectPath"
-			:title="$t('setting.movieSourceSettingAlert')"
+		<my-nodata v-if="pathList.length < 1" @onBtnClick="selectPath" :title="$t('setting.movieSourceSettingAlert')"
 			:btnTitle="$t('setting.btAddSource')" style="position: absolute;width: 100%;margin-top: 150px;">
 		</my-nodata>
 		<!-- 文件树 -->
@@ -80,6 +94,24 @@
 			</template>
 		</vs-dialog>
 
+		<!-- 路径排除对话框 -->
+		<vs-dialog v-model="showAddExcludeDialog"  scroll :full-screen="isMobile">
+			<template #header>
+				<h4 v-if="excludeType" style="font-size: 16px;">
+				{{ excludeType=='excludePathMovie'?$t('setting.excludePath'):$t('setting.excludeFilename') }}
+				</h4>
+			</template>
+			<!-- 添加路径排除 -->
+			<Input  autocapitalize="off" autocorrect="off" search :enter-button="$t('common.add')" :placeholder="$t('setting.addExcludePathPlaceholder')"
+				@on-search="onAddExcludePath" />
+
+			<p v-if="excludePathList.length > 0" style="text-align: left;margin-top: 15px;color:#999999">		
+				{{ excludeType=='excludePathMovie'?$t('setting.excludePathAlert'):$t('setting.excludeFilenameAlert') }}:</p>
+			<div class="flex-row" style="margin-top: 5px;flex-wrap: wrap;">
+				<Tag v-for="item in excludePathList" type="dot" closable color="primary"
+					@on-close="onDeleteExcludePath(item)">{{ item }}</Tag>
+			</div>
+		</vs-dialog>
 	</div>
 </template>
 
@@ -95,7 +127,7 @@ export default {
 			type: Boolean
 		},
 		sourceType: {
-			default: "",
+			default: "movie",
 			type: String
 		}
 	},
@@ -110,6 +142,9 @@ export default {
 
 	data() {
 		return {
+			excludeType:"",
+			excludePathList: [],//排除路径列表
+			showAddExcludeDialog: false,//路径排除对话框 
 			showChangeSourcePosition: false,
 			canAddPath: true, //在electron内选文件夹会短时间内回调两次 弄个标记做一下防重
 			showChooseFolder: false,
@@ -122,8 +157,84 @@ export default {
 
 	},
 	methods: {
-		matchInfoSwitch(sourceObj,ignoreMatchInfo){
-			console.log("sourceObj",sourceObj)
+		showAddExclude(type){
+			this.excludeType=type
+			this.excludePathList=[]
+			this.getExcludeConfig()
+			this.showAddExcludeDialog=true
+		},
+		onAddExcludePath(newPath) {
+			if (!newPath) return
+			if(newPath.length>35){
+				this.showVsAlertDialog(this.$t('common.alert'),this.$t('common.textTooLong'))
+				return
+			}
+			for (let i in this.excludePathList) {
+				if (this.excludePathList[i] == newPath) {
+					return
+				}
+			}
+			this.excludePathList.push(newPath)
+			this.saveConfig()
+		},
+		onDeleteExcludePath(delPath) {
+			if (!delPath) return
+			for (let i in this.excludePathList) {
+				if (this.excludePathList[i] == delPath) {
+					this.excludePathList.splice(i, 1)
+					break
+				}
+			}
+			this.saveConfig()
+		},
+		getExcludeConfig() {
+			this.api.post('/api/commonApi/getAllConfig', {
+				hideLoading: true,
+				keys: `('${this.excludeType}')`
+			}).then((res) => {
+				for (let i = 0; i < res.data.allConfig.length; i++) {
+					let configItem = res.data.allConfig[i]
+					if (configItem.title == this.excludeType) {
+						this.excludePathList = JSON.parse(configItem.value)
+					}
+				}
+			}).catch((error) => { })
+		},
+		saveConfig() {
+			let params = {}
+			params[this.excludeType]=this.excludePathList
+			this.api.post('/api/commonApi/saveConfig', params).then((res) => {
+				if (!res.code) {
+					this.showVsNotification(this.$t('common.operationSuccess'))
+					this.getExcludeConfig()
+				}
+			}).catch((error) => { })
+		},
+		onChooseMediaType(mediaType, sourceFolder) {
+			if (mediaType == 'tvplay') {
+				this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('movie.setAsTvAlert'),
+					() => {
+						this.setAsTvMovie(1, sourceFolder)
+					}, () => {
+						this.getPathList()
+					})
+			} else {
+				this.setAsTvMovie(0, sourceFolder)
+			}
+		},
+		setAsTvMovie(isTvPlay, sourceFolder) {
+			this.api.post('/api/movieApi/setTvplay', {
+				isTvPlay: isTvPlay,
+				sourceFolderId: sourceFolder.id,
+			}).then((res) => {
+				if (!res.code) {
+					this.showVsNotification(this.$t('common.operationSuccess'))
+				}
+				this.getPathList()
+			}).catch((error) => { })
+		},
+		matchInfoSwitch(sourceObj, ignoreMatchInfo) {
+			console.log("sourceObj", sourceObj)
 			// 添加来源目录的网络请求
 			this.api.post('/api/movieApi/switchMatchInfo', {
 				sourceFolderId: sourceObj.id,
@@ -132,7 +243,7 @@ export default {
 				if (!res.code) {
 					this.showVsNotification(this.$t('common.operationSuccess'))
 				}
-			}).catch((error) => { 
+			}).catch((error) => {
 				this.getPathList()
 			})
 
@@ -203,7 +314,9 @@ export default {
 					id: path.id
 				}).then((res) => {
 					if (!res.code) {
-						this.getPathList()
+						this.showVsAlertDialog(this.$t('common.alert'), this.$t('setting.sourceFolderDeleteInBg'), () => {
+							this.getPathList()
+						})
 					}
 				}).catch((error) => { })
 			})
@@ -213,6 +326,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
 .source-setting-root {
 
 	background-color: rgba(255, 255, 255, 0.6);
@@ -253,11 +367,18 @@ export default {
 
 .item-title {
 	word-break: break-all;
-	margin-top: 10px;
-	margin-bottom: 10px;
+	margin-top: 15px;
+	margin-bottom: 15px;
 	width: 100%;
 	text-align: left;
 	font-size: 14px;
+	display: flex;
+	align-items: center;
+
+	.item-label {
+		font-weight: bold;
+		margin-right: 10px;
+	}
 }
 
 .add-text {

@@ -103,7 +103,6 @@ export default {
 	},
 	mounted() {
 
-
 		let token = localStorage.getItem('token')
 		if (token) {
 			this.$store.state.token = token
@@ -140,7 +139,6 @@ export default {
 		Vue.prototype.switchUpload = this.switchUpload;
 		Vue.prototype.switchBgTask = this.switchBgTask;
 		Vue.prototype.runInElectron = runInElectron;
-		Vue.prototype.shouldShowTour = this.shouldShowTour
 		Vue.prototype.isAndroid = /(Android)/i.test(navigator.userAgent)
 		Vue.prototype.dealOnPageScroll = this.dealOnPageScroll
 		Vue.prototype.pushState = this.pushState
@@ -148,6 +146,7 @@ export default {
 		Vue.prototype.goPathNewWebView = this.goPathNewWebView
 		Vue.prototype.goPath = this.goPath
 		Vue.prototype.copyText = this.copyText
+		Vue.prototype.goHome = this.goHome
 
 
 
@@ -156,6 +155,18 @@ export default {
 		this.initFinish = true
 	},
 	methods: {
+		goHome() {
+			//屏幕宽度小于640进入手机端首页
+			if (document.body.clientWidth <= 640 && this.isMobile()) {
+				this.$router.push({
+					path: '/homeMobile'
+				})
+			} else {
+				this.$router.push({
+					path: '/home'
+				})
+			}
+		},
 		copyText(text) {
 			let clip = navigator.clipboard
 			if (clip) {
@@ -168,17 +179,17 @@ export default {
 				//如果在app里面就打开新页面
 				jsBridge.onOpenNewWebViewByPath(path, title)
 			} else {
-				console.log("newTag",newTag)
+				console.log("newTag", newTag)
 				if (newTag) {
-					console.log("location.href",location.href)
-					window.open(location.protocol+'//' + window.location.host + "/#" + path,"_blank");                 
+					console.log("location.href", location.href)
+					window.open(location.protocol + '//' + window.location.host + "/#" + path, "_blank");
 				} else {
 					this.goPath(path, query)
 				}
 			}
 		},
 		pushState() {
-			//要想监听后退时间必须pushstate
+			//要想监听后退必须pushstate
 			if (window.history && window.history.pushState) {
 				history.pushState(null, null, document.URL);
 			}
@@ -205,7 +216,7 @@ export default {
 		},
 		switchUpload(isShow, uploadTargetPath) {
 			if (this.isFromApp && jsBridge && isShow) {
-				jsBridge.onClickUpload(uploadTargetPath)
+				jsBridge.onClickUpload(uploadTargetPath,this.$store.state.token)
 			} else {
 				if (this.isMobile()) {
 					this.bgTaskIsShow = false
@@ -292,24 +303,6 @@ export default {
 				this.isRouterAlive = true
 			})
 		},
-		shouldShowTour(page, cb) {
-			if (!localStorage.getItem(`tour-${page}`)) {
-				this.api
-					.post("/api/commonApi/shouldShowTour", { hideLoading: true, page: page })
-					.then((res) => {
-						if (!res.code) {
-							localStorage.setItem(`tour-${page}`, 1)
-							if (res.show == 1) {
-								if (cb) cb()
-							}
-						}
-					})
-					.catch((error) => {
-						console.log(error);
-					});
-			}
-
-		},
 		dealOnPageScroll(e, onReachBottom, onShowToTopBtn) {
 			//滚动回调
 			let scrollTop = null;
@@ -350,7 +343,9 @@ export default {
 <style lang="scss">
 @import 'nas.scss';
 
-
+.text-grey{
+	color: $nas-text-grey;
+}
 
 .bgtask-wrapper {
 	position: fixed;
@@ -391,6 +386,7 @@ export default {
 .icon-main-color {
 	color: $nas-main;
 }
+
 
 .icon-red-color {
 	color: $nas-red;
@@ -481,6 +477,13 @@ body,
 	-webkit-box-orient: vertical
 }
 
+.max-line-two {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical
+}
 .ivu-slider-wrap {
 	background-color: $nas-grey !important;
 }

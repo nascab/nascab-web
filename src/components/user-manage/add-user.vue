@@ -3,17 +3,17 @@
 		<!-- 添加新用户 -->
 		<Form style="width:100%" ref="formValidate" :model="formValidate" :rules="ruleValidate" >
 			<FormItem :label="$t('common.username')" prop="username">
-				<Input :disabled="editUser!=null" v-model="formValidate.username"
+				<Input autocapitalize="off" autocorrect="off"  :disabled="editUser!=null" v-model="formValidate.username"
 					:placeholder="$t('common.username')"></Input>
 			</FormItem>
 			<FormItem :label="$t('common.password')" prop="password">
-				<Input  v-model="formValidate.password" :placeholder="$t('common.password')"></Input>
+				<Input autocapitalize="off" autocorrect="off"   v-model="formValidate.password" :placeholder="$t('common.password')"></Input>
 			</FormItem>
 			<FormItem :label="$t('common.question')" prop="question">
-				<Input  v-model="formValidate.question" :placeholder="$t('registerAdmin.placeholderQuestion')"></Input>
+				<Input  autocapitalize="off" autocorrect="off"  v-model="formValidate.question" :placeholder="$t('registerAdmin.placeholderQuestion')"></Input>
 			</FormItem>
 			<FormItem :label="$t('common.answer')" prop="answer">
-				<Input  v-model="formValidate.answer" :placeholder="$t('registerAdmin.placeholderAnswer')"></Input>
+				<Input  autocapitalize="off" autocorrect="off"  v-model="formValidate.answer" :placeholder="$t('registerAdmin.placeholderAnswer')"></Input>
 			</FormItem>
 		</Form>
 		<my-btn style="width: 250px;margin-top: 30px;" :disabled="!btnCanUse" @click="handleSubmit('formValidate')" :title="editUser?$t('common.update'):$t('common.add')"></my-btn>

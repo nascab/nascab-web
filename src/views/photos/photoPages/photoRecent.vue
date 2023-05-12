@@ -2,9 +2,9 @@
 	<photo-base :initIndex="6">
 		<div class="photo-recent-root" ref="photoListRoot">
 			<!-- 头部操控条 -->
-			<photo-operation-header style="width:100%;height:70px;position: absolute;left: 0;z-index: 2;"
-				ref="photoHeader" @onChooseDataType="onChooseDataType" @onChangeShowMode="onChangeShowMode"
-				@onSizeChange="setImgSize" @onSearch="onSearch" @albumId="albumId">
+			<photo-operation-header style="width:100%;height:70px;position: absolute;left: 0;z-index: 2;" ref="photoHeader"
+				@onChooseDataType="onChooseDataType" @onChangeShowMode="onChangeShowMode" @onSizeChange="setImgSize"
+				@onSearch="onSearch" @albumId="albumId">
 			</photo-operation-header>
 			<div style="width:100%;display:flex;height: 100%;flex-direction:row;overflow: hidden;padding-top: 70px;">
 				<!-- 照片列表容器 -->
@@ -45,6 +45,7 @@ import photoOperationHeader from "@/views/photos/components/photoOperationHeader
 //照片列表内容组件
 import photoListContent from "@/views/photos/components/photoListContent.vue"
 import photoBase from "@/views/photos/photoBase";
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
 	props: {
@@ -260,14 +261,24 @@ export default {
 					this.pushState()
 
 				} else if (photoList[index].type == 2) {
-					this.showVideoDetail = true;
-					this.$nextTick(() => {
-						this.$refs.videoPlayer.playVideo(photoList, index);
-					});
-					this.pushState()
-
+					if (localStorage.getItem("rawPlayer") == "1") {
+						//调用原生播放器
+						jsBridge.playVideo(JSON.stringify({
+							playIndex: index,
+							playList: photoList,
+							token: this.$store.state.token,
+							fromFileBrower: false,
+							serverType: "photo"
+						}))
+					} else {
+						//继续使用网页播放器
+						this.showVideoDetail = true;
+						this.$nextTick(() => {
+							this.$refs.videoPlayer.playVideo(photoList, index);
+						});
+						this.pushState()
+					}
 				}
-
 			}
 		},
 	},

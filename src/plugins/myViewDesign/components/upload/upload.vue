@@ -6,6 +6,7 @@
                 :webkitdirectory="webkitdirectory" :accept="accept">
             <slot></slot>
         </div>
+        
         <slot name="tip"></slot>
         <upload-list v-if="showUploadList" :files="fileList" @on-file-remove="handleRemove"
             @on-file-preview="handlePreview"></upload-list>
@@ -132,7 +133,7 @@ export default {
         },
         webkitdirectory: {
             type: Boolean,
-            default: false
+            default: true
         }
     },
     data() {

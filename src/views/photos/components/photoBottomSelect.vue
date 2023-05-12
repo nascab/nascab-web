@@ -35,19 +35,19 @@
 		</div>
 
 		<!-- 在回收站内显示的ui -->
-		<div v-else style="display: flex;flex-direction: row;justify-content: space-between;width: 100%;">
+		<div v-if="trashMode" style="display: flex;flex-direction: row;justify-content: space-between;width: 100%;">
 			<div style="display: flex;flex-direction: row;align-items: center;">
 				<div class="left-root" @click="trashPhotos(0)">
 					<my-btn v-if="selectedList.length > 0" :title="$t('file.restore') + ':' + selectedList.length">
 					</my-btn>
 					<!-- 全部恢复 -->
-					<my-btn v-else :title="$t('file.restoreAll')"></my-btn>
+					<my-btn v-if="selectedList.length <1" :title="$t('file.restoreAll')"></my-btn>
 				</div>
 				<div class="right-root" @click="deleteFromDisk()">
 					<my-btn v-if="selectedList.length > 0" type="red"
 						:title="$t('file.delete') + ':' + selectedList.length"></my-btn>
 					<!-- 全部删除 -->
-					<my-btn v-else :title="$t('file.deleteAll')" type="red"></my-btn>
+					<my-btn v-if="selectedList.length <1" :title="$t('file.deleteAll')" type="red"></my-btn>
 				</div>
 			</div>
 			<!-- 取消已选 -->

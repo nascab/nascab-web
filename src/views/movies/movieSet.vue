@@ -2,12 +2,12 @@
 	<div class="setting-root-wrapper" :class="{ 'setting-padding': hasPadding }">
 		<div class="common-setting-root">
 			<div style="width: 100%;display: flex;flex-direction: column;align-items: center;">
-				<vs-input type="double" class="item-input" style="margin-top: 20px;" v-model="settingData.subtitleSize"
+				<vs-input autocapitalize="off" autocorrect="off"  type="double" class="item-input" style="margin-top: 20px;" v-model="settingData.subtitleSize"
 					:label="$t('setting.videoSubtitleFontSize')">
 				</vs-input>
 				<!-- crf -->
 				<Tooltip :content="$t('setting.crfDesc')" style="width:100%" max-width="100%">
-					<vs-input type="number" class="item-input" v-model="settingData.crf" :label="$t('setting.crf')">
+					<vs-input autocapitalize="off" autocorrect="off" type="number" class="item-input" v-model="settingData.crf" :label="$t('setting.crf')">
 					</vs-input>
 				</Tooltip>
 				<!-- 自动硬件解码 -->
@@ -46,6 +46,8 @@
 						<i-switch v-model="settingData.movieShowMatchName" />
 					</div>
 				</div>
+
+				
 				<!-- 使用同文件夹下的图片作为海报 -->
 				<div style="width: 100%;display: flex;flex-direction: column;align-items: center;">
 					<div
@@ -54,6 +56,15 @@
 						<i-switch v-model="settingData.useFolderPictureAsPoster" />
 					</div>
 				</div>
+				<!-- 字幕预提取 -->
+				<div style="width: 100%;display: flex;flex-direction: column;align-items: center;">
+					<div
+						style="display: flex;flex-direction: row;align-items: center;margin-top: 20px;justify-content: flex-start;width: 100%;">
+						<div style="margin-right: 20px;">{{ $t('movie.subtitlePreGen') }}<Icon @click="showVsAlertDialog($t('common.alert'), $t('movie.subtitlePreGenAlert'))" style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" /></div>
+						<i-switch v-model="settingData.subtitlePreGen" />
+					</div>
+				</div>
+				
 				<Divider />
 				<my-btn @click="saveConfig" style="min-width:200px" :title="$t('common.commit')"></my-btn>
 			</div>
@@ -110,7 +121,8 @@ export default {
 				crf: 23,
 				transCodeEncoder: "",
 				transCodeDecoder: "",
-				transcodePath: ""
+				transcodePath: "",
+				subtitlePreGen:true //字幕预提取
 			}
 		}
 	},
@@ -148,7 +160,7 @@ export default {
 			}
 			params.movieShowMatchName = params.movieShowMatchName ? '1' : "0"
 			params.useFolderPictureAsPoster = params.useFolderPictureAsPoster ? "1" : "0"
-
+			params.subtitlePreGen=params.subtitlePreGen ? '1' : "0"
 			this.api.post('/api/commonApi/saveConfigMovie', params).then((res) => {
 				this.showVsNotification(this.$t('setting.saveSuccessRestartValid'))
 			}).catch((error) => { })
@@ -177,7 +189,9 @@ export default {
 						this.settingData.movieShowMatchName = configItem.value == '1'
 					} else if (configItem.title == 'useFolderPictureAsPoster') {
 						this.settingData.useFolderPictureAsPoster = configItem.value == '1'
-					}
+					} else if (configItem.title == 'subtitlePreGen') {
+						this.settingData.subtitlePreGen = configItem.value == '1'
+					} 
 					if (!this.settingData.transCodeEncoder) {
 						//用户没选过编码器 用列表里面的第一个
 						if (this.encoderList.length > 0) {

@@ -39,7 +39,8 @@
 		word-break: break-all;
 		font-size: 16px;
 		color: #666;
-		max-width: 350px;
+		padding-left: 30px;
+		padding-right: 30px;
 		
 	}
 </style>

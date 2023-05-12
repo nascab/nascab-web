@@ -28,7 +28,11 @@
 				<!-- 影音设置 -->
 				<movie-set :hasPadding="true" serverType="movie" v-if="viewType == 'movieSet'"></movie-set>
 				<source-set-movie :hasPadding="true" v-if="viewType == 'sourceSet'" sourceType="movie"></source-set-movie>
-
+				<!-- 观看历史 -->
+				<movie-history :hasPadding="true" v-if="viewType == 'history'"></movie-history>
+				<!-- 我的影集 -->
+				<movie-collection :hasPadding="true" v-if="viewType == 'collections'"></movie-collection>
+				<movie-ai-collection :hasPadding="true" v-if="viewType == 'aiCollections'"></movie-ai-collection>
 			</div>
 		</div>
 	</div>
@@ -39,25 +43,20 @@ import movieList from "@/views/movies/movieList.vue"
 import folder from "@/views/photos/photoPages/folderView.vue"
 import movieSet from "@/views/movies/movieSet.vue"
 import sourceSetMovie from "@/views/movies/movieSourceSet.vue"
+import movieHistory from "@/views/movies/movieHistory.vue"
+import movieCollection from "@/views/movies/movieCollection.vue"
+import movieAiCollection from "@/views/movies/movieAiCollection.vue"
 
 export default {
 	mounted() {
-		if(this.$store.state.currentUser.is_admin == 1){
-			this.sideOptionList.push({
-				id: 'movieSet',
-				title: this.$t('movie.movieSet'),
-				font: "nasIcons icon-movies-source"
-			})	
-			this.sideOptionList.push({
-				id: 'sourceSet',
-				title: this.$t('setting.movieSourceSetting'),
-				font: "nasIcons icon-setting-system"
-			})	
-		}
+	
 	},
 	beforeDestroy() {
 	},
 	components: {
+		movieAiCollection,
+		movieCollection,
+		movieHistory,
 		sourceSetMovie,
 		myHeader,
 		movieList,
@@ -76,15 +75,41 @@ export default {
 				id: 'folder',
 				title: this.$t('movie.viewFolder'),
 				font: "nasIcons icon-folder-iew"
+			},
+			{
+				id: 'history',//观看历史
+				title: this.$t('movie.history'),
+				font: "nasIcons icon-movie-history"
+			},
+			{
+				id: 'aiCollections',//智能影集
+				title: this.$t('movie.smartCollection'),
+				font: "nasIcons icon-ai-album"
+			},
+			{
+				id: 'collections',//我的影集
+				title: this.$t('movie.collection'),
+				font: "nasIcons icon-movie-collection"
+			},{
+				id: 'movieSet',
+				title: this.$t('movie.movieSet'),
+				font: "nasIcons icon-setting-system",
+				onlyAdmin:true
+			},
+			{
+				id: 'sourceSet',
+				title: this.$t('setting.movieSourceSetting'),
+				font: "nasIcons icon-movies-source",
+				onlyAdmin:true
 			}
-			]
+		]
 		};
 	},
 	computed: {
 
 	},
 	methods: {
-		setViewType(viewType){
+		setViewType(viewType) {
 			this.viewType = viewType
 			this.$refs.sidebar.setSelectById(viewType)
 			this.$refs.sidebarMobile.setSelectById(viewType)

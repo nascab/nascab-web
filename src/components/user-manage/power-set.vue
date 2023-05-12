@@ -68,14 +68,14 @@
 		<div v-if="indexName == 'photo'">
 			<div class="btn-root">
 				<my-btn style="width: 250px;margin-top: 30px;" :title="$t('user.addPhotoPowerPath')"
-					@click="showSourcePath"></my-btn>
+					@click="showChoosePath"></my-btn>
 			</div>
 		</div>
 		<!-- 影音服务 -->
 		<div v-if="indexName == 'movie'">
 			<div class="btn-root">
 				<my-btn style="width: 250px;margin-top: 30px;" :title="$t('user.addMoviePowerPath')"
-					@click="showSourcePath"></my-btn>
+					@click="showChoosePath"></my-btn>
 			</div>
 		</div>
 		<!-- 文件浏览 -->
@@ -113,15 +113,12 @@
 				</h4>
 			</template>
 			<file-select ref="fileSelector" v-if="showChooseFolder" parent="root" :type="2" @onSelect='onSelectPath'
-				@onCancel="showChooseFolder = false"></file-select>
+				@onCancel="showChooseFolder = false" :initPath="initPath"></file-select>
 			<template #footer>
 				<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
 					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
 			</template>
 		</vs-dialog>
-
-
-		
 
 	</div>
 </template>
@@ -138,8 +135,12 @@ export default {
 		fileSelectBar,
 		fileSelect
 	},
+	computed:{
+
+	},
 	data() {
 		return {
+			initPath:"",
 			showChooseFolder: false,
 			indexName: "photo",
 			btnCanUse: true,
@@ -158,6 +159,13 @@ export default {
 			this.apiSetUserPower(selectedPath)
 		},
 		showChoosePath() {
+			if(this.indexName=="photo"){
+				this.initPath = "sourceFolderPhoto"
+			}else if(this.indexName=="movie"){
+				this.initPath = "sourceFolderMovie"
+			}else if(this.indexName=="folder"){
+				this.initPath = ""
+			}
 			this.showChooseFolder = true
 		},
 		cancelPath(index) {

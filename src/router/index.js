@@ -55,6 +55,20 @@ const routes = [{
     }
 
 },
+{ //首页 手机端
+    path: '/homeMobile',
+    name: 'homeMobile',
+    meta: {
+        level: 2,
+        title: i18n.t('common.home'),
+    },
+    component: () =>
+        import('../views/home/homeMobile.vue'),
+    meta: {
+        keepAlive: true //设置缓存
+    }
+
+},
 { //安全中心
     path: '/security',
     name: 'security',
@@ -292,6 +306,16 @@ const routes = [{
     },
     component: () =>
         import('../views/noticeCenter/noticeCenter.vue')
+},
+{ //临时分享
+    path: '/shareTemp',
+    name: 'shareTemp',
+    meta: {
+        level: 3,
+        title: i18n.t('home.shareTemp'),
+    },
+    component: () =>
+        import('../views/shareTemp/shareTemp.vue')
 }
 ]
 const originalPush = VueRouter.prototype.push
@@ -304,7 +328,7 @@ const router = new VueRouter({
     base: process.env.BASE_URL,
     routes
 })
-let noCheckPath = ["/", "/login", "/create_admin", "/forgotPwd"]
+let noCheckPath = ["/", "/login", "/create_admin", "/forgotPwd","/shareTemp"]
 router.beforeEach((to, from, next) => { //路由守卫
     if (!noCheckPath.includes(to.path)) { //判断路由是否为登录路径
         if (!store.state.token) { //是否含有token

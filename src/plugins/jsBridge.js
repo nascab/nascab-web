@@ -9,10 +9,13 @@ export default {
                 android.onLoginSuc(usernameAndPwd)
             }
         } catch (err) {
-
         }
-        //IOS TODO
-
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "onLoginSuc","usernameAndPwd":"${usernameAndPwd}"}`)
+            }
+        }catch(err){}
         return
     },
 
@@ -22,11 +25,13 @@ export default {
             if (android) {
                 android.onChooseOtherServer()
             }
-        } catch (err) {
-
-        }
-        //IOS TODO
-
+        } catch (err) {}
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "onChooseOtherServer"}`)
+            }
+        }catch(err){}
         return
     },
 
@@ -36,16 +41,19 @@ export default {
             if (android) {
                 android.onClickMobileSync(token)
             }
-        } catch (err) {
-
-        }
-        //IOS TODO
+        } catch (err) {}
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "onClickMobileSync","token":"${token}"}`)
+            }
+        }catch(err){}
 
         return
     },
 
     //通知app进入到上传
-    onClickUpload(uploadTargetPath) {
+    onClickUpload(uploadTargetPath,token) {
         try {
             if (android) {
                 if (uploadTargetPath) {
@@ -54,10 +62,13 @@ export default {
                     android.onClickUpload()
                 }
             }
-        } catch (err) {
-
-        }
-        //IOS TODO
+        } catch (err) {}
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "onClickUpload","uploadTargetPath":"${uploadTargetPath?uploadTargetPath:""}","token":"${token}"}`)
+            }
+        }catch(err){}
         return
     },
     //通知app进入到私密空间上传
@@ -66,10 +77,13 @@ export default {
             if (android) {
                 android.onClickSpaceUpload(spaceId, spaceToken)
             }
-        } catch (err) {
-
-        }
-        //IOS TODO
+        } catch (err) {}
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "onClickSpaceUpload","spaceId":"${spaceId}","spaceToken":"${spaceToken}"}`)
+            }
+        }catch(err){}
         return
     },
     //打开新webview并加载指定路径
@@ -78,9 +92,14 @@ export default {
             if (android) {
                 android.onOpenNewWebViewByPath(path, title)
             }
-        } catch (err) {
+        } catch (err) {}
 
-        }
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "onOpenNewWebViewByPath","path":"${path}","title":"${title}"}`)
+            }
+        }catch(err){}
         //IOS TODO
         return
     },
@@ -90,10 +109,13 @@ export default {
             if (android) {
                 android.setScreenDirection(direction)
             }
-        } catch (err) {
-
-        }
-        //IOS TODO
+        } catch (err) { }
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "setScreenDirection","direction":"${direction}"}`)
+            }
+        }catch(err){}
         return
     },
     setIsShowNavBar(isShow) {
@@ -101,9 +123,7 @@ export default {
             if (android) {
                 android.setIsShowNavBar(isShow)
             }
-        } catch (err) {
-
-        }
+        } catch (err) {  }
     },
     // 在浏览器中打开
     openInBrowser(url){
@@ -111,17 +131,40 @@ export default {
             if (android) {
                 android.openInBrowser(url)
             }
-        } catch (err) {
-
-        }
+        } catch (err) { }
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "openInBrowser","url":"${url}"}`)
+            }
+        }catch(err){}
     },
     onClickLogout() {
         try {
             if (android) {
                 android.onClickLogout()
             }
-        } catch (err) {
-
-        }
+        } catch (err) {  }
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "onClickLogout"}`)
+            }
+        }catch(err){}
+    },
+    //调用原生播放器
+    playVideo(playData) {
+        console.log("playVideo",playData)
+        try {
+            if (android) {
+                android.playVideo(playData)
+            }
+        } catch (err) {}
+        try{
+            //ios 处理
+            if(webkit&&webkit.messageHandlers){
+                webkit.messageHandlers.bridge.postMessage(`{"func": "playVideo","playData":"${playData}"}`)
+            }
+        }catch(err){}
     }
 };

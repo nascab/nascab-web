@@ -1,6 +1,6 @@
 <template>
   <div class="sys-root">
-    <div class="header">
+    <div  :class="{'header-mobile':mobileLayout,'header':!mobileLayout}">
       <div style="display: flex;flex-direction: row;justify-content: flex-start;align-items: center;">
         <p class="top-title">{{ $t("state.systemState") }}</p>
         <Badge dot :offset="[5, -3]" :count="hasNewVersion">
@@ -25,47 +25,10 @@
 
     </div>
     <div class="content-root">
-      <div class="card-root">
-        <!-- 照片服务 索引状态 -->
-        <Card class="index-monitor" v-if="photoIndexInfo && (photoIndexInfo.photoCount + photoIndexInfo.videoCount) > 0">
-          <div class="ring-title" style="display: flex; align-items: center; justify-content: flex-start">
-            <Spin v-if="photoIndexInfo.indexing"></Spin>
-            <p>
-              {{ photoIndexInfo.indexing ? $t("home.indexing") + "..." : $t("home.photoManage") }}
-            </p>
-          </div>
-          <div class="ring-item-title">
-            {{ $t("photo.image") + ":" + photoIndexInfo.photoCount }}
-          </div>
-          <div class="ring-item-title">
-            {{ $t("photo.video") + ":" + photoIndexInfo.videoCount }}
-          </div>
-          <div class="ring-item-title" style="display: flex; align-items: center">
-            {{ $t("home.thumbnail") + ":" + photoIndexInfo.tinyCount }}
-          </div>
+      <div  :class="{'card-root-mobile':mobileLayout,'card-root':!mobileLayout}">
 
-        </Card>
-        <!-- 影音管理 索引状态 -->
-        <Card class="index-monitor" v-if="movieIndexInfo && (movieIndexInfo.photoCount + movieIndexInfo.videoCount) > 0">
-          <div style="display: flex; align-items: center">
-            <Spin v-if="movieIndexInfo.indexing"></Spin>
-            <p class="ring-title">
-              {{ movieIndexInfo.indexing ? $t("home.indexing") + "..." : $t("home.movieManage") }}
-            </p>
-          </div>
-          <div class="ring-item-title">
-            {{ $t("photo.image") + ":" + movieIndexInfo.photoCount }}
-          </div>
-          <div class="ring-item-title">
-            {{ $t("photo.video") + ":" + movieIndexInfo.videoCount }}
-          </div>
-          <div class="ring-item-title" style="display: flex; align-items: center">
-            {{ $t("home.thumbnail") + ":" + movieIndexInfo.tinyCount }}
-          </div>
-
-        </Card>
         <!-- cpu和内存监控 -->
-        <Card id="cpuRam" class="resource-monitor">
+        <Card id="cpuRam" :class="{'resource-monitor':!mobileLayout,'resource-monitor-mobile':mobileLayout}">
           <p class="ring-title" style="width: 100%; text-align: left">CPU / {{ $t('home.RAM') }} {{ $t('usage') }}</p>
           <div class="resource-monitor-wrapper">
             <!-- cpu用量 -->
@@ -87,22 +50,55 @@
             </i-circle>
           </div>
         </Card>
+        <!-- 照片服务 索引状态 -->
+        <Card :class="{'index-monitor':!mobileLayout,'index-monitor-mobile':mobileLayout}" v-if="photoIndexInfo && (photoIndexInfo.photoCount + photoIndexInfo.videoCount) > 0&&$store.state.currentUser.is_admin == 1">
+          <div class="ring-title" style="display: flex; align-items: center; justify-content: flex-start">
+            <Spin v-if="photoIndexInfo.indexing"></Spin>
+            <p>
+              {{ photoIndexInfo.indexing ? $t("home.indexing") + "..." : $t("home.photoManage") }}
+            </p>
+          </div>
+          <div class="ring-item-title">
+            {{ $t("photo.image") + ":" + photoIndexInfo.photoCount }}
+          </div>
+          <div class="ring-item-title">
+            {{ $t("photo.video") + ":" + photoIndexInfo.videoCount }}
+          </div>
+          <div class="ring-item-title" style="display: flex; align-items: center">
+            {{ $t("home.thumbnail") + ":" + photoIndexInfo.tinyCount }}
+          </div>
+
+        </Card>
+        <!-- 影音管理 索引状态 -->
+        <Card :class="{'index-monitor':!mobileLayout,'index-monitor-mobile':mobileLayout}" v-if="movieIndexInfo && (movieIndexInfo.photoCount + movieIndexInfo.videoCount) > 0&&$store.state.currentUser.is_admin == 1">
+          <div style="display: flex; align-items: center">
+            <Spin v-if="movieIndexInfo.indexing"></Spin>
+            <p class="ring-title">
+              {{ movieIndexInfo.indexing ? $t("home.indexing") + "..." : $t("home.movieManage") }}
+            </p>
+          </div>
+          <div class="ring-item-title">
+            {{ $t("photo.image") + ":" + movieIndexInfo.photoCount }}
+          </div>
+          <div class="ring-item-title">
+            {{ $t("photo.video") + ":" + movieIndexInfo.videoCount }}
+          </div>
+          <div class="ring-item-title" style="display: flex; align-items: center">
+            {{ $t("home.thumbnail") + ":" + movieIndexInfo.tinyCount }}
+          </div>
+
+        </Card>
+        
         <!-- 磁盘监控 -->
-        <Card class="disk-monitor" v-for="(disk, index) in diskList" v-if="!disk.isVirtual">
-          <p v-if="disk.isUSB" class="ring-title" style="width: 100%; text-align: left">
-            USB:{{ disk.diskSign }}
-          </p>
-          <p v-else-if="disk.isCard" class="ring-title" style="width: 100%; text-align: left">
-            Card:{{ disk.diskSign }}
-          </p>
-          <p v-else class="ring-title" style="width: 100%; text-align: left">
-            {{ $t("home.disk") }}:{{ disk.path }}
+        <Card v-if="!disk.isVirtual&&$store.state.currentUser.is_admin == 1" :class="{'disk-monitor':!mobileLayout,'disk-monitor-mobile':mobileLayout}" v-for="(disk, index) in diskList" >
+          <p  class="ring-title" style="width: 100%; text-align: left">
+            {{ $t("home.disk") }}:{{ disk.mount }}
           </p>
 
-          <i-circle style="margin-top: 20px" :stroke-color="disk.userPercent > 90 ? '#ff5500' : '#386DF2'" :size="80"
-            :percent="disk.userPercent">
+          <i-circle style="margin-top: 20px" :stroke-color="disk.usePercent > 90 ? '#ff5500' : '#386DF2'" :size="80"
+            :percent="disk.usePercent">
             <div style="margin-bottom: 5px">
-              <span style="font-size: 14px; color: #386df2">{{ disk.userPercent }}%</span>
+              <span style="font-size: 14px; color: #386df2">{{ disk.usePercent }}%</span>
             </div>
             <span style="font-size: 14px; color: #999999">{{ disk.sizeStr }}</span>
           </i-circle>
@@ -124,6 +120,10 @@ export default {
     nasAccountInfo: {
       default: {},
       type: Object,
+    },
+    mobileLayout: {//是否使用手机布局
+      default: false,
+      type: Boolean,
     }
   },
   components: {
@@ -212,10 +212,10 @@ export default {
               for (let i = 0; i < this.diskList.length; i++) {
                 let disk = this.diskList[i]
                 console.log(disk)
-                if (disk.space && disk.space.free && disk.space.total) {
-                  this.diskList[i].userPercent = parseInt((1 - parseFloat(disk.space.free / disk.space.total)) * 100)
+                if (disk.use) {
+                  this.diskList[i].usePercent = parseInt(this.diskList[i].use)
                 } else {
-                  this.diskList[i].userPercent = 0
+                  this.diskList[i].usePercent = 0
                 }
               }
             } else if (title == "globalIndexInfofile_index_movie") {
@@ -265,7 +265,10 @@ export default {
     height: 50px;
   }
 }
-
+.header-mobile{
+  padding: 0 !important;
+  @extend .header;
+}
 .content-root {
   padding-top: 60px;
   overflow: hidden;
@@ -300,6 +303,16 @@ export default {
   align-content: flex-start;
 }
 
+.card-root-mobile{
+  scrollbar-width: none;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  overflow: auto;
+  align-content: flex-start;
+  justify-content: space-between;
+}
+
 .card-root::-webkit-scrollbar {
   display: none;
 }
@@ -310,6 +323,14 @@ export default {
   margin-top: 10px;
   min-width: 180px;
   @extend .card-item;
+}
+
+
+.index-monitor-mobile {
+  border-radius: 10px;
+  margin-top: 10px;
+  width: 49%;
+  
 }
 
 .resource-monitor {
@@ -325,13 +346,23 @@ export default {
     justify-content: space-around;
   }
 }
+.resource-monitor-mobile {
+  border-radius: 10px !important;
+  @extend .resource-monitor;
 
+  
+}
 .disk-monitor {
   margin-right: 10px;
   border-radius: 20px;
   margin-top: 10px;
   min-width: 120px;
   @extend .card-item;
+}
+.disk-monitor-mobile {
+  border-radius: 10px;
+  margin-top: 10px;
+  width: 49%;
 }
 
 .ring-title {

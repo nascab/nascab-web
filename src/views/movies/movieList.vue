@@ -39,8 +39,10 @@
 					<div class="cover-root" style="width:100%">
 						<!-- 封面 禁用浏览器默认的事件-->
 						<img class="movie-cover" v-lazy="movie.url" :style="{ height: itemWidth / 3 * 4.5 + 'px' }" />
-						<Button type="primary" v-if="movie.hover" @click.stop="playClick(index)" class="icon-play"
-							shape="circle" icon="md-play"></Button>
+						<!-- <Button type="primary"
+							shape="circle" icon="md-play"></Button> -->
+						<img v-if="movie.hover" @click.stop="playClick(index)" class="icon-play"
+							src="@/static/icon_play.png" />
 						<!-- 视频的时长 -->
 						<p class="icon-duration">{{ utils.formatSeconds(movie.duration) }}</p>
 
@@ -66,17 +68,9 @@
 					</div>
 					<!-- 名称 -->
 					<p class="filename">
-
-						{{ showMovieInfoName && movie.movie_info_state == 1 && movie.movie_info_name ? movie.movie_info_name
-							:
-							movie.filename }}
-
-
+						{{ movie.show_name }}
 						<span v-if="movie.movie_year && movie.movie_year > 1000">[{{ parseInt(movie.movie_year) }}]</span>
-
 					</p>
-
-
 				</div>
 				<div @click="movieClick(index)" v-for="(movie, index) in movieList" v-if="showType == 'list'"
 					@mouseenter="mouseEnterImg(index)" @mouseleave="mouseLeaveImg(index)"
@@ -110,15 +104,11 @@
 								@click.stop="utils.checkImdb(movieList[index].filename, movieList[index].movie_imdb_id)"
 								style="border-radius: 5px; width: 30px;height: 30px;margin-left: 10px;"
 								src="@/static/icon_imdb.png" />
-
-
 						</div>
 						<!-- 名称 -->
 						<div style="display:flex;flex-direction:column;height: 100%;">
 							<p class="filename max-line-three">
-								{{ showMovieInfoName && movie.movie_info_state == 1 && movie.movie_info_name ?
-									movie.movie_info_name :
-									movie.filename }}
+								{{ movie.show_name }}
 								<span v-if="movie.movie_year">[{{ parseInt(movie.movie_year) }}]</span>
 							</p>
 							<p class="filepath max-line-three">
@@ -152,17 +142,14 @@
 			<!-- 返回顶部按钮 -->
 			<my-btn-icon v-if="showToTopBtn" style="position:fixed;right:10px;bottom:10px;" iIcon="md-arrow-up"
 				@click="scrollToTop"></my-btn-icon>
-
-
 		</div>
-
-
-		<Modal v-model="showVideoDetail" fullscreen footer-hide :closable="false">
+		<Modal v-model="showVideoDetail" fullscreen footer-hide>
 			<video-detail propsServerType="movie" v-if="showVideoDetail" @onClose="showVideoDetail = false"
 				ref="videoPlayer"></video-detail>
 		</Modal>
 		<!-- 电影详情页 -->
-		<Modal v-model="showMovieInfoDetail" fullscreen footer-hide>
+		<Modal v-model="showMovieInfoDetail" fullscreen footer-hide class-name="modal-style-nopadding"
+			@onClose="showMovieInfoDetail = false">
 			<movie-info-detail @onClose="showMovieInfoDetail = false" :propsDetailMovieList="movieList"
 				:propsDetailIndex="selectedIndex" ref="movieInfoDetail" v-if="showMovieInfoDetail" @onMarkType="markType">
 			</movie-info-detail>
@@ -176,6 +163,24 @@
 			<my-selector-phone :optionList="rightMenuList"
 				@onItemClick="(item) => (rightMenuClick(null, item.type))"></my-selector-phone>
 		</vs-dialog>
+
+		<!-- 选择影集的对话框 -->
+		<vs-dialog scroll v-model="showCollectionSelectDialog">
+			<template #header>
+				<h4 class="not-margin">
+					{{ $t('movie.whichCollectionWantoMove') }}
+				</h4>
+			</template>
+			<div v-for="collection in collectionList">
+				<div class="collection-item" @click="onSelectCollection(collection)">
+					{{ collection.title }}
+				</div>
+			</div>
+			<div v-if="collectionList && collectionList.length < 1" class="collection-item">{{ $t('movie.noCollection') }}</div>
+
+		</vs-dialog>
+
+
 
 		<!-- 筛选来源文件夹 国别 语言 类型 -->
 		<vs-dialog v-model="showFilterDialog">
@@ -212,20 +217,26 @@
 	</div>
 </template>
 <script>
-
-
-
-
-
 import axios from "@/plugins/axios";
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import MovieInfoDetail from "@/views/movies/movieDetail.vue";
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
+	props: {
+		collectionPwd: {
+			default: "",
+			type: String
+		},
+		collectionId: {
+			default: 0,
+			type: Number
+		}
+	},
 	created() {
 	},
 	mounted() {
-		//在header的mounted中触发加载第一页数据 在onChooseRange
+		console.log("mounted")
 		let showType = localStorage.getItem("movie-list-show-type");
 		if (showType) {
 			this.showType = showType;
@@ -233,8 +244,6 @@ export default {
 		}
 
 		this.loadFirstPage()
-
-
 
 		// 监听滚动条
 		window.addEventListener("scroll", this.onPageScroll, true);
@@ -265,6 +274,8 @@ export default {
 	},
 	data() {
 		return {
+			showCollectionSelectDialog: false,//选择影集的对话框
+			collectionList: null,
 			showFilterDialog: false,
 			sourcTypeList: [this.$t('common.all'), this.$t('movie.movie'), this.$t('movie.tvdrama')],
 			sourceFolderList: [this.$t('common.all')],
@@ -287,11 +298,11 @@ export default {
 			showToTopBtn: false,
 			showVideoDetail: false,
 			rightMenuList: [],
-			sliderMin: 130,
+			sliderMin: 150,
 			sliderMax: 280,
-			sliderValue: 130,
-			itemBaseWidth: 130,
-			itemWidth: 130,
+			sliderValue: 150,
+			itemBaseWidth: 150,
+			itemWidth: 150,
 			itemMargin: 6,
 			sortField: 'recent',
 			sortType: 'desc',
@@ -329,6 +340,7 @@ export default {
 		//获取电影筛选过滤的数组 国别/语言/分类
 		getMovieKeys() {
 			this.api.post('/api/movieApi/getMovieKeys', {
+				hideLoading: true
 			}).then((res) => {
 				if (!res.code) {
 					if (res.data && res.data.length > 0) {
@@ -367,7 +379,7 @@ export default {
 				if (!res.code) {
 
 					//查询是否设置了来源文件夹 没有设置用户设置
-					if (this.$store.state.currentUser.is_admin == 1) {
+					if (this.$store.state.currentUser.is_admin == 1 && this.collectionId == 0) {
 
 						if (res.data.length < 1) {
 							this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('movie.noSourceSetAlert'),
@@ -385,9 +397,7 @@ export default {
 								}
 							}
 						}
-
 					}
-z
 					for (let i in res.data) {
 						this.sourceFolderList.push(res.data[i].path)
 					}
@@ -421,10 +431,13 @@ z
 			this.rightMenuList = [{
 				text: this.$t('file.check'),
 				type: "CHECK",
-			}, {
-				text: this.$t('common.delete'),
-				type: "DELETE"
 			}]
+			if (file.is_tvplay == 0) {
+				this.rightMenuList.push({
+					text: this.$t('common.delete'),
+					type: "DELETE"
+				})
+			}
 			console.log('file.is_tvplay', file.is_tvplay)
 			if (file.is_tvplay == 1) {
 				this.rightMenuList.push({
@@ -436,6 +449,19 @@ z
 				this.rightMenuList.push({
 					text: this.$t('movie.setAsTv'),
 					type: "setAsTv"
+				})
+			}
+			if (this.collectionId == 0) {
+				// 菜单： 添加到影库
+				this.rightMenuList.push({
+					text: this.$t('movie.addToCollection'),
+					type: "addToCollection"
+				})
+			} else {
+				//菜单 从影库移出
+				this.rightMenuList.push({
+					text: this.$t('movie.removeFromCollection'),
+					type: "removeFromCollection"
 				})
 			}
 		},
@@ -464,16 +490,19 @@ z
 				}).then((res) => {
 					if (!res.code) {
 						this.showVsNotification(this.$t('movie.indexDeleted'));
-						for (let i in this.movieList) {
-							if (this.movieList[i].id == this.selectedFile.id) {
-								this.movieList.splice(i, 1)
-								this.selectedFile = null
-								break
-							}
-						}
+						this.removeSelectedFileFromList()
 					}
 				}).catch((error) => { })
 			}).catch((error) => { })
+		},
+		removeSelectedFileFromList() {
+			for (let i in this.movieList) {
+				if (this.movieList[i].id == this.selectedFile.id) {
+					this.movieList.splice(i, 1)
+					this.selectedFile = null
+					break
+				}
+			}
 		},
 		deleteSelectedFile() {
 			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('file.confirmDelete'), () => {
@@ -514,9 +543,41 @@ z
 				this.markType(1, this.selectedFile.id)
 			} else if (type == 'setAsMovie') { //设置为电影
 				this.markType(2, this.selectedFile.id)
+			} else if (type == "addToCollection") {//移动到影集
+				this.showCollectionSelectDialog = true
+				if (this.collectionList == null) {
+					this.api.post('/api/movieApi/getCollection', {
+					}).then((res) => {
+						if (!res.code) {
+							this.collectionList = res.data
+						}
+					}).catch((error) => { })
+				}
+
+			} else if (type == "removeFromCollection") {//从影库移出
+				this.api.post('/api/movieApi/removeIndexFromCollection', {
+					indexIdList: [this.selectedFile.id]
+				}).then((res) => {
+					if (!res.code) {
+						this.showVsNotification(this.$t('common.operationSuccess'))
+						this.removeSelectedFileFromList()
+					}
+				}).catch((error) => { })
 			}
 		},
-
+		onSelectCollection(collection) {
+			// 移动到影集
+			this.api.post('/api/movieApi/addIndexToCollection', {
+				collectionId: collection.id,
+				indexId: this.selectedFile.id
+			}).then((res) => {
+				if (!res.code) {
+					this.showCollectionSelectDialog = false
+					this.showVsNotification(this.$t('common.operationSuccess'))
+					this.removeSelectedFileFromList()
+				}
+			}).catch((error) => { })
+		},
 		loadFirstPage() {
 			this.nextHasMore = true
 			this.nextLoading = false
@@ -607,19 +668,29 @@ z
 				//点击的时电视剧 则先进入详情
 				this.movieClick(index)
 			} else {
-
 				console.log("显示播放器")
-
-				this.showVideoDetail = true;
-				this.$nextTick(() => {
-					this.$refs.videoPlayer.playVideo(this.movieList, index);
-				});
-				this.pushState()
-
+				if (localStorage.getItem("rawPlayer") == "1") {
+					//调用原生播放器
+					jsBridge.playVideo(JSON.stringify({
+						playIndex: index,
+						playList: this.movieList,
+						token: this.$store.state.token,
+						fromFileBrower: false,
+						serverType: "movie"
+					}))
+				} else {
+					//继续使用网页播放器
+					this.showVideoDetail = true;
+					this.$nextTick(() => {
+						this.$refs.videoPlayer.playVideo(this.movieList, index);
+					});
+					this.pushState()
+				}
 			}
-
 		},
 		getMovies(append) {
+			console.log("loadFirstPage", this.nextLoading, this.nextHasMore)
+
 			if (this.nextLoading || !this.nextHasMore) {
 				return
 			}
@@ -628,6 +699,8 @@ z
 			}
 			this.nextLoading = true
 			let params = {
+				collectionPwd: this.collectionPwd,
+				collectionId: this.collectionId,
 				hideLoading: true,
 				count: this.count,
 				excludeIds: [],
@@ -636,6 +709,7 @@ z
 				searchStr: this.searchStr,
 				offset: this.movieList.length
 			}
+			console.log("params", params)
 			if (this.selectedSourceFolder && this.selectedSourceFolder != this.$t('common.all')) {
 				params.sourceFolder = axios.encodePath(this.selectedSourceFolder)
 			}
@@ -670,7 +744,7 @@ z
 						if (res.data[i].movie_cover_path && res.data[i].movie_info_state == 1) {
 							//如果有封面 则使用封面
 							res.data[i].url = axios.getRawFileUrl(res.data[i].movie_cover_path, '', 'movie')
-						}else if(res.data[i].folder_cover_path){
+						} else if (res.data[i].folder_cover_path) {
 							//没有封面 看看有没有同文件夹下匹配的海报
 							res.data[i].url = axios.getRawFileUrl(res.data[i].folder_cover_path, '', 'movie')
 						}
@@ -689,6 +763,17 @@ z
 						}
 						res.data[i].sizeStr = sizeStr
 
+						if (!res.data[i].show_name) {
+							if (this.showMovieInfoName && res.data[i].movie_info_state == 1 && res.data[i].movie_info_name) {
+								res.data[i].show_name = res.data[i].movie_info_name
+							}
+							if(!res.data[i].show_name){
+								res.data[i].show_name=res.data[i].filename
+							}
+						}
+
+
+
 					}
 					if (append) {
 						this.movieList.push(...res.data)
@@ -704,7 +789,9 @@ z
 					}
 					this.nextLoading = false
 					this.$nextTick(() => {
-						this.calImageWidth();
+						setTimeout(() => {
+							this.calImageWidth();
+						}, 300);
 					})
 				})
 				.catch((error) => {
@@ -716,8 +803,12 @@ z
 }
 </script>
 <style lang="scss" scoped>
-::v-deep .vs-select {
-	width: 300px;
+::v-deep .ivu-icon-ios-close {
+	display: none;
+}
+
+::v-deep .ivu-select-dropdown {
+	width: 90%;
 }
 
 .movie-list-root {
@@ -883,7 +974,7 @@ z
 	background-color: black;
 	width: 100%;
 	object-fit: cover;
-	box-shadow: 5px 5px 10px rgba(0, 0, 0, .2);
+	box-shadow: 2px 5px 5px rgba(0, 0, 0, .2);
 	// border: 1px solid #eee;
 }
 
@@ -939,5 +1030,17 @@ z
 	color: white;
 	padding: 10px;
 	background-color: $nas-grey;
+}
+
+.collection-item {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	background-color: #eee;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	cursor: pointer;
+	font-size: 16px;
+	border-radius: 5px;
+	color: $nas-text-grey;
 }
 </style>

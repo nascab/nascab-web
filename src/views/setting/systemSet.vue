@@ -242,6 +242,7 @@ export default {
 <style lang="scss" scoped>
 .system-root {
 	height: 100%;
+	overflow: auto;
 	padding: 10px;
 
 	@media not all and (max-width:640px) {

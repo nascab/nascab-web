@@ -374,8 +374,8 @@ export default {
 		},
 		//根据日期获取数据
 		getPhotoByDate(dateStr, timeType) {
-			let timestamp = new Date(dateStr.original_date).getTime() + 16 * 3600000;
-			this.getPhotoByTime(timestamp, timeType);
+			// let timestamp = new Date(dateStr.original_date).getTime() + 16 * 3600000;
+			this.getPhotoByTime(dateStr.original_time+ 24 * 3600000, timeType);
 		},
 		//根据时间戳获取数据 loadLastPage为获取本页数据后是否自动获取上一页 因为点击时间轴后需要自动加载上一页提升用户体验
 		getPhotoByTime(timestamp, timeType, loadLastPageAfterReq) {

@@ -67,8 +67,10 @@
 					<div style="width:100%;height:80px"></div>
 				</div>
 
-				<!-- 选择模式下的菜单 -->
-				<div v-if="selectMode" class="bottom-select-root">
+				
+			</div>
+			<!-- 选择模式下的菜单 -->
+			<div v-if="selectMode" class="bottom-select-root">
 					<!-- 取消 -->
 					<div @click="exitSelectMode">
 						<my-btn type="white" icon="md-add" :title="$t('common.cancel')"></my-btn>
@@ -82,7 +84,6 @@
 						<my-btn icon="md-add" :title="$t('photo.mergePerson')"></my-btn>
 					</div>
 				</div>
-			</div>
 
 			<!-- 相册详情对话框 -->
 			<Modal :scrollable="false" footer-hide ref="myModal" class-name="modal-style-nopadding"
@@ -119,7 +120,7 @@
 							{{ $t('common.ok') }}
 						</vs-button>
 						<div style="margin-top: 10px;">
-							<a href="#" @click.stop="onDeletePerson"> {{ $t('photo.deletePerson') }}</a>
+							<a  @click.stop="onDeletePerson()"> {{ $t('photo.deletePerson') }}</a>
 						</div>
 					</div>
 				</template>
@@ -327,6 +328,7 @@ export default {
 				})
 		},
 		onDeletePerson(faceIdList) {
+			console.log("faceIdList",faceIdList,this.selectedItem)
 			this.showVsConfirmDialog(
 				this.$t('common.confirm'),
 				this.$t('photo.sureDeletePerson'), () => {
@@ -533,7 +535,8 @@ export default {
 }
 
 .album-root-wrapper {
-	position: relative;
+	padding-left: 10px;
+	padding-right: 10px;
 	z-index: 1;
 	width: 100%;
 	height: 100%;
@@ -547,6 +550,7 @@ export default {
 	flex-wrap: wrap;
 	overflow-y: auto;
 	align-content: flex-start;
+	position: relative;
 
 }
 

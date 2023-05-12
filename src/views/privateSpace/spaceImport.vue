@@ -13,10 +13,10 @@
 				@click="showChooseFolder=true">{{$t('file.chooseFolder')}}</Button>
 		</div>
 
-		<vs-input type="password" style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.rawSpacePwd')"
+		<vs-input autocapitalize="off" autocorrect="off" type="password" style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.rawSpacePwd')"
 			v-model="formData.spacePwd" />
 
-		<vs-input style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.newSpaceName')"
+		<vs-input autocapitalize="off" autocorrect="off" style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.newSpaceName')"
 			v-model="formData.spaceName" />
 
 		<!-- 导入按钮 -->

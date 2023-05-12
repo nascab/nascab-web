@@ -30,9 +30,9 @@ class VideoHelper {
         //分辨率选项
         this.optionsPlaySize = [
             { value: 1, label: this.vue.$t("video.code_raw") },
-            { value: 4096, minBitrate: 1024, maxBitrate: 102400, defaultBitrate: 3584, label: "4K" },
-            { value: 1920, minBitrate: 1024, maxBitrate: 40960, defaultBitrate: 2048, label: "1080P" },
-            { value: 1280, minBitrate: 1024, maxBitrate: 4096, defaultBitrate: 1024, label: "720P" },
+            { value: 4096, minBitrate: 1024, maxBitrate: 102400, defaultBitrate: 4096, label: "4K" },
+            { value: 1920, minBitrate: 1024, maxBitrate: 40960, defaultBitrate: 3584, label: "1080P" },
+            { value: 1280, minBitrate: 1024, maxBitrate: 4096, defaultBitrate: 2048, label: "720P" },
             { value: 720, minBitrate: 512, maxBitrate: 3584, defaultBitrate: 1024, label: "480P" },
             { value: 480, minBitrate: 320, maxBitrate: 2048, defaultBitrate: 512, label: "240P" }
         ]
@@ -110,7 +110,7 @@ class VideoHelper {
             } else if (event.keyCode == 32) {
                 this.vue.switchPlay()  //空格键处理
             } else if (event.keyCode == 37) {
-                let moveSec = (parseInt(this.vue.seekSec) - 30)
+                let moveSec = (parseInt(this.vue.seekSec) - 15)
                 if (moveSec < 1) moveSec = 1
                 if (formatUtil.usingFlv) {//flv是直播流 需要换url
                     this.vue.changeSeekFromSlider(moveSec)
@@ -118,7 +118,7 @@ class VideoHelper {
                     this.vue.vPlayer.currentTime(moveSec)  //方向键左
                 }
             } else if (event.keyCode == 39) {
-                let moveSec = (parseInt(this.vue.seekSec) + 30)
+                let moveSec = (parseInt(this.vue.seekSec) + 15)
                 if (moveSec > this.vue.indexObj.duration) moveSec = this.vue.indexObj.duration
                 if (formatUtil.usingFlv) {//flv是直播流 需要换url
                     this.vue.changeSeekFromSlider(moveSec)
@@ -174,12 +174,15 @@ class VideoHelper {
         }
     }
     download() {
-        let url=this.vue.indexObj.rawUrl
-        let fullUrl = window.location.protocol + "//" + window.location.host + url
+        let fullUrl=this.vue.indexObj.rawUrl
+        if(!fullUrl.startsWith("http")){
+             fullUrl = window.location.protocol + "//" + window.location.host + fullUrl
+        }
+        console.log("fullUrl",fullUrl)
         if (this.vue.isFromApp) {
             jsBridge.openInBrowser(fullUrl)
         } else {
-            window.open(url, "_blank")
+            window.open(fullUrl, "_blank")
         }
     }
     destroyFlvPlayer() {
@@ -218,6 +221,7 @@ class VideoHelper {
     }
     //字幕上传成功回调
     uploadSubtitleSuc(response, file, fileList) {
+        console.log("response",response)
         if (response.code) {
             return this.uploadSubtitleErr()
         }
@@ -460,6 +464,7 @@ class VideoHelper {
                     let subtitlePathList = res.data
                     if (subtitlePathList.length > 0) {
                         //添加到现有字幕列表
+                        let rawLength=this.vue.currentSubtitleStreamList.length
                         for (let i in subtitlePathList) {
                             let subtitleItem = subtitlePathList[i]
                             this.vue.currentSubtitleStreamList.push({
@@ -468,12 +473,15 @@ class VideoHelper {
                                 type: 'path'
                             })
                         }
+                        if(rawLength<1){
+                            this.vue.chooseSubtitle(0)
+                        }
                     }
                     // 设置用户自定义的字体大小
                     if (res.userFontSize) {
-                        this.vue.userFontSize = res.userFontSize + "rem"
+                        this.vue.userFontSize = res.userFontSize*15 + "px"
                     }else{
-                        this.vue.userFontSize =  "1rem"
+                        this.vue.userFontSize =  "20px"
                     }
                 }
             })

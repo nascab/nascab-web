@@ -3,14 +3,13 @@
     <div class="nas-account-root">
       <Divider>{{ $t("nascab.remoteAccessMenu") }}</Divider>
       <div class="list-root">
-        <!-- 远程访问 -->
         <div class="item-root">
           <span class="item-text-left">{{ $t("nascab.remoteAccess") }}:</span>
           <vs-tooltip v-if="currentVipInfo && currentVipInfo.subdomain">
-            <div v-if="currentVipInfo && currentVipInfo.subdomain"
+            <!-- <div v-if="currentVipInfo && currentVipInfo.subdomain"
               style="display: flex; flex-direction: row; align-items: center">
               <a @click="lanIpClick('http://')">http://{{ currentVipInfo.subdomain }}{{ currentVipInfo.proxyDomain }}</a>
-            </div>
+            </div> -->
             <div v-if="currentVipInfo && currentVipInfo.subdomain"
               style="display: flex; flex-direction: row; align-items: center">
               <a @click="lanIpClick('https://')">https://{{ currentVipInfo.subdomain }}{{ currentVipInfo.proxyDomain }}</a>
@@ -66,48 +65,7 @@
           <i-switch v-model="remoteEnable" @on-change="remoteEnableSwitch" />
         </div>
       </div>
-      <!-- 自定义端口映射 -->
-      <!-- <div v-if="currentVipInfo && currentVipInfo.subdomain"
-        style="display:flex;flex-direction:column;align-items:flex-start;">
-        <Divider style="margin-top:30px">{{ $t('nascab.customProxyTitle') }}</Divider>
-        <div style="color:#888;text-align:left;max-width:800px;display:flex;align-items:center">
-          <p>{{ $t('nascab.customAlert', { port: currentVipInfo.extraPort1 }) }}</p>
-          <vs-tooltip>
-            <Icon style="margin-left:5px" type="ios-help-circle-outline" size="25" />
-            <template #tooltip>
-              {{ $t('nascab.customExample', {
-                  ip: currentVipInfo.subdomain + currentVipInfo.proxyDomain + ':' +
-                    currentVipInfo.extraPort1
-                })
-              }}
-            </template>
-          </vs-tooltip>
-        </div>
-        <div style="margin-top:50px;width:100%">
-          <vs-input v-model="customProxIp" type="text" class="item-input" placeholder="127.0.0.1"
-            :label="$t('nascab.localIp') + '  ' + $t('nascab.localMachine')">
-          </vs-input>
-        </div>
-        <div style="margin-top:30px;width:100%">
-          <vs-input v-model="customProxPort" type="text" class="item-input" placeholder="1-65535"
-            :label="$t('nascab.localPort')">
-          </vs-input>
-        </div>
-        <div v-if="customProxIp && customProxPort" style="margin-top:30px;width:100%;text-align:left">
-          {{ $t('nascab.customServerRemoteUrl') }}: {{
-              currentVipInfo.subdomain
-          }}{{ currentVipInfo.proxyDomain }} {{ $t('state.port') }}:
-          {{ currentVipInfo.extraPort1 }}
-        </div>
-        <div class="save-root" style="margin-top:30px;">
-          <div @click="setCustomProxy(1)">
-            <my-btn type="white" class="save-btn" :title="$t('nascab.clearCustomProxy')" />
-          </div>
-          <div @click="setCustomProxy()">
-            <my-btn class="save-btn" :title="$t('nascab.saveIpPort')" />
-          </div>
-        </div>
-      </div> -->
+    
       <vs-dialog overflow-hidden full-screen v-model="showIframeDialog">
         <iframe v-if="showIframeDialog" scrolling="auto" :src="loadUrl" class="iframe"></iframe>
       </vs-dialog>

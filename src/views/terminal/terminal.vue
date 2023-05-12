@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div style="text-align: left;height: 100%;width: 100%;" id="xterm" />
 </template>
 <script>
@@ -99,4 +99,4 @@ export default {
 </script>
 <style lang="scss" scoped>
 #xterm {}
-</style>
+</style> -->

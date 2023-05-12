@@ -53,6 +53,7 @@ import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import photoOperationHeader from "@/views/photos/components/photoOperationHeader.vue"
 //照片列表内容组件
 import photoListContent from "@/views/photos/components/photoListContent.vue"
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
 	props: {
@@ -184,32 +185,32 @@ export default {
 				this.$refs.photoContent.getPhotoByDate(this.timeLine[0], 1);
 			}
 		},
-		checkSourePath(){
+		checkSourePath() {
 			//查询是否设置了来源文件夹 没有设置用户设置
 			if (this.$store.state.currentUser.is_admin == 1) {
-					this.api.post('/api/sourceFolderApi/getPathByType', {
-						type: 'photo',
-					}).then((res) => {
-						if (!res.code) {
-							if (res.data.length < 1) {
-								this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
-									'photo.noSourceSetAlert'), () => {
-										this.goPath('/photoSourceSet')
-									}, null, this.$t('photo.goToSet'))
-							} else {
-								for (let i in res.data) {
-									if (res.data[i].exist == 0) {
-										this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
-											'photo.sourcePathUnusable',{path:res.data[i].path}), () => {
-												this.goPath('/photoSourceSet')
-											}, null, this.$t('photo.goToSet'))
-										break
-									}
+				this.api.post('/api/sourceFolderApi/getPathByType', {
+					type: 'photo',
+				}).then((res) => {
+					if (!res.code) {
+						if (res.data.length < 1) {
+							this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
+								'photo.noSourceSetAlert'), () => {
+									this.goPath('/photoSourceSet')
+								}, null, this.$t('photo.goToSet'))
+						} else {
+							for (let i in res.data) {
+								if (res.data[i].exist == 0) {
+									this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
+										'photo.sourcePathUnusable', { path: res.data[i].path }), () => {
+											this.goPath('/photoSourceSet')
+										}, null, this.$t('photo.goToSet'))
+									break
 								}
 							}
 						}
-					}).catch((error) => { })
-				}
+					}
+				}).catch((error) => { })
+			}
 		},
 		//窗口变化回调
 		onWindowResize(e) {
@@ -392,12 +393,23 @@ export default {
 					this.pushState()
 
 				} else if (photoList[index].type == 2) {
-					this.showVideoDetail = true;
-					this.$nextTick(() => {
-						this.$refs.videoPlayer.playVideo(photoList, index);
-					});
-					this.pushState()
-
+					if (localStorage.getItem("rawPlayer") == "1") {
+						//调用原生播放器
+						jsBridge.playVideo(JSON.stringify({
+							playIndex: index,
+							playList: photoList,
+							token: this.$store.state.token,
+							fromFileBrower: false,
+							serverType: "photo"
+						}))
+					} else {
+						//继续使用网页播放器
+						this.showVideoDetail = true;
+						this.$nextTick(() => {
+							this.$refs.videoPlayer.playVideo(photoList, index);
+						});
+						this.pushState()
+					}
 				}
 
 			}

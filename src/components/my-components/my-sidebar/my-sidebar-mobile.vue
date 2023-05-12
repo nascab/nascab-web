@@ -2,7 +2,7 @@
 	<div class="my-sidebar-root">
 
 		<!-- 回到首页 app内部不显示-->
-		<my-btn-icon v-if="!isFromApp" type="grey" class="nas-mobile-show" style="position:fixed;bottom:135px;left:15px;" iIcon="md-home" @click="goPath('/home')"></my-btn-icon>
+		<my-btn-icon v-if="!isFromApp" type="grey" class="nas-mobile-show" style="position:fixed;bottom:135px;left:15px;" iIcon="md-home" @click="goHome()"></my-btn-icon>
 		<!-- 切换边栏 -->
 		<my-btn-icon type="grey" class="nas-mobile-show" style="position:fixed;bottom:65px;left:15px;" iIcon="md-reorder" @click="(activeSidebar = !activeSidebar)"></my-btn-icon>
 
@@ -12,7 +12,7 @@
 				<img src="@/static/common/naslogo.png" class="logo" />
 			</template>
 
-			<vs-sidebar-item :id="index + ''" v-for="(option, index) in optionList">
+			<vs-sidebar-item :id="index + ''" v-for="(option, index) in optionList" v-if="!option.onlyAdmin || option.onlyAdmin&&$store.state.currentUser.is_admin == 1 ">
 				<template #icon>
 					<span :class="option.font" v-if="index == selectedIndex" style="font-size: 26px;"
 						class="item-icon"></span>

@@ -6,6 +6,48 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "34453282",
+      "name": "share live-fill",
+      "font_class": "share",
+      "unicode": "e869",
+      "unicode_decimal": 59497
+    },
+    {
+      "icon_id": "6129323",
+      "name": "280皮肤、个性化",
+      "font_class": "custome",
+      "unicode": "e7e8",
+      "unicode_decimal": 59368
+    },
+    {
+      "icon_id": "10329744",
+      "name": "link",
+      "font_class": "link",
+      "unicode": "e63b",
+      "unicode_decimal": 58939
+    },
+    {
+      "icon_id": "18072087",
+      "name": "albums",
+      "font_class": "movie-collection",
+      "unicode": "e7e3",
+      "unicode_decimal": 59363
+    },
+    {
+      "icon_id": "4630735",
+      "name": "history",
+      "font_class": "movie-history",
+      "unicode": "e63a",
+      "unicode_decimal": 58938
+    },
+    {
+      "icon_id": "7594870",
+      "name": "24gf-folderPlus",
+      "font_class": "24gf-folderPlus",
+      "unicode": "eac5",
+      "unicode_decimal": 60101
+    },
+    {
       "icon_id": "12579446",
       "name": "radio-checked",
       "font_class": "radio-checked",

@@ -238,6 +238,8 @@ export default {
 }
 
 .album-root-wrapper {
+	padding-left: 10px;
+	padding-right: 10px;
 	position: relative;
 	z-index: 1;
 	width: 100%;

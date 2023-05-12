@@ -7,10 +7,7 @@
 		<div class="nas-mobile-none">
 			<my-header></my-header>
 		</div>
-
-		<my-btn-icon v-if="!isFromApp" class="nas-mobile-show" iIcon="md-home" style="position:fixed;bottom:50px;left:15px;"
-			@click="goPath('/home')"></my-btn-icon>
-
+		<my-btn-icon v-if="!isFromApp" type="grey" class="nas-mobile-show" style="position:fixed;bottom:50px;left:15px;" iIcon="md-home" @click="goHome()"></my-btn-icon>
 		<!-- 无数据提示 -->
 		<my-nodata v-if="!loading && spaceList.length < 1" @onBtnClick="showAddModal = true"
 			:title="$t('private.privateSpaceDescA')"

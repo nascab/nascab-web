@@ -1,8 +1,8 @@
 <template>
 	<div class="space-add-root">
-		<vs-input style="width: 100%;margin-top: 10px;" :label-placeholder="$t('private.spaceName')"
+		<vs-input autocapitalize="off" autocorrect="off" style="width: 100%;margin-top: 10px;" :label-placeholder="$t('private.spaceName')"
 			v-model="formData.spaceName" />
-		<vs-input style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.spacePwd')"
+		<vs-input autocapitalize="off" autocorrect="off" style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.spacePwd')"
 			v-model="formData.spacePwd" />
 
 		<div style="margin-top: 20px;">{{$t('private.folderPath')}}</div>

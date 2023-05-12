@@ -1,6 +1,6 @@
 <template>
   <div class="service-root">
-    <div class="header">
+    <div :class="{ 'header-mobile': mobileLayout, 'header': !mobileLayout }">
       <div style="display: flex; flex-direction: row; justify-content: flex-start;  align-items: center;">
         <p class="top-title">{{ $t("state.serverState") }}</p>
         <!-- 版本提示 -->
@@ -13,64 +13,71 @@
           class="versionStr">{{ $t("nascab.versionTeam") }}</a>
         <div class="max-line-one" style="margin-left:10px">{{ hostName }}</div>
       </div>
+
       <!-- 刷新按钮 -->
       <vs-button icon style="background-color: white; flex-shrink: 0">
         <Icon color="#333333" @click="getServerState()" type="md-refresh" size="18" />
       </vs-button>
     </div>
+
     <div class="content-root">
-      <div class="card-root">
+      <div :class="{ 'card-root-mobile': mobileLayout, 'card-root': !mobileLayout }">
         <!-- 局域网访问地址 -->
-        <Card id="lanIp" class="card-item ">
+        <Card id="lanIp" :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }">
           <p class="card-title">
-            {{ apiServerStateStr }}
+            {{ apiServerStateStr }}<a style="margin-left: 5px;" @click="changeProtocal">[{{ protocal }}]</a>
           </p>
           <div v-if="ipv4List.length > 0" v-for="lanIp in ipv4List"
-            @click="showQrCodeDialog('http://' + lanIp.ip + ':' + apiServer.port)" class="card-item-title access-link enable-text-select">
-            {{ 'http://' + lanIp.ip + ":" + apiServer.port }}
+            @click="showQrCodeDialog('http://' + lanIp.ip + ':' + apiServer.port)"
+            class="card-item-title access-link ">
+            <div v-if="protocal=='http'" class="enable-text-select"> {{ 'http://' + lanIp.ip + ":" + apiServer.port }}</div>
+            <div class="enable-text-select" v-if="apiServerHttps && apiServerHttps.port && protocal=='https'"> {{ 'https://' + lanIp.ip + ":" + apiServerHttps.port }}
+            </div>
           </div>
           <div v-if="ipv4List.length < 1" class="card-item-title access-link">
             {{ $t("state.netStateNoFound") }}
           </div>
         </Card>
-
-
-        <!-- 外网访问地址 -->
-        <Card class="card-item">
+      <!-- 我的域名 -->
+      <Card :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }">
           <p class="card-title">
-            {{ $t("nascab.remoteAccess") }}
+            {{ $t("nascab.myDomain") }}
           </p>
           <div class="card-item-title access-link">
-            <a v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.subdomain" class=" enable-text-select"
-              @click="showQrCodeDialog('http://' + nasAccountInfo.vipInfo.subdomain + nasAccountInfo.vipInfo.proxyDomain)">
-              http://{{ nasAccountInfo.vipInfo.subdomain }}{{ nasAccountInfo.vipInfo.proxyDomain }}</a>
+            <a v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.subdomain" class=" enable-text-select">
+            {{ nasAccountInfo.vipInfo.subdomain }}{{ nasAccountInfo.vipInfo.proxyDomain }}</a>
             <!-- 去设置 -->
-            <span v-if="!nasAccountInfo.vipInfo || !nasAccountInfo.vipInfo.subdomain" @click="goToSetting('remoteAccess')"
+            <span v-if="!nasAccountInfo.vipInfo || !nasAccountInfo.vipInfo.subdomain" @click="goToSetting('ddns')"
               class="card-item-title access-link">
               {{ $t('photo.goToSet') }}
             </span>
           </div>
         </Card>
         <!-- IPV6地址 -->
-        <Card id="lanIp6" class="card-item">
+        <Card id="lanIp6" :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }">
           <p class="card-title">
-            {{ $t("state.ipv6url") }}<Icon @click="showVsAlertDialog($t('common.alert'), $t('state.ipv6alert'))" style="cursor: pointer;" size="16" type="ios-help-circle-outline" />
+            {{ $t("state.ipv6url") }}
+            <Icon @click="showVsAlertDialog($t('common.alert'), $t('state.ipv6alert'))"
+              style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" />
           </p>
           <div v-if="ipv6List.length > 0" v-for="lanIp in ipv6List"
             @click="showQrCodeDialog('http://[' + lanIp.ip + ']:' + apiServer.port)"
-            class="card-item-title access-link max-line-one  enable-text-select">
-            {{ 'http://[' + lanIp.ip + "]:" + apiServer.port }}
+            class="card-item-title access-link">
+            <div class="enable-text-select" v-if="apiServer&&protocal=='http'" style="text-overflow: ellipsis;word-break: break-all;"> {{ 'http://[' + lanIp.ip + "]:" + apiServer.port }}</div>
+            <div class="enable-text-select" v-if="apiServerHttps && apiServerHttps.port&&protocal=='https'" style="text-overflow: ellipsis;word-break: break-all;"> {{ 'https://[' + lanIp.ip + "]:" + apiServerHttps.port }} </div>
           </div>
-          <div v-if="ipv6List.length < 1" class="card-item-title access-link"
+          <div v-if="ipv6List.length < 1" class="card-item-title access-link" 
             @click="showVsAlertDialog($t('common.alert'), $t('state.ipv6alert'))">
             {{ $t("state.netStateNoFound") }}
           </div>
         </Card>
         <!-- ftp服务状态 -->
-        <Card class="card-item" v-if="ftpServer && ftpServer.state == 'run'">
+        <Card :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }"
+          v-if="ftpServer && ftpServer.state == 'run'">
           <p class="card-title">FTP{{ ftpServerStr }}</p>
           <div v-if="ipv4List.length > 0" v-for="lanIp in ipv4List"
-            @click="lanIpClick('ftp://' + lanIp + ':' + ftpServer.port)" class="card-item-title access-link  enable-text-select">
+            @click="lanIpClick('ftp://' + lanIp + ':' + ftpServer.port)"
+            class="card-item-title access-link  enable-text-select">
             {{ 'ftp://' + lanIp.ip + ":" + ftpServer.port }}
           </div>
           <div v-else class="card-item-title access-link">
@@ -78,10 +85,12 @@
           </div>
         </Card>
         <!-- webdav服务状态 -->
-        <Card class="card-item" v-if="webDavServer && webDavServer.state == 'run'">
+        <Card :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }"
+          v-if="webDavServer && webDavServer.state == 'run'">
           <p class="card-title">WebDav{{ webDavServerStr }}</p>
           <div v-if="ipv4List.length > 0" v-for="lanIp in ipv4List"
-            @click="lanIpClick('http://' + lanIp + ':' + webDavServer.port)" class="card-item-title access-link enable-text-select">
+            @click="lanIpClick('http://' + lanIp + ':' + webDavServer.port)"
+            class="card-item-title access-link enable-text-select">
             {{ 'http://' + lanIp.ip + ":" + webDavServer.port }}
           </div>
           <div v-else class="card-item-title access-link">
@@ -116,12 +125,17 @@ export default {
       default: {},
       type: Object,
     },
+    mobileLayout: {//是否使用手机布局
+      default: false,
+      type: Boolean,
+    }
   },
   computed: {
 
   },
   data() {
     return {
+      protocal:"http",
       loading: false,
       showUrlDialog: false,
       showUrl: "",
@@ -131,6 +145,7 @@ export default {
       webDavServerStr: "",
       apiServerStateStr: "",
       apiServer: null,
+      apiServerHttps: null,
       webDavServer: null,
       lanIpAndPort: "",
       ipv4List: [],//局域网ip列表
@@ -154,6 +169,9 @@ export default {
     }
   },
   methods: {
+    changeProtocal(){
+      this.protocal=this.protocal=="http"?"https":"http"
+    },
     goToSetting(pageName) {
       if (this.$store.state.currentUser.is_admin == 1) {
         this.goPathNewWebView("/setting?pageName=" + pageName, this.$t('home.settingCenter'), { pageName: pageName })
@@ -222,6 +240,11 @@ export default {
               //设置服务运行状态字符串
               this.apiServer = JSON.parse(res.data[i].value);
               this.apiServerStateStr = this.$t("state.lanUrl");
+            } else if (res.data[i].title == "apiServerHttps") {
+              //设置服务运行状态字符串
+              try {
+                this.apiServerHttps = JSON.parse(res.data[i].value);
+              } catch (err) { }
             } else if (res.data[i].title == "webDavServer") {
               //设置服务运行状态字符串
               this.webDavServer = JSON.parse(res.data[i].value);
@@ -231,8 +254,6 @@ export default {
                 this.webDavServer.state == "run"
                   ? this.$t("state.run")
                   : this.$t("state.error");
-
-
             } else if (res.data[i].title == "FTPServer") {
               //设置服务运行状态字符串
               this.ftpServer = JSON.parse(res.data[i].value);
@@ -288,7 +309,7 @@ export default {
 
 .header {
   width: 100%;
-  padding: 15px 15px;
+  padding: 15px;
   height: 60px;
   position: absolute;
   display: flex;
@@ -301,6 +322,11 @@ export default {
     height: 50px;
   }
 
+}
+
+.header-mobile {
+  padding: 0 !important;
+  @extend .header;
 }
 
 .content-root {
@@ -336,6 +362,11 @@ export default {
   align-content: flex-start;
 }
 
+.card-root-mobile {
+  padding: 0 !important;
+  @extend .card-root;
+}
+
 .card-item {
   margin-top: 10px;
   border-radius: 20px;
@@ -359,6 +390,11 @@ export default {
   }
 }
 
+.card-item-mobile {
+  border-radius: 10px;
+  @extend .card-item;
+}
+
 .versionStr {
   flex-shrink: 0;
   font-size: 16px;
@@ -372,4 +408,5 @@ export default {
 .access-link {
   cursor: pointer;
   color: $nas-main !important;
-}</style>
+}
+</style>

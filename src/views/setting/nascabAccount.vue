@@ -15,6 +15,14 @@
                 <a v-if="this.currentNasUserInfo" @click="tokenLogin()" style="margin-left:10px;">
                     {{ $t('common.refresh') }}</a>
             </div>
+            <div class="item-root" v-if="currentVipInfo">
+                <span class="item-text-left">{{ $t('user.subCountNum') }}:</span>
+                <span>{{ currentVipInfo.sub_account_num}}</span>
+
+                <!-- 增加更多 -->
+                <a v-if="this.currentNasUserInfo" @click="showAddUser" style="margin-left:10px;">
+                    {{ $t('common.addMore') }}</a>
+            </div>
 
             <!-- 当前版本 -->
             <div class="item-root">
@@ -34,7 +42,7 @@
             <div v-if="currentVipInfo" class="item-root">
                 <span class="item-text-left">{{ $t('nascab.validUntil') }}:</span>
                 <!-- 有效期显示 -->
-                {{ currentVipInfo.end_date | dateFormat('YYYY-MM-DD HH:mm') }}
+                {{utils.formatTimeStamp(currentVipInfo.end_date)}}
                 <!-- 续期按钮 -->
                 <a @click="toBuyVip()" style="margin-left:10px;">
                     {{ $t('nascab.renewal') }}</a>
@@ -61,8 +69,9 @@
             </div>
         </div>
 
+      
         <Modal v-model="showUserLoginDialog" footer-hide>
-            <iframe v-if="showUserLoginDialog" :src="loadUrl" style="width:100%;height:550px;border:none;"></iframe>
+            <iframe v-if="showUserLoginDialog" :src="loadUrl" style="width:100%;height:550px;border:none;" scrolling="no"></iframe>
         </Modal>
 
         <Modal v-model="showBuyVipDialog" footer-hide fullscreen>
@@ -70,6 +79,9 @@
         </Modal>
         <iframe v-if="marketingUrl && currentNasUserInfo" :src="marketingUrl"
             style="width:100%;height:600px;border:none;"></iframe>
+
+
+
     </div>
 </template>
 
@@ -83,14 +95,18 @@ let baseUrl = axios.nasCabBaseUrl + "/userCenter/#/"
 if (process.env.NODE_ENV !== "development") {
     baseUrl = axios.nasCabBaseUrl + "/userCenter/#/"
 }
+import utils from "@/plugins/utils";
 
 let loginUrl = baseUrl + "?iframeMode=1"
 let vipUrl = baseUrl + "pages/vip/vip?iframeMode=1"
 let contactUrl = baseUrl + "pages/contactUs/contactUs"
 let marketingUrl = baseUrl + "pages/marketing/marketing"
+let addMoreUrl = baseUrl + "pages/addUser/addUser"
+
 export default {
     data() {
         return {
+            showAddUserDiaolog:false,
             marketingUrl: marketingUrl,
             loadUrl: loginUrl, //iframe加载的url
             showUserLoginDialog: false,
@@ -120,6 +136,14 @@ export default {
             // }
             this.showUserLoginDialog = true
         },
+        showAddUser() {
+            this.loadUrl = addMoreUrl + "?token=" + this.userToken
+            if (this.$store.state.language) {
+                this.loadUrl += "&language=" + this.$store.state.language
+            }
+            console.log(" this.loadUrl", this.loadUrl)
+            this.showUserLoginDialog = true
+        },
         toNasUserInfo() {
             let returnUrl = encodeURIComponent(window.location.href)
             this.loadUrl = `${loginUrl}&target=userInfo&token=${this.userToken}&returnUrl=${returnUrl}`
@@ -138,6 +162,9 @@ export default {
             this.showUserLoginDialog = true
         },
         toBuyVip() {
+            if(localStorage.ios==1){
+                return this.showVsNotification(this.$t('common.buyVipInPc'))
+            }
             if (!this.currentNasUserInfo) {
                 return this.showVsNotification(this.$t('nascab.loginFirst'))
             }

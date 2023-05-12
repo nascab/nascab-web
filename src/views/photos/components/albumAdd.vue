@@ -45,6 +45,10 @@
 						<Icon type="md-sunny" size="16"></Icon>
 						<span>{{ $t('album.memoryDate') }}</span>
 					</Radio>
+					<Radio label="holidays">
+						<Icon type="md-beer" size="16"></Icon>
+						<span>{{ $t('album.holidays') }}</span>
+					</Radio>
 					<Radio label="fix">
 						<Icon type="md-pricetags" size="16"></Icon>
 						<span>{{ $t('album.fixDate') }}</span>
@@ -54,6 +58,8 @@
 						<span>{{ $t('album.sectionDate') }}</span>
 					</Radio>
 				</RadioGroup>
+
+
 			</div>
 			<!--  例如：您的生日是1月1日，您可以选择'每年1月1日'，这样，每年1月1日拍摄的照片将位于此相册中-->
 			<div v-if="dateType == 'aiDate'" style="margin-top: 10px;text-align: left;">
@@ -72,11 +78,28 @@
 					<h4 style="margin-bottom: 10px;text-align: left;">
 						{{ $t('album.takePhotoDate') }}:
 					</h4>
+
 					<!-- 智能日期 -->
-					<div v-if="dateType == 'aiDate'">
+					<div v-if="dateType == 'aiDate'" style="display: flex;align-items: center;">
+
 						<Cascader :placeholder="$t('album.chooseDate')" style="width: 150px;" :data="aiDateList"
 							v-model="aiDateValue"></Cascader>
-
+						<RadioGroup v-model="aiDateType" style="margin-left:10px">
+							<!-- 公历 -->
+							<Radio label="solar">
+								<span>{{ $t('photo.solar') }}</span>
+							</Radio>
+							<!-- 农历 -->
+							<Radio label="lunar">
+								<span>{{ $t('photo.lunar') }}</span>
+							</Radio>
+						</RadioGroup>
+					</div>
+					<!-- 节假日 -->
+					<div v-if="dateType == 'holidays'">
+						<Select @on-select="onHolidaySelect" style="width:200px">
+							<Option v-for="(item, index) in holidayList" :value="index">{{ item.label }}</Option>
+						</Select>
 					</div>
 					<!-- 固定日期 -->
 					<div v-if="dateType == 'fix'">
@@ -91,8 +114,8 @@
 					</div>
 					<!-- 区间日期 -->
 					<div v-if="dateType == 'section'">
-						<DatePicker type="daterange" v-model="sectionDateValue"
-							:placeholder="$t('album.chooseDateSection')" style="width: 300px">
+						<DatePicker type="daterange" v-model="sectionDateValue" :placeholder="$t('album.chooseDateSection')"
+							style="width: 300px">
 						</DatePicker>
 					</div>
 				</div>
@@ -103,7 +126,7 @@
 			<h4 style="margin-top: 30px;margin-bottom: 20px;">{{ $t('album.geoAlbumExample') }}</h4>
 			<div id="albumMap" style="width: 100%;height: 300px;"></div>
 			<Button type="info" @click="startSelectArea" style="margin-right: 20px;margin-top: 20px;">{{
-					$t('album.selectArea')
+				$t('album.selectArea')
 			}}</Button>
 			<Button type="success" @click="clearSelectArea" style="margin-top: 20px;">{{ $t('album.clearSelectArea')
 			}}</Button>
@@ -125,7 +148,7 @@
 				{{ $t('album.albumName') }}:
 			</h4>
 			<div style="display: flex;align-items: center;">
-				<Input maxlength="30" v-model="albumName" :placeholder="$t('album.albumName')" style="width: 300px" />
+				<Input  autocapitalize="off" autocorrect="off" maxlength="30" v-model="albumName" :placeholder="$t('album.albumName')" style="width: 300px" />
 				<!-- 创建相册按钮 -->
 				<vs-button @click="createAlbum" type="primary" style="width: 200px;margin-left: 20px;">
 					<Icon type="md-add-circle" style="margin-right: 10px;" />
@@ -137,6 +160,7 @@
 </template>
 
 <script>
+
 import geohash from "ngeohash"
 import chooseData from "./chooseData/aiDataValue.js"
 import axios from "@/plugins/axios";
@@ -157,8 +181,11 @@ export default {
 			albumName: "", //相册名称
 			albumType: "date", //选中的相册类型 默认日期相册
 			dateType: "aiDate", //日期相册的类型 默认智能日期相册
+			aiDateType: "solar",//solar 公历 lunar 农历
 			aiDateValue: [], //智能日期选择后的值
+			selectedHoliday: null,
 			aiDateList: chooseData.aiDataValue, //智能日期的选项 太长放在在另外的js里
+			holidayList: chooseData.holidayList,//节日列表
 			sectionDateValue: "", //区间日期值
 			fixDateValue: "", //固定日期选择值
 			fixDateFilterValue: "=", //固定日期的 符号 等于 大于 小于
@@ -184,6 +211,10 @@ export default {
 	},
 	mounted() { },
 	methods: {
+		onHolidaySelect(holidayIndex) {
+			this.selectedHoliday = this.holidayList[holidayIndex.value]
+			this.albumName = this.selectedHoliday.label
+		},
 		//根据用户输入的关键字搜索
 		searchMode(value) {
 			value = value.trim()
@@ -219,12 +250,18 @@ export default {
 						this.showVsNotification(this.$t('album.chooseDate'))
 						return
 					}
-					searchValue = "LIKE '" + this.aiDateValue[0] + '-' + this.aiDateValue[1] + '-' + this.aiDateValue[
-						2] + "'"
-
 					dataValue.year = this.aiDateValue[0]
 					dataValue.month = this.aiDateValue[1]
 					dataValue.day = this.aiDateValue[2]
+					console.log("this.aiDateType",this.aiDateType)
+					if (this.aiDateType == "solar") {//公历
+						searchValue = "LIKE '" + this.aiDateValue[0] + '-' + this.aiDateValue[1] + '-' + this.aiDateValue[
+							2] + "'"
+					} else if (this.aiDateType == "lunar") {//阴历
+						dataValue.isLunar=1
+						searchValue = chooseData.getLunarInSql(dataValue.month, dataValue.day)
+					}
+					console.log("searchValue",searchValue)
 				} else if (this.dateType == 'fix') { //固定日期
 					searchField = 'original_time'
 					if (this.fixDateValue.length < 3) {
@@ -264,6 +301,9 @@ export default {
 					dataValue.month_end = endDate.getMonth() + 1
 					dataValue.day_end = endDate.getDate()
 
+				} else if (this.dateType == 'holidays') {
+					searchValue = this.selectedHoliday.searchValue
+					dataValue.holidayName = this.selectedHoliday.label
 				}
 			} else if (this.albumType == "geo") {
 				//地理围栏相册
@@ -338,7 +378,7 @@ export default {
 				bounds = L.latLngBounds(corner1, corner2);
 			this.map = new L.Map('albumMap', {
 				maxBounds: bounds,
-				attributionControl:false,
+				attributionControl: false,
 				center: center,
 				zoom: 5,
 				layers: [glayer_normal]
@@ -393,7 +433,7 @@ export default {
 <style lang="scss" scoped>
 .root {
 	padding: 10px;
-	min-height: 300px;
+	min-height: 350px;
 	width: 100%;
 }
 

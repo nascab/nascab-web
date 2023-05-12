@@ -3,7 +3,7 @@
 
 		<div class="operation-header">
 			<!-- 创建时间排序 文件名排序 -->
-			<my-menu-select :shrinkModeTh="500" style="flex-shrink:0;margin-right: 20px;" @onItemClick="clickType"
+			<my-menu-select :shrinkModeTh="550" style="flex-shrink:0;margin-right: 20px;" @onItemClick="clickType"
 				:optionList="typeMenuOptionList"></my-menu-select>
 
 			<!-- 搜索栏 -->
@@ -34,7 +34,7 @@
 						<p class="item-text">{{ record.remark }}</p>
 					</div>
 					<!-- 源路径 -->
-					<div class="item-row" v-if="record.type != 'delete'">
+					<div class="item-row" v-if="record.type != 'delete' && record.source_path">
 						<b class="item-title">{{ $t('file.sourcePath') }}:</b>
 						<p class="item-text">{{ record.source_path }}</p>
 					</div>
@@ -46,7 +46,7 @@
 					<!-- 开始时间 -->
 					<div class="item-row">
 						<b class="item-title">{{ $t('common.startTime') }}:</b>
-						<p class="item-text">{{ record.create_time | dateFormat('YYYY-MM-DD HH:mm:ss') }}</p>
+						<p class="item-text">{{ utils.formatTimeStamp(record.create_time) }}</p>
 					</div>
 				</Card>
 
@@ -70,6 +70,7 @@
 </template>
 <script>
 
+import utils from "@/plugins/utils";
 
 
 export default {
@@ -110,6 +111,9 @@ export default {
 			}, {
 				title: this.$t('file.unzip'),
 				id: "unzip"
+			}, {
+				title: this.$t('upload.upload'),
+				id: "upload"
 			}]
 		}
 	},
@@ -211,6 +215,8 @@ export default {
 				return this.$t("file.unzip")
 			} else if (type == "delete") {
 				return this.$t("file.delete")
+			}else if (type == "upload") {
+				return this.$t("upload.upload")
 			}
 		}
 	}

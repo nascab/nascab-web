@@ -93,7 +93,8 @@ export default {
 			}, {
 				id: '/photoSourceSet',
 				title: this.$t('setting.photoSourceSetting'),
-				font: "nasIcons icon-setting-system"
+				font: "nasIcons icon-setting-system",
+				onlyAdmin:true
 			}
 			]
 		};

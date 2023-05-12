@@ -7,9 +7,9 @@
 			@closeExif="closeExif">
 		</photo-exif>
 
-		<Modal v-model="showPhotoEditor" fullscreen footer-hide>
+		<!-- <Modal v-model="showPhotoEditor" fullscreen footer-hide>
 			<tui-image-editor ref="photoEditor" @onClose="onEditorClose"> </tui-image-editor>
-		</Modal>
+		</Modal> -->
 	</div>
 </template>
 
@@ -40,7 +40,7 @@ export default {
 	},
 	data() {
 		return {
-			showPhotoEditor: false,
+			// showPhotoEditor: false,
 			imgIndex: 0,
 			showExif: false,
 			indexObj: null,
@@ -66,15 +66,15 @@ export default {
 				}
 			}
 		},
-		onEditorClose(change) {
-			//编辑器关闭回调
-			this.showPhotoEditor = false
-			if (change) {
-				//图片有修改
-				this.$Spin.show();
-				this.$emit('onImageChange')
-			}
-		},
+		// onEditorClose(change) {
+		// 	//编辑器关闭回调
+		// 	this.showPhotoEditor = false
+		// 	if (change) {
+		// 		//图片有修改
+		// 		this.$Spin.show();
+		// 		this.$emit('onImageChange')
+		// 	}
+		// },
 		onClose() {
 			this.$emit('onClose')
 		},
@@ -82,7 +82,10 @@ export default {
 			this.showExif = false
 			localStorage.setItem('showExif', '0')
 		},
-		showImg(photoList, index) {
+		showImg(photoList, index, keepRawUrl) {
+			console.log("photoList", photoList)
+			console.log("index", index)
+
 			//加载太多会有问题 列表只加载60个 即前30个 后30个 从原列表截取
 			let showUrl = photoList[index].url
 			let urlList = []
@@ -98,6 +101,7 @@ export default {
 					break
 				}
 			}
+			console.log(this.showList)
 			this.showList.reverse();
 			for (let i = index; i < photoList.length; i++) {
 				if (photoList[i].type == 1) {
@@ -146,9 +150,6 @@ export default {
 
 			}
 			if (!this.isMobile) {//pc可以编辑
-				toolbar.oneToOne = {
-					show: true
-				}
 				toolbar.zoomOut = {
 					show: true
 				}
@@ -157,9 +158,9 @@ export default {
 			toolbar.prev = {
 				show: true
 			}
-			toolbar.play = {
-				show: true
-			}
+			// toolbar.play = {
+			// 	show: true
+			// }
 			toolbar.next = {
 				show: true
 			}
@@ -173,15 +174,16 @@ export default {
 				toolbar.zoomIn = {
 					show: true
 				}
-				if (!this.fromFolderBrower && !this.fromSpace) {
-					toolbar.edit = () => {
-						let lowExt = this.indexObj.ext.toLowerCase()
-						this.showPhotoEditor = true
-						this.$nextTick(() => {
-							this.$refs.photoEditor.editImage(this.indexObj, this.serverType);
-						})
-					}
-				}
+				//去掉图片编辑
+				// if (!this.fromFolderBrower && !this.fromSpace) {
+				// 	toolbar.edit = () => {
+				// 		let lowExt = this.indexObj.ext.toLowerCase()
+				// 		this.showPhotoEditor = true
+				// 		this.$nextTick(() => {
+				// 			this.$refs.photoEditor.editImage(this.indexObj, this.serverType);
+				// 		})
+				// 	}
+				// }
 
 			}
 			//只有照片管理提供删除
@@ -215,14 +217,14 @@ export default {
 									this.onClose()
 								}
 							}
-						}).catch((error) => { })
+						}).catch((error) => { console.log(error) })
 					})
 				}
 			}
 			let viewer = this.$viewerApi({
 				options: {
-					//android 和 pc端不显示动画 太卡
-					transition: this.isMobile && !/(Android)/i.test(navigator.userAgent),
+					//android 和 pc端不显示动画 太卡 && !/(Android)/i.test(navigator.userAgent)
+					transition: this.isMobile,
 					button: false,
 					className: "viewerroot",
 					initialViewIndex: showIndex,
@@ -293,6 +295,9 @@ export default {
 					},
 					// 去哪里获取原始url
 					url(image) {
+						if (keepRawUrl) {
+							return image.src
+						}
 						if (image.src.indexOf('type=tiny') != -1) {
 							return image.src.replace('type=tiny', 'type=raw');
 						}
@@ -310,7 +315,6 @@ export default {
 }
 </script>
 <style>
-
 .viewer-root {
 	z-index: 100;
 }
@@ -370,10 +374,10 @@ export default {
 }
 </style>
 <style lang="scss" scoped>
-
-::v-deep .viewer-toolbar ul{
-	transform:scale(1.2) !important;
+::v-deep .viewer-toolbar ul {
+	transform: scale(1.2) !important;
 }
+
 .viewerroot {
 	margin-right: 250px;
 }

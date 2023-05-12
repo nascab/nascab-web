@@ -1,11 +1,14 @@
 <template>
-	<div class="bgtask-root">
-		<div style="width: 100%;display: flex;justify-content: center;">
-			<div style="font-weight: bold;">{{ $t('home.bgTask') }}</div>
+	<div :class="{ 'bgtask-root-mobile': mobileLayout, 'bgtask-root': !mobileLayout }">
+		<div style="width: 100%;display: flex;justify-content: center;margin-top: 15px;">
+			<div style="width: 100%;font-weight: bold;text-align: left;">{{ $t('home.bgTask') }}</div>
 		</div>
 
 		<div v-for="item in taskList">
-			<div class="task-type">{{ item.taskTypeStr }}</div>
+			<div style="display: flex;align-items:center;margin-top: 10px;">
+				<div class="blue-point"></div>
+				<div class="task-type">{{ item.taskTypeStr }}<Icon v-if="item.taskTypeStrAlert" @click="showVsAlertDialog($t('common.alert'), item.taskTypeStrAlert)" style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" /></div>
+			</div>
 			<div style="display:flex;align-items: center;">
 				<div v-if="item.sizeStr" class="size-str">{{ item.sizeStr }}</div>
 				<Progress v-if="item.percent" :percent="item.percent" :stroke-width="20" status="active" text-inside />
@@ -20,7 +23,7 @@
 		</div>
 
 		<!-- 关闭按钮 -->
-		<vs-button @click="$emit('setBgTaskShow', false)" icon class="closs-btn">
+		<vs-button v-if="!mobileLayout" @click="$emit('setBgTaskShow', false)" icon class="closs-btn">
 			<Icon type="md-close-circle" color="#386DF2" size="25" />
 		</vs-button>
 	</div>
@@ -31,7 +34,10 @@
 
 export default {
 	props: {
-
+		mobileLayout: {//是否使用手机布局
+			default: false,
+			type: Boolean,
+		}
 	},
 	components: {
 
@@ -47,8 +53,7 @@ export default {
 			popedTaskIdList: [],//已经弹出过得运行中任务就不再弹出了
 		};
 	},
-	created() {
-
+	mounted() {
 		this.timer = setInterval(() => {
 			if (this.$store.state.token) this.getBgTaskList(1)
 		}, 8000)
@@ -93,7 +98,6 @@ export default {
 			if (!playerCount || playerCount < 1) {
 				//如果当前没有在执行播放 那么查看下是否有残留的 停止失败的playid 有的话一起发送给服务器 让服务区停止转码
 				let playIdList = sessionStorage.getItem('play-id-list')
-				console.log('bgtask 取出保存的playIdList', playIdList)
 				if (playIdList) {
 					try {
 						playIdList = JSON.parse(playIdList)
@@ -151,6 +155,13 @@ export default {
 						} else if (this.taskList[i].task_type == 'AI_CLASSES') {
 							//物体识别
 							this.taskList[i].taskTypeStr = this.$t('photo.doingAiClasses')
+						} else if (this.taskList[i].task_type == 'AI_PHASH') {
+							//扫描重复照片
+							this.taskList[i].taskTypeStr = this.$t('photo.doingPhash')
+						} else if (this.taskList[i].task_type == 'SUBTITLE_PRE_GEN') {
+							//字幕预提取
+							this.taskList[i].taskTypeStr = this.$t('movie.subtitlePreGen')+"..."
+							this.taskList[i].taskTypeStrAlert = this.$t('movie.subtitlePreGenAlert')+"["+this.$t('movie.subtitlePrenGenClose')+"]"
 						}
 						// 设置任务执行百分比
 						if (item.size_current && item.size_all && item.size_current > 0) {
@@ -166,7 +177,7 @@ export default {
 						}
 					}
 					//有新任务会自动弹出列表 弹出过得id就不弹了 只有首页弹
-					if (this.taskList.length > 0 && window.location.href.includes("/home")) {
+					if (this.taskList.length > 0 && window.location.href.includes("/home") && !this.mobileLayout && !this.isFromApp) {
 						let shoulePopBgTask = false
 						for (let i in this.taskList) {
 							if (!this.popedTaskIdList.includes(this.taskList[i].id)) {
@@ -199,11 +210,22 @@ export default {
 	box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.3);
 }
 
+.bgtask-root-mobile {
+	border-radius: 10px !important;
+	@extend .bgtask-root;
+}
+
+.blue-point {
+	margin-right: 10px;
+	background-color: $nas-main;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
 .task-type {
 	text-align: left;
 	width: 100%;
-	margin-bottom: 10px;
-	margin-top: 10px;
 }
 
 .size-str {
@@ -219,8 +241,8 @@ export default {
 }
 
 .no-task-text {
-	margin-top: 20px;
-	margin-bottom: 20px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 	color: $nas-grey;
 }
 
@@ -228,5 +250,4 @@ export default {
 	margin-left: 5px;
 	color: $nas-grey;
 	cursor: pointer;
-}
-</style>
+}</style>

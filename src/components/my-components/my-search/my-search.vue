@@ -1,7 +1,7 @@
 <template>
 	<div class="my-search-root">
 		<!-- pc端显示的 -->
-		<Input size="large" clearable  class="input-pc" @on-clear="doSearch()" @on-enter="doSearch()" @on-search="doSearch()" style="border-radius:20px" search enter-button :placeholder="placeholder" v-model="searchValue" />
+		<Input autocapitalize="off" autocorrect="off"  size="large" clearable  class="input-pc" @on-clear="doSearch()"  @on-search="doSearch()" style="border-radius:20px" search enter-button :placeholder="placeholder" v-model="searchValue" />
 
 		<!-- 手机端显示的搜索按钮 -->
 		<my-btn-icon  iIcon="ios-search" class="input-mobile"  @click="showMobileSearch = true"></my-btn-icon>
@@ -12,7 +12,7 @@
 				</h4>
 			</template>
 			<div class="input-mobile-root">
-				<vs-input type="text" v-model="searchValue">
+				<vs-input autocapitalize="off" autocorrect="off"  type="text" v-model="searchValue">
 					<template #icon>
 						<i class="nasIcons icon-search icon-main-color" />
 					</template>
@@ -59,6 +59,7 @@ export default {
 			this.doSearch()
 		},
 		doSearch() {
+			console.log("doSearch doSearch")
 			this.showMobileSearch = false
 			this.$emit('onSearch', this.searchValue)
 		}

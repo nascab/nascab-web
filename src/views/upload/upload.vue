@@ -5,15 +5,17 @@
 			<div v-if="targetPath" style="font-weight:bold">
 				{{ $t('upload.targetFolder') + " : " }}
 			</div>
-			<Tag color="primary" style="border-radius:20px" v-if="targetPath" closable @on-close="targetPath = ''">{{ targetPath }}</Tag>
+			<Tag color="primary" style="border-radius:20px" v-if="targetPath" closable @on-close="targetPath = ''">{{
+				targetPath }}</Tag>
 			<!-- 选择上传文件夹 -->
-			<Button v-else @click="selectPath" type="primary" style="border-radius:20px">{{ $t('upload.selectTargetFolder') }}</Button>
+			<Button v-else @click="selectPath" type="primary" style="border-radius:20px">{{ $t('upload.selectTargetFolder')
+			}}</Button>
 
 			<!-- 最近使用的文件夹 -->
 			<div v-if="lastUsePath && !targetPath && !spaceId"
 				style="margin-top:20px; margin-bottom: 10px; padding-left: 10px;padding-right: 10px;display: flex;align-items: flex-start;flex-direction: row;font-weight: bold;align-items: center;">
 				<div style="flex-shrink:0">{{ $t('upload.recentUseFolder') }}:</div>
-				<a @click="selectRecrentFolder" >{{ lastUsePath }}</a>
+				<a @click="selectRecrentFolder">{{ lastUsePath }}</a>
 			</div>
 		</div>
 
@@ -30,44 +32,89 @@
 				{{ $t('upload.rename') }}
 			</vs-radio>
 		</div>
-		<Upload :action="uploadUrl" ref="upload" :show-upload-list="false" :on-error="onUploadError"
-			:on-success="onUploadSuccess" :before-upload="onBeforeUpload" :on-progress="onUploadProgress"
-			v-show="targetPath || spaceId" multiple type="drag">
+
+		<div v-if="targetPath && !isMobile"
+			style="display: flex;flex-direction: row;margin-bottom: 20px;padding-left: 20px;align-items: center;">
+			<div style="margin-right: 10px;">{{ $t('upload.uploadType') + " : " }}</div>
+			<vs-radio v-model="uploadType" val="files" style="margin-right: 10px;">
+				{{ $t('upload.files') }}
+			</vs-radio>
+			<vs-radio v-model="uploadType" val="folder" style="margin-right: 10px;">
+				{{ $t('upload.folder') }}
+			</vs-radio>
+		</div>
+		<Upload v-if="uploadType == 'files'" :action="uploadUrl" ref="upload" :show-upload-list="false"
+			:on-error="onUploadError" :on-success="onUploadSuccess" :before-upload="onBeforeUpload"
+			:on-progress="onUploadProgress" v-show="targetPath || spaceId" multiple type="drag" :webkitdirectory="false">
 			<div style="padding: 20px 0;position: relative;">
+
 				<Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
-				<div style="display:flex;align-items: center;justify-content: center;">
-					<p style="margin-right:10px">{{ this.$t('upload.dropFilesUpload') }}</p>
-					<Button v-if="uploadList.length > 0" @click.stop="uploadList = []" @click="uploadList = []"
-						size="small">{{ $t('upload.clearRecord') }}</Button>
+				<div style="display:flex;align-items: center;justify-content: center;cursor: pointer;">
+					<p>{{ this.$t('upload.dropFilesUpload') }}</p>
+					<Button style="margin-left: 3px;" v-if="uploadList.length > 0" @click.stop="uploadList = []"
+						@click="uploadList = []" size="small">{{ $t('upload.clearRecord') }}</Button>
 				</div>
 			</div>
 		</Upload>
 
-		<!-- 上传文件列表 -->
-		<div style="overflow:auto;max-height: 300px;padding-bottom: 20px;">
-			<div v-for="(item, index) in uploadList"
-				style="padding:10px;display:flex;flex-direction: column;border-bottom: 1px solid #eee;">
-
-				<!-- 文件名称 -->
-				<div style="display:flex;width:100%;align-items: center;">
-					<!-- 成功的标志 -->
-					<Icon v-if="item.status == 'finished'" type="md-checkmark-circle" size="20" color="green"
-						style="margin-right: 5px;" />
-					<!-- 失败的标志 -->
-					<Icon v-if="item.status == 'error'" type="ios-close-circle" size="20" color="red"
-						style="margin-right: 5px;" />
-					<!-- 文件名称 -->
-					<div style="text-align: left;flex: 1;word-break: break-all;"
-						:class="{ uploadError: item.status == 'error' }">{{ item.name }}</div>
-					<!-- 删除按钮 -->
-					<Icon style="flex-shrink: 0; cursor: pointer;" type="ios-trash" @click="handleRemove(item, index)"
-						size="20"></Icon>
+		<Upload v-if="uploadType == 'folder'" :action="uploadUrl" ref="upload" :show-upload-list="false"
+			:on-error="onUploadError" :on-success="onUploadSuccess" :before-upload="onBeforeUpload"
+			:on-progress="onUploadProgress" v-show="targetPath || spaceId" multiple type="select" :webkitdirectory="true">
+			<div style="padding: 20px 0;position: relative;">
+				<Icon type="ios-cloud-upload" size="52" style="color: #3399ff;cursor: pointer;"></Icon>
+				<div style="display:flex;align-items: center;justify-content: center;">
+					<p>{{ this.$t('file.chooseFolder') }}</p>
+					<Button style="margin-left: 3px;" v-if="uploadList.length > 0" @click.stop="clearRecord"
+						@click="uploadList = []" size="small">{{ $t('upload.clearRecord') }}</Button>
 				</div>
-				<Progress v-if="item.status == 'uploading'" :percent="item.percentage" hide-info></Progress>
+			</div>
+		</Upload>
+		<!-- 上传文件列表 -->
+
+		<div
+			style="width:100%; max-height: 300px;padding-bottom: 20px;display: flex;flex-direction: column;align-items: center;">
+			<Menu v-if="uploadList && uploadList.length > 0" mode="horizontal" active-name="all"
+				@on-select="onRecordTypeSelect" style="width:100%;display: flex;justify-content: space-around;">
+				<MenuItem name="all">
+				{{ $t("common.all") }}[{{ uploadList.length }}]
+				</MenuItem>
+				<MenuItem name="uploading">
+				{{ $t("common.uploading") }}
+				</MenuItem>
+				<MenuItem name="finished">
+				{{ $t("common.succesed") }}
+				</MenuItem>
+				<MenuItem name="error">
+				{{ $t("common.faild") }}
+				</MenuItem>
+
+			</Menu>
+			<div style="overflow:auto;height:100%;width:100%">
+				<div v-for="(item, index) in uploadList"
+					style="padding:10px;display:flex;flex-direction: column;border-bottom: 1px solid #eee;width:100%;"
+					v-if="item.status == recordType || recordType == 'all'">
+
+					<!-- 文件名称 -->
+					<div style="display:flex;width:100%;align-items: center;justify-content: space-between;">
+						<!-- 成功的标志 -->
+						<Icon v-if="item.status == 'finished'" type="md-checkmark-circle" size="20" color="green"
+							style="margin-right: 5px;" />
+						<!-- 失败的标志 -->
+						<Icon v-if="item.status == 'error'" type="ios-close-circle" size="20" color="red"
+							style="margin-right: 5px;" />
+						<!-- 文件名称 -->
+						<div style="text-align: left;flex: 1;word-break: break-all;"
+							:class="{ uploadError: item.status == 'error' }">{{ item.name }}</div>
+						<!-- 删除按钮 -->
+						<Icon style="flex-shrink: 0; cursor: pointer;" type="ios-trash" @click="handleRemove(item, index)"
+							size="20"></Icon>
+					</div>
+					<Progress v-if="item.status == 'uploading'" :percent="item.percentage" hide-info></Progress>
+				</div>
 			</div>
 		</div>
 		<!-- 文件树 -->
-		<vs-dialog v-model="showChooseFolder" prevent-close scroll :full-screen="isMobile" >
+		<vs-dialog v-model="showChooseFolder" prevent-close scroll :full-screen="isMobile">
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ $t('file.chooseFolder') + '[' + $t('file.doubleClickFolderEnter') + ']' }}
@@ -80,7 +127,7 @@
 					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
 			</template>
 		</vs-dialog>
-		
+
 
 		<!-- 关闭按钮 -->
 		<vs-button v-if="!spaceId" @click="switchUpload()" icon class="closs-btn">
@@ -112,14 +159,16 @@ export default {
 	},
 	data() {
 		return {
+			uploadType: "files",
 			uploadUrl: "",
 			currentUploadFile: null,
-			overMode: 'over',
+			overMode: 'skip',
 			uploadList: [],
+			recordType: "all",
 			targetPath: "",
 			lastUsePath: "",
 			uploadSucCount: 0,
-			showChooseFolder: false,
+			showChooseFolder: false
 		};
 	},
 	created() {
@@ -129,6 +178,12 @@ export default {
 		this.lastUsePath = localStorage.getItem('lastUsePath')
 	},
 	methods: {
+		clearRecord() {
+			this.uploadList = []
+		},
+		onRecordTypeSelect(recordType) {
+			this.recordType = recordType
+		},
 		onBeforeUpload(file) {
 			return new Promise((resolve, reject) => {
 				if (!this.$store.state.token) {
@@ -153,7 +208,7 @@ export default {
 					})
 					return reject()
 				}
-				let uploadUrl = axios.uploadUrl() + `&savePath=${axios.encodePath(this.targetPath)}&overMode=${this.overMode}`
+				let uploadUrl = axios.uploadUrl() + `&savePath=${axios.encodePath(this.targetPath)}&overMode=${this.overMode}&filename=${file.name}`
 				if (this.spaceId) {
 					uploadUrl = axios.privateSpaceUploadUrl() + `&spaceId=${this.spaceId}&overMode=over&spaceToken=${this.$store.state.privateSpace[this.spaceId]}&filename=${file.name}`
 				}
@@ -178,6 +233,7 @@ export default {
 			}
 
 			this.uploadList.splice(index, 1)
+
 			if (canceled) {
 				//任务被取消 添加一个错误记录
 				let cancelName = this.$t('common.cancelled')
@@ -208,7 +264,7 @@ export default {
 				})
 			} else {
 				//成功了
-				console.log('上传成功')
+				console.log('上传成功', file)
 				this.$emit('fileUploaded', file)
 				this.uploadList.unshift(file)
 			}
@@ -231,19 +287,34 @@ export default {
 				file: file
 			})
 		},
-		onUploadError(error, file, fileList) {
-			console.log('错误', file)
+		onUploadError(error, response, file) {
+			for (let i in this.uploadList) {
+				if (this.uploadList[i].uid == file.uid) {
+					this.uploadList.splice(i, 1)
+					break
+				}
+			}
 			this.uploadList.unshift({
 				status: "error",
-				name: this.$t('upload.uploadFail')
+				name: file ? file.name + ":" + this.$t('upload.uploadFail') : this.$t('upload.uploadFail')
 			})
 		},
 		selectRecrentFolder() {
-			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('upload.useRecentFolder', {
-				recentFolder: this.lastUsePath
-			}), () => {
-				this.onSelectPath(this.lastUsePath)
-			})
+			// 检查目标文件夹是否还存在
+			this.api
+				.post("/api/uploadApi/folderExist", {
+					savePath: this.lastUsePath,
+				})
+				.then((res) => {
+					if (!res.code) {
+						this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('upload.useRecentFolder', {
+							recentFolder: this.lastUsePath
+						}), () => {
+							this.onSelectPath(this.lastUsePath)
+						})
+					}
+				})
+				.catch((error) => { });
 		},
 		selectPath() {
 			this.showChooseFolder = true

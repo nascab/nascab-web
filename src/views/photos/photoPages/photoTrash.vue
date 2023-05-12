@@ -2,9 +2,9 @@
 	<photo-base :initIndex="7">
 		<div class="trash-root" ref="photoListRoot">
 			<!-- 头部操控条 -->
-			<photo-operation-header style="width:100%;height:70px;position: absolute;left: 0;z-index: 2;"
-				ref="photoHeader" @onChooseDataType="onChooseDataType" @onChangeShowMode="onChangeShowMode"
-				@onSizeChange="setImgSize" :datePrefix="$t('file.trashBin')">
+			<photo-operation-header style="width:100%;height:70px;position: absolute;left: 0;z-index: 2;" ref="photoHeader"
+				@onChooseDataType="onChooseDataType" @onChangeShowMode="onChangeShowMode" @onSizeChange="setImgSize"
+				:datePrefix="$t('file.trashBin')">
 			</photo-operation-header>
 			<div style="width:100%;display:flex;height: 100%;flex-direction:row;overflow: hidden;padding-top: 70px;">
 				<!-- 照片列表容器 -->
@@ -23,8 +23,7 @@
 			</div>
 			<!-- 点击照片后弹出的照片详情 -->
 			<Modal v-model="showPhotoDetail" fullscreen footer-hide>
-				<photo-detail v-if="showPhotoDetail" @onClose="showPhotoDetail = false"
-					ref="photoDetail"></photo-detail>
+				<photo-detail v-if="showPhotoDetail" @onClose="showPhotoDetail = false" ref="photoDetail"></photo-detail>
 			</Modal>
 			<Modal v-model="showVideoDetail" fullscreen footer-hide :closable="false">
 				<video-detail propsServerType="photo" v-if="showVideoDetail" @onClose="showVideoDetail = false"
@@ -71,6 +70,7 @@ import photoOperationHeader from "@/views/photos/components/photoOperationHeader
 //照片列表内容组件
 import photoListContent from "@/views/photos/components/photoListContent.vue"
 import photoBase from "@/views/photos/photoBase";
+import jsBridge from "@/plugins/jsBridge"
 
 export default {
 	components: {
@@ -113,6 +113,10 @@ export default {
 		//窗口变化监听
 		window.addEventListener("resize", this.onWindowResize);
 		window.addEventListener('popstate', this.onPopstate)
+
+		setTimeout(() => {
+			this.$forceUpdate()
+		}, 500);
 
 	},
 	beforeDestroy() {
@@ -294,12 +298,23 @@ export default {
 				});
 				this.pushState()
 			} else if (this.selectedPhoto.type == 2) {
-				this.showVideoDetail = true;
-				this.$nextTick(() => {
-					this.$refs.videoPlayer.playVideo(this.$refs.photoContent.photoList, this
-						.selectedPhotoIndex);
-				});
-				this.pushState()
+				if (localStorage.getItem("rawPlayer") == "1") {
+					//调用原生播放器
+					jsBridge.playVideo(JSON.stringify({
+						playIndex: this.selectedPhotoIndex,
+						playList: this.$refs.photoContent.photoList,
+						token: this.$store.state.token,
+						fromFileBrower: false,
+						serverType: "photo"
+					}))
+				} else {
+					//继续使用网页播放器
+					this.showVideoDetail = true;
+					this.$nextTick(() => {
+						this.$refs.videoPlayer.playVideo(this.$refs.photoContent.photoList, this.selectedPhotoIndex);
+					});
+					this.pushState()
+				}
 			}
 		},
 		popRestore() {
@@ -326,11 +341,12 @@ export default {
 	width: 100%;
 	height: 100%;
 	padding-left: 10px;
-		padding-right: 10px;
+	padding-right: 10px;
+
 	@media not all and (max-width:640px) {
 		border-top-left-radius: 20px;
 		border-top-right-radius: 20px;
-		
+
 	}
 
 	background-color: rgba(255, 255, 255, 0.6);

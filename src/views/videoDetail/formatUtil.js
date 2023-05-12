@@ -19,14 +19,14 @@ if (window.location.href.indexOf(axios.nasRemoteUrl) != -1) {
     formatUtil.isRemoteMode = true//当前在使用远程连接
 }
 formatUtil.getCanPlayRawFile=function(videoStream,indexObj){
-    if(indexObj.filename){
-        let extionName=formatUtil.getFileExtension(indexObj.filename)
-        if(extionName=="mov"||extionName=="MOV"){
-            if(indexObj.is_livephoto==1&&!formatUtil.isSafari()&&!formatUtil.isChrome()){
-                return false
-            }
-        }
-    }
+    // if(indexObj.filename){
+    //     let extionName=formatUtil.getFileExtension(indexObj.filename)
+    //     if(extionName=="mov"||extionName=="MOV"){
+    //         if(indexObj.is_livephoto==1&&!formatUtil.isSafari()&&!formatUtil.isChrome()){
+    //             return false
+    //         }
+    //     }
+    // }
     return true
 }
 //设置当前播放的格式状态
@@ -35,12 +35,12 @@ formatUtil.setFormatState = function (format) {
     formatUtil.usingRawFile = format == false
 }
 formatUtil.getTranscodeFormat = function (indexObj) {
-    if(indexObj&&indexObj.duration&&indexObj.duration<10){
-        //10秒以下的使用mp4
-        return "mp4"
-    }else{
+    // if(indexObj&&indexObj.duration&&indexObj.duration<10){
+    //     //10秒以下的使用mp4
+    //     return "mp4"
+    // }else{
         return 'm3u8'
-    }
+    // }
    
 }
 formatUtil.isIos = function () {//判断是否为ios

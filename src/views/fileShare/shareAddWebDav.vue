@@ -2,7 +2,7 @@
 	<div>
 		<Form prop="taskName" ref="shareData" :model="shareData">
 			<FormItem :label="$t('share.pathSign')">
-				<Input @on-keyup="shareData.pathSign = shareData.pathSign.replace(/[^\w\/]/ig, '')" type="text"
+				<Input  autocapitalize="off" autocorrect="off" @on-keyup="shareData.pathSign = shareData.pathSign.replace(/[^\w\/]/ig, '')" type="text"
 					v-model="shareData.pathSign" :placeholder="$t('share.pathSignPlaceHolder')"></Input>
 			</FormItem>
 			<p>WebDav{{ $t('share.urlExample') }}http://ip:port/{{ $t('share.pathSign') }}</p>

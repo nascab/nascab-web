@@ -1,8 +1,8 @@
 @font-face {
   font-family: "nasIcons"; /* Project id 3592611 */
-  src: url('iconfont.woff2?t=1678198210131') format('woff2'),
-       url('iconfont.woff?t=1678198210131') format('woff'),
-       url('iconfont.ttf?t=1678198210131') format('truetype');
+  src: url('iconfont.woff2?t=1681792332922') format('woff2'),
+       url('iconfont.woff?t=1681792332922') format('woff'),
+       url('iconfont.ttf?t=1681792332922') format('truetype');
 }
 
 .nasIcons {
@@ -11,6 +11,30 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-share:before {
+  content: "\e869";
+}
+
+.icon-custome:before {
+  content: "\e7e8";
+}
+
+.icon-link:before {
+  content: "\e63b";
+}
+
+.icon-movie-collection:before {
+  content: "\e7e3";
+}
+
+.icon-movie-history:before {
+  content: "\e63a";
+}
+
+.icon-24gf-folderPlus:before {
+  content: "\eac5";
 }
 
 .icon-radio-checked:before {

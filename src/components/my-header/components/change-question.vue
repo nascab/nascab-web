@@ -3,13 +3,13 @@
 		<!-- 修改密保问题 -->
 		<Form ref="formValidate" :model="formValidate" :rules="ruleValidate" >
 			<FormItem :label="$t('header.rawQuestion')" prop="username">
-				<Input disabled v-model="currentUser.question"></Input>
+				<Input autocapitalize="off" autocorrect="off"  disabled v-model="currentUser.question"></Input>
 			</FormItem>
 			<FormItem :label="$t('header.newQuestion')" prop="newQuestion">
-				<Input v-model="formValidate.newQuestion" :placeholder="$t('header.newQuestion')"></Input>
+				<Input autocapitalize="off" autocorrect="off"  v-model="formValidate.newQuestion" :placeholder="$t('header.newQuestion')"></Input>
 			</FormItem>
 			<FormItem :label="$t('header.newAnswer')" prop="newAnswer">
-				<Input v-model="formValidate.answer" :placeholder="$t('header.newAnswer')"></Input>
+				<Input autocapitalize="off" autocorrect="off"  v-model="formValidate.answer" :placeholder="$t('header.newAnswer')"></Input>
 			</FormItem>
 		</Form>
 		<vs-button :disabled="!btnCanUse" type="info" style="margin-top: 20px;width: 100%;border-radius: 20px;"

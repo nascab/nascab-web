@@ -25,7 +25,7 @@
 		<Divider></Divider>
 
 		<!-- 原空间密码 -->
-		<vs-input type="password" style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.rawSpacePwd')"
+		<vs-input autocapitalize="off" autocorrect="off" type="password" style="width: 100%;margin-top: 30px;" :label-placeholder="$t('private.rawSpacePwd')"
 			v-model="formData.spacePwd" />
 
 

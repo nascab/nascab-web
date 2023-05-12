@@ -20,14 +20,17 @@
 				</my-sidebar-mobile>
 			</div>
 
-			<files-operation-record v-if="menuActive=='operation_record'"></files-operation-record>
+			<files-operation-record v-if="menuActive == 'operation_record'"></files-operation-record>
+			<!-- 所有用户共享的文件夹管理 -->
+			<files-share-for-all v-else-if="menuActive == 'share_manage'"></files-share-for-all>
+			<!-- 临时共享 -->
+			<files-share-temp v-else-if="menuActive == 'share_temp'"></files-share-temp>
 			<div v-else class="brower-list-root">
 				<folder-brower-operation-bar ref="fileBar" style="position: absolute;left: 0;"
 					@onBack="$refs.fileBrowser.goBack()" :showSlider="!isMobile" @createNewFolder="createNewFolder"
-					@onSliderChange="onSliderChange" :showSearch="menuActive=='list'" :showClearBtn="menuActive != 'list'" @onClear="onClear"
-					:showCreateNew="showCreateNew" @onRefresh="$refs.fileBrowser.refresh()"
-					 @onCopy="$refs.fileBrowser.copy()"
-					 @onSearch="(val)=>$refs.fileBrowser.onSearch(val)">
+					@onSliderChange="onSliderChange" :showSearch="menuActive == 'list'" :showClearBtn="menuActive != 'list'"
+					@onClear="onClear" :showCreateNew="showCreateNew" @onRefresh="$refs.fileBrowser.refresh()"
+					@onCopy="$refs.fileBrowser.copy()" @onSearch="(val) => $refs.fileBrowser.onSearch(val)">
 				</folder-brower-operation-bar>
 				<div style="width: 100%;height: 100%;overflow: hidden;padding-top: 80px;">
 					<folder-brower style="width: 100%;height: 100%; z-index: 0;overflow-y: auto;" ref="fileBrowser"
@@ -44,12 +47,17 @@ import myHeader from "@/components/my-header/my-header.vue"
 import folderBrower from "@/components/folder-brower/folder-brower.vue"
 import folderBrowerOperationBar from "@/components/folder-brower/folder-brower-operation-bar.vue"
 import filesOperationRecord from "./filesOperationRecord.vue"
+import filesShareForAll from "./filesShareForAll.vue"
+import filesShareTemp from "./filesShareTemp.vue"
+
 export default {
 	components: {
 		myHeader,
 		folderBrower,
 		folderBrowerOperationBar,
-		filesOperationRecord
+		filesOperationRecord,
+		filesShareForAll,
+		filesShareTemp
 	},
 	data() {
 		return {
@@ -67,10 +75,22 @@ export default {
 				title: this.$t('file.recent'),
 				font: "nasIcons icon-file-recent"
 			}, {
+				id: 'share_manage',
+				title: this.$t('home.shareManage'),
+				font: "nasIcons icon-white-list",
+				onlyAdmin:true
+			}, {
+				id: 'share_temp',
+				title: this.$t('home.shareTemp'),
+				font: "nasIcons icon-link",
+				onlyAdmin:true
+			}, {
 				id: 'operation_record',
 				title: this.$t('file.logs'),
 				font: "nasIcons icon-log"
-			}],
+			}
+			// 
+		],
 			menuActive: "list"
 		}
 	},
@@ -98,10 +118,13 @@ export default {
 			}
 		},
 		setLeftMenuId(menu) {
-			let menuId=menu.id
+			let menuId = menu.id
+			//从日志跳到文件列表 不刷新文件列表类型 否则会重复调用接口
+			let shouldChangeShowType = true
+			if (this.menuActive == "operation_record") shouldChangeShowType = false
 			this.menuActive = menuId
 			this.$nextTick(() => {
-				if (this.$refs.fileBrowser) {
+				if (this.$refs.fileBrowser && shouldChangeShowType) {
 					this.$refs.fileBrowser.changeShowType(menuId)
 				}
 			})

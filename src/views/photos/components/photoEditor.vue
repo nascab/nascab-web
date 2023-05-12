@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
 	<div style="position: fixed;width: 100%;height: 100%; ">
 		<div ref="imageEditor" style="width: 100%; height: 100%" />
 		<div
@@ -208,4 +208,4 @@
 </script>
 <style lang="scss" scoped>
 
-</style>
+</style> -->

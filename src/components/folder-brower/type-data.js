@@ -15,7 +15,6 @@ let typeData={
 	'.m4v': 2,
 	'.flv':2,
 	'.f4v':2,
-	'.dat':2,
 	 '.vob':2,
 	 '.mpg':2,
 	 '.rmvb':2,

@@ -34,11 +34,7 @@ export default {
 
 <style lang="scss" scoped>
 .shrink-item {
-	margin-top: 10px;
-	border-radius: 20px;
-	color: white;
-	padding: 5px;
+	padding: 10px;
 	font-size: 16px;
-	background-color: $nas-main;
 }
 </style>

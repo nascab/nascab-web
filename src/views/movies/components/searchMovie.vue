@@ -4,7 +4,7 @@
 		<!-- 搜索的文件名字 -->
 		<div style="word-break:break-all;margin-bottom:10px;text-align: left;width: 100%;">{{ movieIndexObj.filename }}
 		</div>
-		<Input style="margin-bottom:10px" v-model="searchStr" @on-search="searchMovieInfo(false)" search
+		<Input  autocapitalize="off" autocorrect="off" style="margin-bottom:10px" v-model="searchStr" @on-search="searchMovieInfo(false)" search
 			:enter-button="$t('common.search')" :placeholder="$t('movie.inputMovieName')" />
 		<!-- 搜索结果列表 -->
 		<div class="search-item" v-for="(info, index) in searchResultList">

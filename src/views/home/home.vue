@@ -30,8 +30,6 @@
         </div>
       </div>
     </div>
-    <!-- <v-tour name="myTour" :steps="tourSteps" :options="tourOptions"></v-tour> -->
-
     <!-- 右键菜单 -->
     <easy-cm @ecmcb="rightMenuClick" :list="rightMenuList"></easy-cm>
   </div>
@@ -52,6 +50,7 @@ export default {
   computed: {},
   data() {
     return {
+      showMenuArr: [],
       rightMenuList: [{
         text: this.$t('file.openInNewWindow'),
         type: "NEW_WINDOW",
@@ -67,33 +66,6 @@ export default {
           buttonStop: this.$t('tour.finish'),
         }
       },
-      tourSteps: [
-        {
-          target: '#photoManage',  // We're using document.querySelector() under the hood
-          content: this.$t('tour.photoManage')
-        },
-        {
-          target: '#movieManage',
-          content: this.$t('tour.movieManage')
-        },
-        {
-          target: '#switchBg',
-          content: this.$t('tour.switchBg')
-        },
-        {
-          target: '#checkMsg',
-          content: this.$t('tour.msg')
-        },
-        {
-          target: '#lanIp',
-          content: this.$t('tour.lanIp')
-        },
-        {
-          target: '#cpuRam',
-          content: this.$t('tour.cpuRam')
-        }
-      ],
-
     }
   },
   computed: {
@@ -101,21 +73,19 @@ export default {
     homeMenuList() {
       return [
         // 照片管理
-        { id: "photoManage", src: require("@/static/home/icon-photo-manage.png"), path: "/photoTimeline", title: this.$t("home.photoManage"), isShow: true },
+        { id: "photoManage", src: require("@/static/home/icon-photo-manage.png"), path: "/photoTimeline", title: this.$t("home.photoManage"), isShow:this.showMenuArr.includes('photoManage') },
         // 影音管理
-        { id: "movieManage", src: require("@/static/home/icon-movie-manage.png"), path: "/movies", title: this.$t("home.movieManage"), isShow: true },
+        { id: "movieManage", src: require("@/static/home/icon-movie-manage.png"), path: "/movies", title: this.$t("home.movieManage"), isShow: this.showMenuArr.includes('movieManage') },
         //  文件浏览器
-        { id: "filesBrower", src: require("@/static/home/icon-folder-browser.png"), path: "/filesBrower", title: this.$t("home.fileBrower"), isShow: true },
+        { id: "filesBrower", src: require("@/static/home/icon-folder-browser.png"), path: "/filesBrower", title: this.$t("home.fileBrower"), isShow: this.showMenuArr.includes('filesBrower')  },
         //  备份
-        { id: "backup", src: require("@/static/home/icon-file-backup.png"), path: "/backup", title: this.$t("home.backup"), isShow: this.$store.state.currentUser.is_admin == 1 },
+        { id: "backup", src: require("@/static/home/icon-file-backup.png"), path: "/backup", title: this.$t("home.backup"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('backup') },
         // 分享
-        { id: "sharing", src: require("@/static/home/icon-file-share.png"), path: "/share", title: this.$t("home.sharing"), isShow: this.$store.state.currentUser.is_admin == 1 },
+        { id: "sharing", src: require("@/static/home/icon-file-share.png"), path: "/share", title: this.$t("home.sharing"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('sharing') },
         // 私有空间
-        { id: "privateSpace", src: require("@/static/home/icon-private-space.png"), path: "/privateSpace", title: this.$t("photo.privateSpace"), isShow: true  },
+        { id: "privateSpace", src: require("@/static/home/icon-private-space.png"), path: "/privateSpace", title: this.$t("photo.privateSpace"), isShow: this.showMenuArr.includes('privateSpace') },
         // 安全
-        { id: "security", src: require("@/static/home/icon-security.png"), path: "/security", title: this.$t("home.securityCenter"), isShow: this.$store.state.currentUser.is_admin == 1 },
-        // 终端
-        { id: "terminal", src: require("@/static/home/icon-terminal.png"), path: "/terminal", title: this.$t("home.terminal"), isShow: this.$store.state.currentUser.is_admin == 1 },
+        { id: "security", src: require("@/static/home/icon-security.png"), path: "/security", title: this.$t("home.securityCenter"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('security') },
         // 配置中心
         { id: "settingCenter", src: require("@/static/home/icon-setting.png"), path: "/setting", title: this.$t("home.settingCenter"), isShow: this.$store.state.currentUser.is_admin == 1 },
 
@@ -123,16 +93,12 @@ export default {
     }
   },
   mounted() {
-
+   
   },
   activated() {
     this.getNasAccountInfo();
   },
   created() {
-    // this.shouldShowTour('home', () => {
-    //   this.$tours['myTour'].start()
-    // })
-
     //检查更新
     this.getVersionInfo()
   },
@@ -144,8 +110,10 @@ export default {
         console.log(window.location)
         if (this.selectedMenu.id == "terminal" && window.location.protocol.startsWith("https")) {
           //打开terminal强制使用http协议
-          window.open('http://' + window.location.host + "/#" + this.selectedMenu.path, "_blank");
-        }else{
+
+          let terminalUrl = `http://${window.location.host}/#/?token=${this.$store.state.token}&target=terminal`
+          window.open(terminalUrl, "_blank");
+        } else {
           window.open(window.location.origin + "/#" + this.selectedMenu.path)
         }
       }
@@ -158,8 +126,9 @@ export default {
     onMenuClick(menu) {
       console.log("menu", menu)
       //https的时候要强制开新页面 跳http 因为安全策略 https无法访问ws协议 只能访问wss协议
-      if (menu.id == "terminal" && (window.location.protocol.startsWith("https")||this.$store.state.runInElectron)) {
-        window.open('http://' + window.location.host + "/#" + menu.path, "_blank");
+      if (menu.id == "terminal" && (window.location.protocol.startsWith("https") || this.$store.state.runInElectron)) {
+        let terminalUrl = `http://${window.location.host}/#/?token=${this.$store.state.token}&target=terminal`
+        window.open(terminalUrl, "_blank");
       } else {
         this.goPathNewWebView(menu.path, menu.title, null, menu.newTag)
       }
@@ -174,6 +143,11 @@ export default {
               this.$refs.systemState.hasNewVersion = 1
             }
           }
+        }
+        if (res.showMenuArr) {
+          this.showMenuArr = res.showMenuArr
+        }else{
+          this.showMenuArr=["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"]
         }
       }).catch((error) => { })
     },

@@ -3,7 +3,7 @@
 		<div class="my-header-left">
 			<img src="@/static/common/naslogo.png" class="logo">
 			<!-- pc端显示在左边 -->
-			<vs-button v-if="showHome" @click="goPath('/home')" class="iconBtn" style="margin-left: 30px;"
+			<vs-button v-if="showHome" @click="goHome()" class="iconBtn" style="margin-left: 30px;"
 				animation-type="vertical">
 				<img class="btnImg" src="@/static/home/icon-home.png" />
 				<template #animate v-if="!isMobile">
@@ -14,7 +14,7 @@
 		<!-- unreadMsgCount -->
 		<div class="my-header-right">
 			<!-- 手机端显示在右边 -->
-			<vs-button @click="goPath('/home')" v-if="showHome" class="iconBtn rightHomeBtn" animation-type="vertical">
+			<vs-button @click="goHome()" v-if="showHome" class="iconBtn rightHomeBtn" animation-type="vertical">
 				<img class="btnImg" src="@/static/home/icon-home.png" />
 				<template #animate v-if="!isMobile">
 					Home

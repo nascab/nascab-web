@@ -1,6 +1,6 @@
 <template >
 	<div class="my-sidebar-root">
-		<div class="option-item" v-for="(option, index) in optionList">
+		<div class="option-item" v-for="(option, index) in optionList" v-if="!option.onlyAdmin || option.onlyAdmin&&$store.state.currentUser.is_admin == 1 ">
 			<div class="sign" v-if="index == selectedIndex"></div>
 			<div class="item-content" @click="itemClick(index)">
 				<span :class="option.font" v-if="index == selectedIndex" style="font-size: 26px;"

@@ -46,6 +46,8 @@
 	</div>
 </template>
 <script>
+import utils from "@/plugins/utils";
+
 export default {
 	mounted() {
 		//在header的mounted中触发加载第一页数据 在onChooseRange
@@ -125,7 +127,7 @@ export default {
 						this.recordList[i].typeStr = this.recordList[i].type
 					}
 
-					this.recordList[i].create_time = this.$moment(this.recordList[i].create_time).local().format('YYYY-MM-DD HH:mm:ss')
+					this.recordList[i].create_time = utils.formatTimeStamp(this.recordList[i].create_time)
 
 				}
 				this.loading = false

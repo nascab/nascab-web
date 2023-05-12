@@ -162,29 +162,34 @@ export default {
 				}
 				this.albumFirstPhoto = photo
 				//创建标记点
-				let imgMaker = L.marker([photo.latitude, photo.longitude], {
-					icon: myIcon,
-					indexId: photo.id
-				})
-				imgMaker.on('click', (e) => {
-					this.api
-						.post("/api/mapApi/getLocationStr", {
-							indexId: photo.id,
-						})
-						.then((res) => {
-							if (!res.code) {
-								this.selectPositionStr = res.geo.name + ' ' + res.geo
-									.cn_name
-								this.clickGeohash = photo.geohash
-								this.showPhotoGeo = true
-								this.pushState()
-							}
-						})
-						.catch((error) => {
-							console.log(error)
-						});
-				})
-				imgMaker.addTo(this.markerGroup);
+				try {
+					let imgMaker = L.marker([photo.latitude, photo.longitude], {
+						icon: myIcon,
+						indexId: photo.id
+					})
+					imgMaker.on('click', (e) => {
+						this.api
+							.post("/api/mapApi/getLocationStr", {
+								indexId: photo.id,
+							})
+							.then((res) => {
+								if (!res.code) {
+									this.selectPositionStr = res.geo.name + ' ' + res.geo
+										.cn_name
+									this.clickGeohash = photo.geohash
+									this.showPhotoGeo = true
+									this.pushState()
+								}
+							})
+							.catch((error) => {
+								console.log(error)
+							});
+					})
+					imgMaker.addTo(this.markerGroup);
+				} catch (err) {
+					console.log(err)
+				}
+
 			}
 			if (this.albumId || this.ordinaryAlbumId) {
 				//相册模式 中心点移动到第一张图片处

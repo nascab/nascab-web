@@ -1,6 +1,22 @@
 let getToken = () => {
     return localStorage.getItem('token')
 }
+
+let formatTimeStamp = (value) => {
+    if (value) {
+        let date = new Date(value)	// 时间戳为秒：10位数
+        //let date = new Date(value)	// 时间戳为毫秒：13位数
+        let year = date.getFullYear()
+        let month = date.getMonth() + 1 < 10 ? `0${date.getMonth() + 1}` : date.getMonth() + 1
+        let day = date.getDate() < 10 ? `0${date.getDate()}` : date.getDate()
+        let hour = date.getHours() < 10 ? `0${date.getHours()}` : date.getHours()
+        let minute = date.getMinutes() < 10 ? `0${date.getMinutes()}` : date.getMinutes()
+        let second = date.getSeconds() < 10 ? `0${date.getSeconds()}` : date.getSeconds()
+        return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    } else {
+        return ''
+    }
+}
 let formatSeconds = (value) => {
     //秒转为时分秒
     var secondTime = parseInt(value); // 秒
@@ -87,9 +103,9 @@ let calItemWidth = function (wrapper, itemBaseWidth, itemMargin) {
         if (baseCount < 1) {
             baseCount = 1
         }
-        let itemWidth=(parseInt(wrapper.width*10)/10 - itemMargin * baseCount * 2) / baseCount;
+        let itemWidth = (parseInt(wrapper.width * 10) / 10 - itemMargin * baseCount * 2) / baseCount;
         // 保留一位小数 后面舍弃
-        itemWidth=parseInt(itemWidth*10)/10
+        itemWidth = parseInt(itemWidth * 10) / 10
         return itemWidth
     }
 
@@ -101,5 +117,6 @@ export default {
     formatSeconds,
     getSizeStr,
     checkDouban,
-    checkImdb
+    checkImdb,
+    formatTimeStamp
 }

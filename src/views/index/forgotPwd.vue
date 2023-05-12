@@ -11,11 +11,13 @@
 
 			<!-- 右边表单 -->
 			<div style="display: flex;flex-direction: column;align-items: center;">
+				
 				<!-- title -->
 				<div style="font-size:28px;margin-bottom: 50px;">{{ $t('login.getPwdBack') }}</div>
+
 				<vs-tooltip>
 					<!-- 答案 -->
-					<vs-input type="text" color="#F6FAFF" v-model="formInline.answer"
+					<vs-input autocapitalize="off" autocorrect="off" type="text" color="#F6FAFF" v-model="formInline.answer"
 						:placeholder="$t('resetPwd.placeholderAnswer')">
 						<template #icon>
 							<img src="@/static/login/icon-answer.png" class="input-icon" />
@@ -29,7 +31,7 @@
 				</vs-tooltip>
 
 				<!-- 用户名 -->
-				<vs-input type="text" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.username"
+				<vs-input autocapitalize="off" autocorrect="off" type="text" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.username"
 					:placeholder="$t('registerAdmin.placeholderUsername')">
 					<template #icon>
 						<img src="@/static/login/icon-username.png" class="input-icon" />
@@ -37,7 +39,7 @@
 				</vs-input>
 
 				<!-- 密码 -->
-				<vs-input type="password" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.password"
+				<vs-input autocapitalize="off" autocorrect="off"  type="password" style="margin-top: 30px;" color="#F6FAFF" v-model="formInline.password"
 					:placeholder="$t('resetPwd.placeholderPassword')">
 					<template #icon>
 						<img src="@/static/login/icon-password.png" class="input-icon" />
@@ -53,6 +55,8 @@
 				<!-- 去登陆 -->
 				<vs-button @click="goLogin" style="margin-top: 20px;" border>{{ $t('login.goLogin') }}
 				</vs-button>
+				<a @click="showForgetAnswer" style="margin-top:10px">{{ $t('login.forgetAnswer') }}</a>
+
 			</div>
 			<!-- <img v-if="isMobile" style="position: fixed;bottom: 40px;width: 120px;object-fit: contain;"
 				src="@/static/common/naslogo.png" mode="widthFix" /> -->
@@ -78,6 +82,9 @@ export default {
 		this.getInfo()
 	},
 	methods: {
+		showForgetAnswer(){
+			this.showVsAlertDialog(this.$t('common.alert'), this.$t('login.forgetAnswerAlert',{dbPath:`C:\\Users\\您的Windows用户名\\AppData\\Roaming\\nascab\\database`}))
+		},
 		goLogin() {
 			this.$router.push({
 				path: '/login'

@@ -61,7 +61,7 @@
 				</h4>
 			</template>
 			<div>
-				<Input prefix="ios-paper" v-if="showAddIp" v-model="newIp"></Input>
+				<Input  autocapitalize="off" autocorrect="off" prefix="ios-paper" v-if="showAddIp" v-model="newIp"></Input>
 			</div>
 
 			<vs-button style="width: 100%;margin-top: 30px;" @click="addIp()">{{$t('common.ok')}}</vs-button>

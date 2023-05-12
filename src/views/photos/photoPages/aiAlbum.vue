@@ -28,6 +28,8 @@
 							<div v-if="album.type == 'date'">
 								<!-- 智能日期 -->
 								<p v-if="album.data_value.type == 'aiDate'" class="item-subtitle max-line-one">
+									<!-- 公历、农历 -->
+									{{  album.data_value.isLunar==1?$t("photo.lunar"):$t("photo.solar") }}:
 									{{ album.data_value.year == '%' ? $t('album.everyYear') : album.data_value.year }}{{
 										'/' + (album.data_value.month == '%' ? $t('album.everyMonth') : album.data_value.month)
 									}}{{ '/' +
@@ -42,6 +44,10 @@
 									<span v-if="album.data_value.sign == '>'">{{ $t('album.gt') }}</span>
 									<span v-if="album.data_value.sign == '<'">{{ $t('album.lt') }}</span>
 									<span v-if="album.data_value.sign == '='">{{ $t('album.eq') }}</span>
+								</p>
+
+								<p v-if="album.data_value.type == 'holidays'" class="item-subtitle max-line-one">
+									{{ $t('album.holidays') }}-{{ album.data_value.holidayName }}
 								</p>
 								<!-- 区间日期 -->
 								<p v-if="album.data_value.type == 'section'" class="item-subtitle max-line-one">
@@ -58,6 +64,8 @@
 							<div v-if="album.type == 'geo'">
 								<p class="item-subtitle max-line-one">{{ $t('album.geoAlbumDetail') }}</p>
 							</div>
+
+
 							<!-- 设备相册 -->
 							<div v-if="album.type == 'mode'">
 								<p class="item-subtitle max-line-one">{{ album.data_value.mode }}</p>
@@ -71,6 +79,7 @@
 									<h3 v-if="album.data_value.type == 'aiDate'">{{ $t('album.aiDate') }}</h3>
 									<h3 v-if="album.data_value.type == 'fix'">{{ $t('album.fixDate') }}</h3>
 									<h3 v-if="album.data_value.type == 'section'">{{ $t('album.sectionDate') }}</h3>
+									<h3 v-if="album.data_value.type == 'holidays'">{{ $t('album.holidays') }}</h3>
 								</div>
 								<div v-if="album.type == 'geo'">
 									<h3>{{ $t('album.geoAlbum') }}</h3>
@@ -103,7 +112,7 @@
 			</my-dialog-input>
 
 			<!--添加相册对话框 -->
-			<vs-dialog v-model="showAddAlbum">
+			<vs-dialog v-model="showAddAlbum" scroll>
 				<template #header>
 					<h4 style="font-size: 16px;">
 						{{ $t('album.addAAlbum') }}

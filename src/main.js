@@ -6,17 +6,13 @@ import store from './store'
 import myViewDesign from '@/plugins/myViewDesign';
 import i18n from '@/plugins/i18n' // 导入vue-i18n
 import './plugins/myViewDesign/styles/index.less';
-import moment from 'moment'
 
 import '@/plugins/longpress'
 //导入jsbridge 挂在全局
 import Bridge from './plugins/jsBridge'
 Vue.prototype.$bridge = Bridge
 
-//新手指引库
-import VueTour from 'vue-tour'
-require('vue-tour/dist/vue-tour.css')
-Vue.use(VueTour)
+
 
 //懒加载图片组建
 import VueLazyload from 'vue-lazyload'
@@ -24,7 +20,7 @@ import VueLazyload from 'vue-lazyload'
 const loadimage = require('./assets/loading.gif')
 const errorimage = require('./assets/error.png')
 Vue.use(VueLazyload, {
-	preLoad: 1.3,
+	preLoad: 1,
 	error: errorimage,
 	loading: loadimage,
 	attempt: 1
@@ -38,17 +34,12 @@ Vue.use(myViewDesign, {
 	i18n: (key, value) => i18n.t(key, value)
 });
 
-// 定义时间格式全局过滤器
-Vue.filter('dateFormat', function (daraStr, pattern = 'YYYY-MM-DD HH:mm:ss') {
-	return moment(daraStr).format(pattern)
-})
 
 // 上下文菜单组件
 import VueEasyCm from '@/plugins/easyContextMenu'
 Vue.use(VueEasyCm)
 
-// 注册全局 moment
-Vue.prototype.$moment = moment
+
 
 //css
 import "/src/assets/font/iconfont.css"

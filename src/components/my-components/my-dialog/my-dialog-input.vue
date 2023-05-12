@@ -1,11 +1,10 @@
 <template>
 	<!-- 提示性对话框 -->
 	<div>
-		<vs-dialog  :prevent-close="preventClose" :blur="isBlur" v-model="active" :not-close="!showCloseBtn">
+		<vs-dialog :prevent-close="preventClose" :blur="isBlur" v-model="active" :not-close="!showCloseBtn">
 			<template #header>
 				<div style="display: flex;align-items: center;margin-top: 20px;">
-					<img style="width: 22px;height: 22px;margin-right: 10px;"
-						src="@/static/common/icon-dialog-alert.png" />
+					<img style="width: 22px;height: 22px;margin-right: 10px;" src="@/static/common/icon-dialog-alert.png" />
 					<p style="color: #333333;font-size: 22px;text-align: center;">
 						{{ title }}
 					</p>
@@ -16,11 +15,26 @@
 				{{ content ? content : title }}
 			</div>
 			<!-- 输入框 -->
-			<vs-input @keyup.enter="onBtnClick" :type="isPwd ? 'password' : 'text'" v-model="inputValue" :placeholder="placeholder"  @keydown.down="onBtnClick">
+			<vs-input autocapitalize="off" autocorrect="off" @keyup.enter="onBtnClick" :type="isPwd ? 'password' : 'text'" v-model="inputValue"
+				:placeholder="placeholder" @keydown.down="onBtnClick">
 				<template #icon>
 					<p>?</p>
 				</template>
 			</vs-input>
+
+
+			<!-- 内容 -->
+			<div v-if="contentB" style="word-break: break-all;text-align: left;max-width: 100%;margin-top: 10px;">
+				{{ contentB }}
+			</div>
+			<!-- 输入框 -->
+			<vs-input autocapitalize="off" autocorrect="off" v-if="contentB" @keyup.enter="onBtnClick" v-model="inputValueB" :placeholder="placeholderB"
+				@keydown.down="onBtnClick">
+				<template #icon>
+					<p>?</p>
+				</template>
+			</vs-input>
+
 			<!-- <vs-tooltip >
 				<template #tooltip>
 					<div style="word-break: break-all;">
@@ -69,6 +83,10 @@ export default {
 			default: "",
 			type: String,
 		},
+		placeholderB: {
+			default: "",
+			type: String,
+		},
 		preventClose: {
 			default: false,
 			type: Boolean,
@@ -82,6 +100,11 @@ export default {
 		},
 		//内容
 		content: {
+			default: "",
+			type: String,
+		},
+		//内容
+		contentB: {
 			default: "",
 			type: String,
 		},
@@ -101,6 +124,7 @@ export default {
 	data() {
 		return {
 			inputValue: "",
+			inputValueB: "",
 			active: false
 		};
 	},
@@ -112,7 +136,7 @@ export default {
 			if (this.closeOnClickBtn) {
 				this.active = false
 			}
-			this.$emit('onOkClick', this.inputValue)
+			this.$emit('onOkClick', this.inputValue, this.inputValueB)
 		},
 		setShow(isShow) {
 			this.$nextTick(() => {
