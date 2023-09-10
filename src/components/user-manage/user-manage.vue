@@ -37,7 +37,7 @@
 		</div>
 
 		<!-- 增加新用户的modal -->
-		<vs-dialog prevent-close blur v-model="showAddUser">
+		<vs-dialog prevent-close scroll v-model="showAddUser">
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ editUser ? $t('user.updateUserInfo') : $t('user.addNewUser') }}
@@ -46,9 +46,8 @@
 			<add-user :editUser="editUser" v-if="showAddUser" @success="addUserSuccess"></add-user>
 		</vs-dialog>
 
-
 		<!-- 权限设置modal -->
-		<vs-dialog prevent-close blur v-model="showPowerSet" scroll>
+		<vs-dialog prevent-close  v-model="showPowerSet" scroll>
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ $t('user.powerSet') + ':' + selectedUser.username }}

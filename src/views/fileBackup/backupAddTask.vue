@@ -125,7 +125,7 @@
 		</vs-dialog>
 
 
-		<vs-dialog blur v-model="showAddExclude">
+		<vs-dialog  v-model="showAddExclude">
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ $t('backup.addExclude') }}

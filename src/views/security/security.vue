@@ -11,11 +11,11 @@
 		<div class="main-layout nas-padding-right-zero">
 			<!-- 左侧边栏 -->
 			<div class="sidebar-root">
-				<my-sidebar ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
+				<my-sidebar  name="security" ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
 			</div>
 			<!-- 左侧边栏-手机 -->
 			<div class="sidebar-mobile-root">
-				<my-sidebar-mobile ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
+				<my-sidebar-mobile  name="security" ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
 				</my-sidebar-mobile>
 			</div>
 			<div class="security-list-root">
@@ -26,7 +26,7 @@
 
 				<!-- 安全日志 pc-->
 				<div style="height:100%" class="nas-mobile-none" v-if="leftIndex == 2">
-					<login-records></login-records>
+					<login-records-mobile></login-records-mobile>
 				</div>
 
 				<!-- 安全日志 mobile-->

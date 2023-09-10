@@ -155,15 +155,30 @@ export default {
     //调用原生播放器
     playVideo(playData) {
         console.log("playVideo",playData)
+
+        // playIndex: index,
+        // playList: list,
+        // token: that.$store.state.token,
+        // fromFileBrower: false,
+        // serverType: "movie"
+
+        if(playData.playList.length>100){
+            console.log("数组长度超过限制",playData.playList)
+            playData.playList=playData.playList.slice(playData.playIndex,playData.playIndex+100)
+            playData.playIndex=0
+            console.log("数组长度截取",playData.playList)
+        }
+
+        let jsonPlayData=JSON.stringify(playData)
         try {
             if (android) {
-                android.playVideo(playData)
+                android.playVideo(jsonPlayData)
             }
         } catch (err) {}
         try{
             //ios 处理
             if(webkit&&webkit.messageHandlers){
-                webkit.messageHandlers.bridge.postMessage(`{"func": "playVideo","playData":"${playData}"}`)
+                webkit.messageHandlers.bridge.postMessage(`{"func": "playVideo","playData":"${jsonPlayData}"}`)
             }
         }catch(err){}
     }

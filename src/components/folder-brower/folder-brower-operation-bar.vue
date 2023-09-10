@@ -29,13 +29,13 @@
 			</div>
 
 			<!-- 上传到当前文件夹 -->
-			<my-btn-icon iIcon="md-cloud-upload" style="margin-left:10px;"
+			<my-btn-icon v-if="showSearch" iIcon="md-cloud-upload" style="margin-left:10px;"
 				@click="$bus.$emit('onUploadToCurrentPath')"></my-btn-icon>
 			<!-- 黏贴 -->
 			<my-btn-icon v-if="!isRoot && showPaste" style="margin-left:10px;" iIcon="md-copy"
 				@click="$emit('onCopy')"></my-btn-icon>
 			<!-- 刷新 -->
-			<my-btn-icon style="margin-left:10px;" iIcon="md-sync" @click="$emit('onRefresh')"></my-btn-icon>
+			<my-btn-icon v-if="showSearch" style="margin-left:10px;" iIcon="md-sync" @click="$emit('onRefresh')"></my-btn-icon>
 
 		</div>
 	</div>
@@ -68,9 +68,9 @@ export default {
 	computed: {},
 	data() {
 		return {
-			sliderMin: 100,
+			sliderMin:  80,
 			sliderMax: 200,
-			sliderValue: 100,
+			sliderValue:  80,
 			newFolderName: "",
 			showPath: '',
 			isRoot: false,
@@ -111,15 +111,15 @@ export default {
 .bar-root {
 	position: relative;
 	width: 100%;
-	height: 70px;
+	height: 60px;
 	display: flex;
 	align-items: center;
 	padding-left: 10px;
 	padding-right: 10px;
 
 	@media not all and (max-width:640px) {
-		padding-left: 30px;
-		padding-right: 30px;
+		padding-left: 20px;
+		padding-right: 20px;
 	}
 
 }

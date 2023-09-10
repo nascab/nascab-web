@@ -29,6 +29,8 @@
 									src="@/static/icon-folder-text.png" />
 								<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'file'"
 									src="@/static/icon-folder-file.png" />
+								<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'pdf'"
+									src="@/static/icon-folder-pdf.png" />
 							</div>
 							<!-- 文件名称 -->
 							<p class="filename" style="width:90px">{{ file.name ? file.name : file.fileFullPath }}</p>
@@ -99,7 +101,14 @@ export default {
 
 	},
 	methods: {
-
+		goPreviewPdf(fileUrl){
+			let pdfUrl=axios.getPdfUrl(fileUrl)
+			if(this.isMobile){
+				window.location.href=pdfUrl
+			}else{
+				window.open(pdfUrl, "_blank")
+			}
+		},
 		//点击了图片 跳转到图片详情
 		goPreviewImage(index) {
 			//将文件对象包装为indexObj的格式 方便使用一套代码展示 从物理路径跳过去无法使用加入回收站功能 因为没有indexId
@@ -165,6 +174,8 @@ export default {
 					return "video"
 				case 3:
 					return "text"
+				case 4:
+					return "pdf"
 				default:
 					return "file"
 			}
@@ -176,6 +187,8 @@ export default {
 			} else {
 				if (fileObj.fileType == "image") {
 					this.goPreviewImage(index)
+				} else if (fileObj.fileType == 'pdf') {
+					this.goPreviewPdf(this.getRawUrl(index, this.fileTree[index].name))
 				} else {
 					window.open(this.getRawUrl(index, this.fileTree[index].name), "_blank")
 				}

@@ -1,7 +1,7 @@
 <template>
 	<div style="padding-top:10px;">
 		<div v-for="(option, index) in optionList">
-			<div @click="onItemSelect(index)" class="shrink-item">{{ option.text }}</div>
+			<Button type="dashed" @click="onItemSelect(index)" class="shrink-item">{{ option.text }}</Button>
 		</div>
 	</div>
 </template>
@@ -34,7 +34,10 @@ export default {
 
 <style lang="scss" scoped>
 .shrink-item {
-	padding: 10px;
-	font-size: 16px;
+	color:white;
+	background-color: $nas-main;
+	width: 90%;
+	margin-bottom:10px;
+	border-radius: 20px;
 }
 </style>

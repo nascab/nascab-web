@@ -6,8 +6,12 @@
 			<my-menu-select :shrinkModeTh="550" style="flex-shrink:0;margin-right: 20px;" @onItemClick="clickType"
 				:optionList="typeMenuOptionList"></my-menu-select>
 
-			<!-- 搜索栏 -->
-			<my-search :placeholder="$t('file.recordSearchPlaceholder')" @onSearch="onSearch"></my-search>
+			<div class="flex-row">
+				<!-- 清除日志 -->
+				<Icon color="#999" v-if="$store.state.currentUser.is_admin == 1" @click="clearLog" type="md-trash" style="margin-right: 10px;cursor:pointer" size="30"/>
+				<!-- 搜索栏 -->
+				<my-search :placeholder="$t('file.recordSearchPlaceholder')" @onSearch="onSearch"></my-search>
+			</div>
 		</div>
 
 		<my-nodata v-if="recordList.length < 1" :title="$t('common.noMore')"
@@ -16,7 +20,7 @@
 
 		<!-- 操作记录列表 -->
 		<div v-else style="width: 100%;height: 100%;padding-top: 80px;overflow: hidden;">
-			<div style="padding-bottom: 15px;overflow: auto;height: 100%;width: 100%;">
+			<div style="padding-bottom: 15px;overflow: auto;height: 100%;width: 100%;" @scroll="onPageScroll">
 				<Card class="card-root" v-for="(record, index) in recordList">
 					<!-- 操作类型 -->
 					<div class="item-row">
@@ -119,14 +123,16 @@ export default {
 	},
 	mounted() {
 		this.clickType("")
-		// 监听滚动条
-		window.addEventListener("scroll", this.onPageScroll, true);
 	},
 	beforeDestroy() {
-		window.removeEventListener("scroll", this.onPageScroll, true);
-
 	},
 	methods: {
+		//  清除操作日志
+		clearLog(){
+			this.showVsConfirmDialog(this.$t('common.alert'), this.$t('file.sureClearLog'), () => {
+				this.clearRecord()
+			}, null, this.$t('common.delete'), this.$t('common.cancel'), 0, true)
+		},
 		//滚动回调
 		onPageScroll(e) {
 			this.dealOnPageScroll(e, () => {
@@ -150,6 +156,20 @@ export default {
 			this.hasMore = true
 			this.isLoading = false
 			this.getRecordList(this.page)
+		},
+		clearRecord(){
+			this.api
+				.post("/api/file/clearOperationRecord", {})
+				.then((res) => {
+					if (!res.code) {
+						this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.operationSuccess'))
+
+						this.getRecordList(1)
+					}
+				})
+				.catch((error) => {
+					this.isLoading = false
+				});
 		},
 		//获取文件记录列表
 		getRecordList(reqPage) {
@@ -179,7 +199,7 @@ export default {
 							if (this.page == 1) {
 								this.recordList = res.data
 							} else {
-								this.recordList.push(...res.data)
+								this.recordList=this.recordList.concat(res.data)
 							}
 							this.hasMore = res.data.length >= this.pageSize
 						} else {
@@ -233,10 +253,9 @@ export default {
 	height: 80px;
 	padding-left: 10px;
 	padding-right: 10px;
-
 	@media not all and (max-width:640px) {
-		padding-left: 30px;
-		padding-right: 30px;
+		padding-left: 20px;
+		padding-right:20px;
 	}
 
 	display: flex;

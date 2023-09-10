@@ -1,8 +1,21 @@
 <template>
 	<div class="setting-root-wrapper">
-		<b style="margin-top: 20px;">要在首页显示哪些模块?</b>
+		<b>{{ $t("shareDomainSetting") }}</b>
+		<p class="text-grey" style="text-align:left">{{$t("shareDomainAlert")}}</p>
+		<Input v-model="shareUrl" style="margin-top:10px;max-width:600px" @on-search="saveShareUrl" search :enter-button="$t('common.save')" placeholder="xxxxxx.nas-cab.com:80" >
+			<template #prepend>
+				<Select v-model="shareProtocol" style="width: 80px">
+					<Option value="http://">http://</Option>
+					<Option value="https://">https://</Option>
+				</Select>
+			  </template>
+		</Input>
 		<div style="margin-top: 10px;">
-			<CheckboxGroup @on-change="onMenuChange" v-model="showMenuList" style="display: flex;flex-direction: column;">
+		</div>
+		<Divider></Divider>
+		<b>{{ $t("whatModelWillYouUse") }}</b>
+		<div style="margin-top: 10px;">
+			<CheckboxGroup @on-change="onMenuChange" v-model="showMenuList" class="option-root">
 				<Checkbox class="ckItem" label="photoManage" border>{{ $t("home.photoManage") }}</Checkbox>
 				<Checkbox class="ckItem" label="movieManage" border>{{ $t("home.movieManage") }}</Checkbox>
 				<Checkbox class="ckItem" label="filesBrower" border>{{ $t("home.fileBrower") }}</Checkbox>
@@ -12,6 +25,8 @@
 				<Checkbox class="ckItem" label="security" border>{{ $t("home.securityCenter") }}</Checkbox>
 			</CheckboxGroup>
 		</div>
+
+
 	</div>
 </template>
 <script>
@@ -24,20 +39,32 @@ export default {
 	},
 	data() {
 		return {
-			showMenuList: ["photoManage","movieManage","filesBrower","backup","sharing","privateSpace","security"],
+			shareUrl:"",
+			shareProtocol:"http://",
+			showMenuList: ["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"],
 		}
 	},
 	computed: {
 
 	},
 	methods: {
-		onMenuChange(menuArr){
+		onMenuChange(menuArr) {
 			console.log(menuArr)
 			this.saveConfig(menuArr)
 		},
-		saveConfig(menuArr) {
-			let params = {
-				showMenuArr:menuArr
+		saveShareUrl(){
+			if(!this.shareUrl){
+				return this.showVsNotification(this.$t('cannotBeEmpty',{content:"URL"}))
+			}
+			this.saveConfig(null,this.shareProtocol+this.shareUrl)
+		},
+		saveConfig(menuArr,customShareUrl) {
+			let params = {}
+			if(customShareUrl){
+				params.customShareUrl=customShareUrl
+			}
+			if(menuArr){
+				params.showMenuArr=menuArr
 			}
 			this.api.post('/api/commonApi/saveConfig', params).then((res) => {
 				this.showVsNotification(this.$t('setting.saveSuccess'))
@@ -45,13 +72,20 @@ export default {
 		},
 		getAllConfig() {
 			this.api.post('/api/commonApi/getAllConfig', {
-				keys:"('showMenuArr')"
+				keys: "('showMenuArr','customShareUrl')"
 			}).then((res) => {
 				for (let i = 0; i < res.data.allConfig.length; i++) {
 					let configItem = res.data.allConfig[i]
 					if (configItem.title == 'showMenuArr') {
 						this.showMenuList = JSON.parse(configItem.value)
-					} 
+					}else if(configItem.title == 'customShareUrl'){
+						if(configItem.value.indexOf("http://")!=-1){
+							this.shareProtocol="http://"
+						}else{
+							this.shareProtocol="https://"
+						}
+						this.shareUrl=configItem.value.replace("http://","").replace("https://","")
+					}
 				}
 			}).catch((error) => { })
 		}
@@ -59,14 +93,22 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-::v-deep .ivu-checkbox{
+.option-root {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+::v-deep .ivu-checkbox {
 	margin-right: 10px;
 }
-.ckItem{
+
+.ckItem {
 	margin-top: 10px;
 	display: flex;
 	align-items: center;
 }
+
 .setting-root-wrapper {
 	display: flex;
 	flex-direction: column;

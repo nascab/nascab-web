@@ -106,10 +106,10 @@ export default {
 			})
 		},
 		handleSubmit() {
-			if (this.formInline.username.length < 6) {
+			if (this.formInline.username.length < 2) {
 				return this.showVsNotification(this.$t('registerAdmin.usernameLengthLimit'))
 			}
-			if (this.formInline.password.length < 6) {
+			if (this.formInline.password.length < 2) {
 				return this.showVsNotification(this.$t('registerAdmin.passwordLengthLimit'))
 			}
 			this.btnCanUse = false

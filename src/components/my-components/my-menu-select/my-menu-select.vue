@@ -20,7 +20,7 @@
 		<vs-dialog v-model="showSelectItem">
 			<div style="margin-top:20px;cursor: pointer;">
 				<div v-for="(option, index) in optionList">
-					<div @click="onItemSelect(index)" class="shrink-item">{{ option.title }}</div>
+					<Button type="dashed" @click="onItemSelect(index)" class="shrink-item">{{ option.title }}</Button>
 				</div>
 			</div>
 		</vs-dialog>
@@ -42,6 +42,10 @@ export default {
 		withOrder: {
 			default: false,
 			type: Boolean
+		},
+		initValue:{
+			default:"",
+			type:String
 		}
 	},
 	components: {},
@@ -62,8 +66,18 @@ export default {
 		if (windowScreen && windowScreen < this.shrinkModeTh) {
 			this.shrinkMode = true
 		}
+		if(this.initValue){
+			this.setSelectedId(this.initValue)
+		}
 	},
 	methods: {
+		setSelectedId(id){
+			for(let i in this.optionList){
+				if(this.optionList[i].id==id){
+					this.selectedIndex=i
+				}
+			}
+		},
 		setSelectedIndex(i){
 			this.selectedIndex=i
 		},
@@ -72,7 +86,12 @@ export default {
 			this.showSelectItem = false
 		},
 		itemClick(index) {
-			if (this.selectedIndex == index) this.sortType = this.sortType == 'asc' ? 'desc' : 'asc'
+			if (this.selectedIndex == index){
+				 this.sortType = this.sortType == 'asc' ? 'desc' : 'asc'
+				 if(!this.withOrder){
+					return
+				 }	
+			}
 			this.selectedIndex = index
 			this.$emit('onItemClick', this.optionList[index].id, this.sortType)
 		}
@@ -94,6 +113,7 @@ export default {
 }
 
 .shrink-item {
+	width: 100%;
 	margin-top: 10px;
 	border-radius: 20px;
 	color: white;
@@ -102,6 +122,7 @@ export default {
 }
 
 .select-item {
+	height: 20px;
 	cursor: pointer;
 	padding-left: 10px;
 	padding-right: 10px;
@@ -111,10 +132,10 @@ export default {
 		padding-right: 5px;
 	}
 
-	transition: -webkit-transform 0.1s;
-	transition: transform 0.1s;
-	transition: transform 0.1s,
-	-webkit-transform 0.1s;
+	transition: -webkit-transform 0.2s;
+	transition: transform 0.2s;
+	transition: transform 0.2s,
+	-webkit-transform 0.2s;
 	display: flex;
 	align-items: center;
 }

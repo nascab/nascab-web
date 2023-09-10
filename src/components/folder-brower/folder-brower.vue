@@ -1,18 +1,17 @@
 <template>
 	<div @contextmenu.stop="showRightMenuBg($event, $root)" class="browser-root" ref="rootWrapper">
-		<div v-if="!selectMode" class="path-root">
-			<div style="display:flex;justify-content:flex-start;width:100%;">
+
+		<div v-if="!selectMode&&!doingSelect" class="path-root">
+				<p style="color:#999999;margin-right:10px;flex-shrink:0" v-if="!isRoot&&fileTree.length>3" class="max-line-one">{{fileTree.length}} {{$t("itemsCount")}}</p>
 				<a style="font-size:14px;flex-shrink: 0;margin-left: 5px;" @click="parentPathClick(pitem, index)"
 					v-for="(pitem, index) in parentPathList"
 					:style="{ 'color': index == parentPathList.length - 1 ? '#386DF2' : '#999999' }">
 					{{ pitem }}</a>
 				<a v-if="parentPathList.length < 1">{{ $t('file.rootPath') }}</a>
-			</div>
 		</div>
 
-		<div :style="{ 'padding-top': selectMode ? '0' : '30px', 'height': showInWindow ? '550px' : 'auto' }"
-			style="overflow:hidden;">
-			<div class="list-root" ref="wrapper">
+		<div :style="{  'height': showInWindow ? '550px' : 'auto' }"  style="overflow:hidden;">
+			<div class="list-root" ref="wrapper"  @scroll="onPageScroll" >
 				<div v-if="fileTree.length < 1" style="margin-top: 20px;width: 100%;">{{ this.$t('common.noMore') }}
 				</div>
 
@@ -36,13 +35,18 @@
 							<img @dragstart.prevent class="item-img"
 								v-if="file.type == 1 && (file.fileType == 'image' || file.fileType == 'video')"
 								v-lazy="file.url" />
-							<span v-if="file.type == 1 && file.fileType == 'video'"
-								class="play-icon nasIcons icon-play"></span>
+
+							<Button v-if="file.type == 1 && file.fileType == 'video'" type="text" ghost
+								style="height:30px;position:absolute">
+								<span class="nasIcons icon-play" style="font-size:30px;line-height:30px"></span>
+							</Button>
 
 							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'text'"
 								src="@/static/icon-folder-text.png" />
 							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'file'"
 								src="@/static/icon-folder-file.png" />
+							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'pdf'"
+								src="@/static/icon-folder-pdf.png" />
 						</div>
 
 
@@ -79,7 +83,7 @@
 					</div>
 				</div>
 				<!-- 最大显示数量提示 -->
-				<div v-if="fileTree.length >= 1000" class="max-count">{{ $t("file.maxShowCountAlert") }}</div>
+				<div v-if="fileTree.length >= 3000" class="max-count">{{ $t("file.maxShowCountAlert") }}</div>
 			</div>
 		</div>
 		<!-- 手动新增本地路径 -->
@@ -183,6 +187,15 @@
 					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
 			</template>
 		</vs-dialog>
+
+		<!-- 快速分享添加组件	 -->
+		<files-quick-share-add ref="quickShareAdd" />
+
+
+		<!-- 右侧自定义滚动条 -->
+		<my-scroll-bar ref="scrollBar"
+			v-if="!showChooseTargetFolder"></my-scroll-bar>
+
 	</div>
 </template>
 
@@ -194,6 +207,8 @@ import base64 from '@/plugins/base64/index.js'
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import jsBridge from "@/plugins/jsBridge"
 import utils from "@/plugins/utils";
+import filesQuickShareAdd from "@/views/filesBrower/filesQuickShareAdd.vue"
+import myScrollBar from "@/components/my-components/my-scrollbar/my-scrollbar"
 
 //照片点击详情
 import photoDetail from "@/views/photos/components/photoDetail.vue";
@@ -201,8 +216,10 @@ import photoDetail from "@/views/photos/components/photoDetail.vue";
 export default {
 	name: "MyFolderBrower",
 	components: {
+		myScrollBar,
 		videoDetail,
 		photoDetail,
+		filesQuickShareAdd
 	},
 	computed: {},
 	props: {
@@ -239,8 +256,8 @@ export default {
 			showPhotoDetail: false,
 			attrDialogIsShow: false,//属性对话框是否显示
 			rightMenuList: [],
-			itemBaseWidth: 100,
-			itemWidth: 100,
+			itemBaseWidth: 80,
+			itemWidth: 80,
 			itemMargin: 10,
 			showVideoDetail: false,
 			source: "list",
@@ -271,7 +288,6 @@ export default {
 			})
 		}
 
-		window.addEventListener("scroll", this.onPageScroll, true);
 		//监听后退事件
 		window.addEventListener('popstate', this.onPopstate)
 		if (localStorage.folderBrowerShowType) {
@@ -283,7 +299,6 @@ export default {
 		if (!this.showInWindow) {
 			this.$bus.$off("onUploadToCurrentPath")
 		}
-		window.removeEventListener("scroll", this.onPageScroll, true);
 		window.removeEventListener('popstate', this.onPopstate);
 
 	},
@@ -386,11 +401,11 @@ export default {
 			}
 		},
 		mouseEnterImg(index) {
-			if (this.isMobile || this.isRoot) return
+			if (this.isMobile || this.isRoot || this.selectMode) return
 			this.$set(this.fileTree[index], "hover", true);
 		},
 		mouseLeaveImg(index) {
-			if (this.isMobile || this.isRoot) return
+			if (this.isMobile || this.isRoot  || this.selectMode) return
 			this.fileTree[index].hover = false;
 		},
 		onPopstate() {
@@ -405,7 +420,10 @@ export default {
 				this.$router.go(-1)
 			}
 		},
-		onPageScroll() {
+		onPageScroll(e) {
+			if (this.$refs.scrollBar) {
+				this.$refs.scrollBar.onScroll(e)
+			}
 			//滚动的时候清空计时器 防止触发菜单
 			if (this.longPressTimeout) {
 				clearTimeout(this.longPressTimeout);
@@ -507,8 +525,9 @@ export default {
 		touchstart(item, index) {
 			clearTimeout(this.longPressTimeout); //再次清空定时器，防止重复注册定时器
 			this.longPressTimeout = setTimeout(() => {
+				console.log("定时器触发")
 				this.onLongPress(item, index)
-			}, 800);
+			}, 1000);
 		},
 		touchend() {
 			clearTimeout(this.longPressTimeout); //清空定时器，防止重复注册定时器
@@ -686,6 +705,11 @@ export default {
 				type: "ATTR",
 			})
 
+			this.rightMenuList.push({//快速分享
+				text: this.$t('home.shareTemp'),
+				type: "QUICK_SHARE"
+			})
+
 			this.rightMenuList.push({//排列方式
 				text: this.$t('file.showType'),
 				type: "SHOW_TYPE",
@@ -706,6 +730,9 @@ export default {
 					type: "DELETE_CUSTOM_PATH",
 				})
 			}
+
+
+
 		},
 		//递归调用删除接口进行删除
 		deleteBySelectedIndexOnByOne(dealingIndex, sucCount, errCount) {
@@ -816,6 +843,9 @@ export default {
 			} else if (type == "DELETE_CUSTOM_PATH") {
 				//删除自定义路径
 				this.operationLocalPath('delete', null, this.selectedFile.customPathId)
+			} else if (type == "QUICK_SHARE") {
+				//快速分享
+				this.onClickQuickShare()
 			}
 			localStorage.setItem("folderBrowerShowType", this.showType)
 		},
@@ -832,6 +862,15 @@ export default {
 		},
 		//计算item宽度
 		calImageWidth() {
+			if (this.isMobile) {
+				//手机端固定宽高
+				if (this.showType == "grid") {
+					this.itemBaseWidth = 100
+				} else {
+					this.itemBaseWidth = 60
+				}
+				this.itemMargin = 6
+			}
 			let wrapper = this.$refs.wrapper.getBoundingClientRect();
 			let itemWidth = this.utils.calItemWidth(wrapper, this.itemBaseWidth, this.itemMargin)
 			if (itemWidth) this.itemWidth = itemWidth
@@ -925,13 +964,22 @@ export default {
 						this.goPreviewImage(index)
 					} else if (data.fileType == 'video') {
 						this.goPreviewVideo(index)
+					} else if (data.fileType == 'pdf') {
+						this.goPreviewPdf(this.getRawUrl(index, this.fileTree[index].name))
 					} else {
 						this.downloadFile(this.getRawUrl(index, this.fileTree[index].name))
 					}
 				}
 			}
 		},
-
+		goPreviewPdf(fileUrl) {
+			let pdfUrl = axios.getPdfUrl(fileUrl)
+			if (this.isMobile) {
+				window.location.href = pdfUrl
+			} else {
+				window.open(pdfUrl, "_blank")
+			}
+		},
 		getRawUrl(index) {
 			//分享文件
 			let filePath = this.fileTree[index].parent + this.fileTree[index].pathSep + this.fileTree[index].name
@@ -951,8 +999,12 @@ export default {
 				return this.getFileFullPath(this.selectedFile)
 			}
 		},
+		onClickQuickShare() {
+			//显示快速分享对话框
+			this.$refs.quickShareAdd.showAdd(this.getCurrentSelectedPath())
+		},
 		getFileFullPath(fileObj) {
-            if (this.parent == "sourceFolderPhoto" || this.parent == "sourceFolderMovie") {
+			if (this.parent == "sourceFolderPhoto" || this.parent == "sourceFolderMovie") {
 				return fileObj.fileFullPath
 			}
 			//根据文件对象拼接完整访问物理路径
@@ -973,7 +1025,7 @@ export default {
 		},
 		goBack() {
 			//选择来源文件夹状态 直接返回到根目录
-			if(this.initPath=="sourceFolderPhoto"||this.initPath=="sourceFolderMovie"){
+			if (this.initPath == "sourceFolderPhoto" || this.initPath == "sourceFolderMovie") {
 				return this.getFileTree(this.initPath, true)
 			}
 			//点击了返回上一级
@@ -1048,13 +1100,13 @@ export default {
 			}
 			if (localStorage.getItem("rawPlayer") == "1") {
 				//调用原生播放器
-				jsBridge.playVideo(JSON.stringify({
+				jsBridge.playVideo({
 					playIndex: showIndex,
 					playList: useList,
 					token: this.$store.state.token,
-					fromFileBrower:true,
-					serverType:"photo"
-				}))
+					fromFileBrower: true,
+					serverType: "photo"
+				})
 			} else {
 				//继续使用网页播放器
 				this.showVideoDetail = true;
@@ -1182,6 +1234,8 @@ export default {
 					return "video"
 				case 3:
 					return "text"
+				case 4:
+					return "pdf"
 				default:
 					return "file"
 			}

@@ -12,7 +12,7 @@ let nasCabBaseUrl = "https://www.nascab.cn"
 
 let baseUrl = ""
 if (process.env.NODE_ENV === 'development') {
-    baseUrl = "http://localhost:80"
+    baseUrl = `${window.location.protocol}//${window.location.hostname}`
     console.log('baseUrl', baseUrl)
 } else {
     console.log('生产环境')
@@ -78,18 +78,36 @@ requests.interceptors.request.use(config => {
     return config
 }, err)
 
+function isIntevalTaskApi(response){
+    if(!response||!response.config||!response.config.url){
+        return false
+    }
+    if (response.config.url.indexOf("commonApi/getBgTask") == -1
+    && response.config.url.indexOf("commonApi/getServerState") == -1
+    && response.config.url.indexOf("commonApi/getSystemState") == -1
+    ) {
+        return false
+    }else{
+        return true
+    }
+}
 // response interceptor（接收拦截器）
 requests.interceptors.response.use((response) => {
-    iview.Spin.hide();
+    if(!isIntevalTaskApi(response)){
+        iview.Spin.hide();
+    }
     const res = response.data
     if (res.code !== 0 && res.code !== 200) {
         if (res.code === 1) {
             //错误提示
-            if (res.alertType == "dialog") {
-                Vue.prototype.showVsAlertDialog(null, res.message)
-            } else {
-                Vue.prototype.showVsNotification(res.message)
+            if(res.message){
+                if (res.alertType == "dialog") {
+                    Vue.prototype.showVsAlertDialog(null, res.message)
+                } else {
+                    Vue.prototype.showVsNotification(res.message)
+                }
             }
+
         } else if (res.code === 101) {
             //getBgTask接口不提示token过期
             if (response.config.url.indexOf("commonApi/getBgTask") == -1
@@ -101,7 +119,6 @@ requests.interceptors.response.use((response) => {
                     localStorage.removeItem('token')
                     localStorage.removeItem('currentUser')
                     store.state.token = ''
-
                     router.push({
                         path: '/login'
                     })
@@ -215,13 +232,14 @@ function getRawFileUrl(filePath, fileName, serverType,ignoreToken) {
         return baseUrl + `/api/file/rawFile?path=${filePath}&token=${token}&serverType=${serverType}`
     }
 }
-
-
-
 function encodePath(path) {
     path = encodeURIComponent(path)
     path = base64.encode(path)
     return path
+}
+//获取预览pdf的url
+function getPdfUrl(fileUrl){
+    return baseUrl+"/pdfviewer/viewer.html?file="+encodeURIComponent(fileUrl)
 }
 export default {
     createRequestInstance,
@@ -239,5 +257,6 @@ export default {
     nasCabBaseUrl,
     nasRemoteUrl,
     getTinyUrlByFilePath,
-    webSocketUrl
+    webSocketUrl,
+    getPdfUrl
 }

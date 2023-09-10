@@ -15,6 +15,10 @@
 				<span class="nasIcons icon-file-list" style="font-size: 14px;"></span>
 				{{ $t('user.powerFolder') }}
 				</MenuItem>
+				<!-- <MenuItem name="menu">
+				<span class="nasIcons icon-grid" style="font-size: 14px;"></span>
+				{{ $t('common.menu') }}
+				</MenuItem> -->
 			</Menu>
 		</div>
 		<!-- 手机端显示 -->
@@ -29,6 +33,9 @@
 				<vs-option :label="$t('user.powerFolder')" value="folder">
 					{{ $t('user.powerFolder') }}
 				</vs-option>
+				<!-- <vs-option :label="$t('common.menu')" value="menu">
+					{{ $t('common.menu') }}
+				</vs-option> -->
 			</vs-select>
 		</div>
 		<!-- 权限目录列表 -->
@@ -45,11 +52,11 @@
 							@on-change="powerChange(index)">{{ $t('common.check') }}</Checkbox>
 						<Checkbox v-if="indexName == 'photo'" :true-value="1" :false-value="0" v-model="power.power_add"
 							@on-change="powerChange(index)">{{ $t('common.add') }}{{ $t('photo.album') }}</Checkbox>
-						<Checkbox v-if="indexName == 'folder'" :true-value="1" :false-value="0"
-							v-model="power.power_add" @on-change="powerChange(index)">{{ $t('common.upload') }}
+						<Checkbox v-if="indexName == 'folder'" :true-value="1" :false-value="0" v-model="power.power_add"
+							@on-change="powerChange(index)">{{ $t('common.upload') }}
 						</Checkbox>
-						<Checkbox v-if="indexName != 'movie'" :true-value="1" :false-value="0"
-							v-model="power.power_change" @on-change="powerChange(index)">{{ $t('common.change') }}
+						<Checkbox v-if="indexName != 'movie'" :true-value="1" :false-value="0" v-model="power.power_change"
+							@on-change="powerChange(index)">{{ $t('common.change') }}
 						</Checkbox>
 						<Checkbox :true-value="1" :false-value="0" v-model="power.power_delete"
 							@on-change="powerChange(index)">{{ $t('common.delete') }}</Checkbox>
@@ -57,7 +64,7 @@
 					</div>
 					<Button @click="cancelPath(index)" style="border-radius: 10px;margin-top:20px" size="small"
 						type="error">{{
-								$t('user.cancelPathPower')
+							$t('user.cancelPathPower')
 						}}</Button>
 				</div>
 
@@ -86,6 +93,18 @@
 			</div>
 		</div>
 
+		<!-- 菜单权限 -->
+		<div v-if="indexName == 'menu'" style="margin-top:10px;">
+			<div style="text-align:left"> <b>{{ $t("whatModelWillYouUseSubuser") }}</b></div>
+			<CheckboxGroup @on-change="onMenuChange" v-model="showMenuList" class="option-root">
+				<Checkbox class="ckItem" label="photoManage" border>{{ $t("home.photoManage") }}</Checkbox>
+				<Checkbox class="ckItem" label="movieManage" border>{{ $t("home.movieManage") }}</Checkbox>
+				<Checkbox class="ckItem" label="filesBrower" border>{{ $t("home.fileBrower") }}</Checkbox>
+				<Checkbox class="ckItem" label="privateSpace" border>{{ $t("photo.privateSpace") }}</Checkbox>
+			</CheckboxGroup>
+
+		</div>
+
 		<!-- 来源路径选择 -->
 
 		<vs-dialog blur v-model="showSourcePathSelect">
@@ -95,7 +114,7 @@
 				</h4>
 			</template>
 			<div v-for="(path, index) in pathList">
-				<div @click="selectPath(index)" class="option-item max-line-three">{{path.path}}</div>
+				<div @click="selectPath(index)" class="option-item max-line-three">{{ path.path }}</div>
 			</div>
 			<!-- 没有来源目录 -->
 			<div v-if="pathList.length < 1" style="width: 100%;display: flex;justify-content: center;">
@@ -106,7 +125,7 @@
 
 
 		<!-- 真实路径选择 -->
-		<vs-dialog v-model="showChooseFolder" prevent-close scroll  :full-screen="isMobile">
+		<vs-dialog v-model="showChooseFolder" prevent-close scroll :full-screen="isMobile">
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ $t('file.chooseFolder') + '[' + $t('file.doubleClickFolderEnter') + ']' }}
@@ -135,12 +154,12 @@ export default {
 		fileSelectBar,
 		fileSelect
 	},
-	computed:{
+	computed: {
 
 	},
 	data() {
 		return {
-			initPath:"",
+			initPath: "",
 			showChooseFolder: false,
 			indexName: "photo",
 			btnCanUse: true,
@@ -159,11 +178,11 @@ export default {
 			this.apiSetUserPower(selectedPath)
 		},
 		showChoosePath() {
-			if(this.indexName=="photo"){
+			if (this.indexName == "photo") {
 				this.initPath = "sourceFolderPhoto"
-			}else if(this.indexName=="movie"){
+			} else if (this.indexName == "movie") {
 				this.initPath = "sourceFolderMovie"
-			}else if(this.indexName=="folder"){
+			} else if (this.indexName == "folder") {
 				this.initPath = ""
 			}
 			this.showChooseFolder = true
@@ -249,9 +268,25 @@ export default {
 	margin-right: 10px;
 }
 
+.option-root {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+.ckItem {
+	margin-top: 10px;
+	display: flex;
+	align-items: center;
+}
+
 .root {
 	min-height: 300px;
 	width: 100%;
+}
+
+::v-deep .ivu-checkbox {
+	margin-right: 10px;
 }
 
 .btn-root {
@@ -270,7 +305,7 @@ export default {
 
 }
 
-.option-item{
+.option-item {
 	background-color: $nas-second;
 	border-radius: 20px;
 	margin-top: 15px;

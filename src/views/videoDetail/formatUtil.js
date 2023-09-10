@@ -18,16 +18,70 @@ formatUtil.isRemoteMode = false//是否正在远程连接
 if (window.location.href.indexOf(axios.nasRemoteUrl) != -1) {
     formatUtil.isRemoteMode = true//当前在使用远程连接
 }
-formatUtil.getCanPlayRawFile=function(videoStream,indexObj){
-    // if(indexObj.filename){
-    //     let extionName=formatUtil.getFileExtension(indexObj.filename)
-    //     if(extionName=="mov"||extionName=="MOV"){
-    //         if(indexObj.is_livephoto==1&&!formatUtil.isSafari()&&!formatUtil.isChrome()){
-    //             return false
-    //         }
-    //     }
-    // }
+//不支持的音频格式
+let noSupportAudioFormat=["dca","eac3","ac3"]
+
+//检测是否为图片字幕
+formatUtil.isPictureSubtitle=function(subtitleStream){
+    if(subtitleStream&&subtitleStream.type&&subtitleStream.type=="path"){
+        //使用的是视频文件同名字幕
+        return false
+    }
+    if(subtitleStream
+        &&subtitleStream.stream
+        && subtitleStream.stream.codec_name
+        &&(subtitleStream.stream.codec_name.toLowerCase()=="pgssub"
+        ||subtitleStream.stream.codec_name.toLowerCase()=="vobsub"
+        ||subtitleStream.stream.codec_name.toLowerCase()=="dvd_subtitle"
+        ||subtitleStream.stream.codec_name.toLowerCase()=="dvb_subtitle")){
+        console.log("图片字幕 需要转码")
+        return true
+    }else{
+        return false
+    }
+}
+formatUtil.getCanPlayRawFile=function(videoStream,indexObj,audioStream,subtitleStream,uploadSubtitleFilePath){
+    try{
+        console.log("videoStream",videoStream)
+        if(audioStream&&audioStream.stream){
+            if(noSupportAudioFormat.includes(audioStream.stream.codec_name.trim())){
+                return false
+            }
+        }
+        //h265相关的逻辑判断
+        if(videoStream&&videoStream.codec_name=="hevc"){
+            console.log("正在播放h265")
+            if(formatUtil.isChrome()){
+                let chromeVersion = formatUtil.getChromeVersion()
+                let version=parseInt(chromeVersion.major)
+                console.log("Chrome版本",version)
+                if(version<107){
+                    return false
+                }
+            }
+        }
+        //如果是图片字幕 需要转码
+        if(formatUtil.isPictureSubtitle(subtitleStream)&&!uploadSubtitleFilePath){
+            return false
+        }
+    }catch(err){
+        console.log(err)
+        return true
+    }
     return true
+}
+formatUtil.getChromeVersion =function () {
+    var pieces = navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/);
+    if (pieces == null || pieces.length != 5) {
+        return undefined;
+    }
+    pieces = pieces.map(piece => parseInt(piece, 10));
+    return {
+        major: pieces[1],
+        minor: pieces[2],
+        build: pieces[3],
+        patch: pieces[4]
+    };
 }
 //设置当前播放的格式状态
 formatUtil.setFormatState = function (format) {
@@ -35,16 +89,14 @@ formatUtil.setFormatState = function (format) {
     formatUtil.usingRawFile = format == false
 }
 formatUtil.getTranscodeFormat = function (indexObj) {
-    // if(indexObj&&indexObj.duration&&indexObj.duration<10){
-    //     //10秒以下的使用mp4
-    //     return "mp4"
-    // }else{
         return 'm3u8'
-    // }
-   
 }
 formatUtil.isIos = function () {//判断是否为ios
-    return /(iPhone|iOS)/i.test(navigator.userAgent)
+    let isIOS = /iPad|iPhone|iPod/.test(navigator.platform)
+|| (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+
+// 
+    return /(iPhone|iOS|iPad)/i.test(navigator.userAgent) || isIOS
 }
 formatUtil.isSafari = function () {//判断是否为ios
     return /(Safari)/i.test(navigator.userAgent) && !/(Chrome)/i.test(navigator.userAgent)

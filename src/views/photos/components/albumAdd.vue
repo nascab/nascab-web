@@ -5,18 +5,23 @@
 			<Menu mode="horizontal" theme="light" active-name="date" @on-select="onChangeAlbumType">
 				<!-- 智能日期 -->
 				<MenuItem name="date">
-				<Icon type="md-calendar" size="22" />
+				<Icon type="md-calendar" />
 				{{ $t('album.aiDateAlbum') }}
 				</MenuItem>
 				<!-- 地理围栏 -->
 				<MenuItem name="geo">
-				<Icon type="md-plane" size="22" />
+				<Icon type="md-plane" />
 				{{ $t('album.geoAlbum') }}
 				</MenuItem>
 				<!-- 设备相册 -->
 				<MenuItem name="mode">
-				<Icon type="md-phone-portrait" size="22" />
+				<Icon type="md-phone-portrait" />
 				{{ $t('album.modeAlbum') }}
+				</MenuItem>
+				<!-- 条件相册 -->
+				<MenuItem name="condition">
+				<Icon type="ios-options" />
+				{{ $t('photo.filterAlubm') }}
 				</MenuItem>
 			</Menu>
 		</div>
@@ -31,6 +36,9 @@
 				</vs-option>
 				<vs-option :label="$t('album.modeAlbum')" value="mode">
 					{{ $t('album.modeAlbum') }}
+				</vs-option>
+				<vs-option :label="$t('photo.filterAlubm')" value="condition">
+					{{ $t('photo.filterAlubm') }}
 				</vs-option>
 			</vs-select>
 		</div>
@@ -142,16 +150,43 @@
 
 		</div>
 
+		<!-- 按条件筛选 -->
+		<div v-if="albumType == 'condition'" style="display: flex;flex-direction: column;align-items: flex-start;">
+			<h4 style="margin-bottom: 10px;margin-top: 10px;">
+				{{ $t('photo.filterInfo') }}:
+			</h4>
+			<div>
+				<!-- 条件字段 -->
+				<Select v-model="conditionName" style="width:100px;" @on-change="onConditionChange">
+					<Option v-for="item in conditionList" :value="item.value" :key="item.value">{{ item.label }}
+					</Option>
+				</Select>
+				<!-- 等于大于小于 -->
+				<Select v-model="filterValue" style="width:100px;margin-left: 10px;">
+					<Option v-for="item in filterList" :value="item.value" :key="item.value">{{ item.label }}
+					</Option>
+				</Select>
+				<!-- 筛选值 -->
+				<Input autocapitalize="off" autocorrect="off" maxlength="30" v-model="conditionValue"
+					:placeholder="$t('movie.filterValue')" style="width: 80px;margin-left: 10px;" />
+				<span style="margin-left: 5px;" v-if="conditionName == 'size'">MB</span>
+				<span style="margin-left: 5px;" v-if="conditionName == 'width' || conditionName == 'height'">{{ $t("pixel")
+				}}</span>
+				<span style="margin-left: 5px;" v-if="conditionName == 'duration'">{{ $t("second") }}</span>
+			</div>
+		</div>
+
 		<div style="margin-top: 30px;">
 			<!-- 相册名字 -->
 			<h4 style="margin-bottom: 10px;text-align: left;">
 				{{ $t('album.albumName') }}:
 			</h4>
 			<div style="display: flex;align-items: center;">
-				<Input  autocapitalize="off" autocorrect="off" maxlength="30" v-model="albumName" :placeholder="$t('album.albumName')" style="width: 300px" />
+				<Input autocapitalize="off" autocorrect="off" maxlength="30" v-model="albumName"
+					:placeholder="$t('album.albumName')" style="width: 300px" />
 				<!-- 创建相册按钮 -->
-				<vs-button @click="createAlbum" type="primary" style="width: 200px;margin-left: 20px;">
-					<Icon type="md-add-circle" style="margin-right: 10px;" />
+				<vs-button @click="createAlbum" type="primary" style="margin-left: 20px;padding-left:10px;padding-right:10px;flex-shrink:0">
+					<!-- <Icon type="md-add-circle" style="margin-right: 10px;" /> -->
 					{{ $t('album.createAlbum') }}
 				</vs-button>
 			</div>
@@ -202,6 +237,57 @@ export default {
 				label: this.$t('album.lt')
 			}
 			],
+			filterValue: "", //条件符号 
+			conditionName: "", //要筛选的字段名
+			conditionValue: "",//要筛选的字段值
+			conditionList: [
+				{ //固定日期数据源 符号 等于 大于 小于
+					value: 'filename',
+					label: this.$t('movie.filename')
+				},
+				{
+					value: 'path',
+					label: this.$t('common.filepath')
+				},
+				{
+					value: 'size',
+					label: this.$t('file.size')
+				},
+				{
+					value: 'duration',
+					label: this.$t('video.duration')
+				},
+				{
+					value: 'width',
+					label: this.$t('width')
+				},
+				{
+					value: 'height',
+					label: this.$t('height')
+				}
+			],
+			filterNumber: [
+				{
+					value: '>',
+					label: this.$t('common.gt')
+				},
+				{
+					value: '=',
+					label: this.$t('common.eq')
+				},
+
+				{
+					value: '<',
+					label: this.$t('common.lt')
+				}
+			],
+			fiterStr: [
+				{
+					value: 'like',
+					label: this.$t('common.contain')
+				}
+			],
+			filterList: []
 		}
 	},
 	watch: {
@@ -211,6 +297,15 @@ export default {
 	},
 	mounted() { },
 	methods: {
+		onConditionChange(conditionItem) {
+			if (conditionItem == "size" || conditionItem == "duration" || conditionItem == "width" || conditionItem == "height") {
+				this.filterList = this.filterNumber
+			} else {
+				this.filterList = this.fiterStr
+			}
+			this.filterValue = this.filterList[0].value
+		},
+
 		onHolidaySelect(holidayIndex) {
 			this.selectedHoliday = this.holidayList[holidayIndex.value]
 			this.albumName = this.selectedHoliday.label
@@ -253,15 +348,15 @@ export default {
 					dataValue.year = this.aiDateValue[0]
 					dataValue.month = this.aiDateValue[1]
 					dataValue.day = this.aiDateValue[2]
-					console.log("this.aiDateType",this.aiDateType)
+					console.log("this.aiDateType", this.aiDateType)
 					if (this.aiDateType == "solar") {//公历
 						searchValue = "LIKE '" + this.aiDateValue[0] + '-' + this.aiDateValue[1] + '-' + this.aiDateValue[
 							2] + "'"
 					} else if (this.aiDateType == "lunar") {//阴历
-						dataValue.isLunar=1
+						dataValue.isLunar = 1
 						searchValue = chooseData.getLunarInSql(dataValue.month, dataValue.day)
 					}
-					console.log("searchValue",searchValue)
+					console.log("searchValue", searchValue)
 				} else if (this.dateType == 'fix') { //固定日期
 					searchField = 'original_time'
 					if (this.fixDateValue.length < 3) {
@@ -331,6 +426,56 @@ export default {
 				searchField = 'mode'
 				searchValue = this.inputModeValue
 				dataValue.mode = this.inputModeValue
+			} else if (this.albumType == "condition") {
+				//条件相册
+				if (!this.filterValue || !this.conditionName || !this.conditionValue) {
+					return this.showVsNotification(this.$t('movie.pleaseCompleteFilterInfo'))
+				}
+				searchField = this.conditionName
+				searchValue = ` ${this.conditionName} ${this.filterValue} `
+				if (this.filterValue == "like") {
+					searchValue += ` '%${this.conditionValue}%' `
+				} else {
+					if (!Number.isInteger(parseInt(this.conditionValue))) {
+						this.showVsNotification(this.$t('valueMustBeNum'))
+						return
+					}
+					if (this.conditionName == "size") {
+						searchValue += ` ${parseInt(this.conditionValue) * 1024 * 1024}`
+					} else if (this.conditionName == "duration") {
+						searchValue = ` (duration!='undefined' and duration ${this.filterValue} ${parseInt(this.conditionValue)})`
+					} else if (this.conditionName == "width" || this.conditionName == "height") {
+						searchValue += ` ${parseInt(this.conditionValue)}`
+					}
+				}
+				// 设置相册描述文字
+				try {
+
+					let filedName = ""
+					let filedConditionName = ""
+					for (let i in this.conditionList) {
+						if (this.conditionList[i].value == this.conditionName) {
+							filedName = this.conditionList[i].label
+							break
+						}
+					}
+					for (let i in this.filterList) {
+						if (this.filterList[i].value == this.filterValue) {
+							filedConditionName = this.filterList[i].label
+							break
+						}
+					}
+					dataValue = filedName + " " + filedConditionName + " " + this.conditionValue
+					if (this.conditionName == "size") {
+						dataValue += "MB"
+					} else if (this.conditionName == "duration") {
+						dataValue += this.$t("second")
+					} else if (this.conditionName == "width" || this.conditionName == "height") {
+						dataValue += this.$t("pixel")
+					}
+				} catch (err) {
+					dataValue = ""
+				}
 			}
 			// 调用添加接口
 			this.api
@@ -354,14 +499,14 @@ export default {
 				})
 				.catch((error) => { });
 		},
-		initMap() {
-			// if (this.map) {
-			// 	return
-			// }
+		initMap(minZoom, maxZoom) {
+			if (this.map) {
+				return
+			}
 			var url_normal = axios.mapUrl;
 			var glayer_normal = new L.TileLayer(url_normal, {
-				minZoom: 4,
-				maxZoom: 8,
+				minZoom: minZoom,
+				maxZoom: maxZoom,
 				attribution: 'MAP'
 			});
 			let lastCenterLat = localStorage.getItem('map-center-lat')
@@ -380,9 +525,11 @@ export default {
 				maxBounds: bounds,
 				attributionControl: false,
 				center: center,
-				zoom: 5,
+				zoom: parseInt(maxZoom/2),
 				layers: [glayer_normal]
 			});
+
+
 
 			this.areaSelection = new DrawAreaSelection({
 				//地图圈选回调
@@ -397,7 +544,10 @@ export default {
 						let latGap = maxLat - minLat
 						let lngGap = maxLng - minLng
 						//选取的范围过大 缩小geohash精度
-						let precision = 4
+						let precision = 5
+						if (latGap > 1 || lngGap > 1) {
+							precision = 4
+						}
 						if (latGap > 2 || lngGap > 2) {
 							precision = 3
 						}
@@ -418,12 +568,31 @@ export default {
 		clearSelectArea() {
 			this.areaSelection.deactivate()
 		},
+		getZoomInfo() {
+			//获取服务器支持的缩放级别
+			this.api
+				.post("/api/mapApi/getZoom", {
+					hideLoading:true
+				})
+				.then((res) => {
+					console.log(res)
+					if (!res.code) {
+						this.initMap(parseInt(res.zoomInfo.minZoom), parseInt(res.zoomInfo.maxZoom))
+					}
+				})
+				.catch((error) => {
+					console.log(error)
+				});
+		},
 		onChangeAlbumType(val) {
+			console.log(val)
 			this.albumType = val
 			if (this.albumType == "geo") {
 				this.$nextTick(() => {
-					this.initMap()
+					this.getZoomInfo()
 				})
+			} else {
+				this.map = null
 			}
 		}
 	}

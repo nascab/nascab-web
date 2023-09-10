@@ -11,12 +11,10 @@
 			<div style="margin-top:10px" v-if="enable && dealState">[{{ dealState }}]</div>
 		</div>
 		<div class="list-root" ref="listWrapper">
-
-
 			<div v-for="(item, index) in dataList" class="list-item-root">
 				<div
 					style="width:100%;text-align: left;font-size: 18px;margin-bottom:20px;margin-top:30px;font-weight: bold;">
-					{{ $t('photo.checkKeepPhoto') }}</div>
+					{{ (index+1)+"."+$t('photo.checkKeepPhoto') }}</div>
 				<div v-for="(similarItem, indexb) in item.similarIndexList" class="item-div">
 					<img class="item-img" :src="similarItem.url" @click="checkImage(index, indexb)" />
 					<div style="margin-top: 10px;display: flex;flex-direction: column;" @click="nameClick(index, indexb)">
@@ -56,6 +54,12 @@ import axios from "@/plugins/axios";
 import photoDetail from "@/views/photos/components/photoDetail.vue";
 
 export default {
+	props:{
+		pageSize:{
+			type:Number,
+			default:5
+		}
+	},
 	components: {
 		photoDetail
 	},
@@ -78,8 +82,7 @@ export default {
 			selectedIndex: false,
 			enable: true,
 			checkStateTimeout: null,
-			waitDealCount: 0,
-			pageSize: 5
+			waitDealCount: 0
 		}
 	},
 	mounted() {
@@ -245,6 +248,7 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+
 .root-wrapper {
 	z-index: 1;
 

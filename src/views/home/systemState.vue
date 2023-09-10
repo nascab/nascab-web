@@ -107,7 +107,7 @@
       </div>
     </div>
 
-    <Modal v-model="showSystemInfo" footer-hide>
+    <Modal v-model="showSystemInfo" footer-hide class-name="sys-modal">
       <system-info v-if="showSystemInfo"></system-info>
     </Modal>
   </div>
@@ -136,7 +136,7 @@ export default {
       loading: false,
       version: "", //nascab版本
       intervalSystemState: null,
-      intervalSystemStateGap: 15000, //多长时间获取一次系统信息
+      intervalSystemStateGap: 10000, //多长时间获取一次系统信息
       photoIndexInfo: false,
       movieIndexInfo: false,
       systemState: {},
@@ -148,10 +148,10 @@ export default {
 
   },
   created() {
-    this.intervalSystemState = setInterval(() => {
-      this.getSystemState()
-    }, this.intervalSystemStateGap)
-
+    if(this.intervalSystemState==null){
+      this.intervalSystemState = setInterval(this.getSystemState, this.intervalSystemStateGap)
+    }
+    this.getSystemState()
   },
   beforeDestroy() {
     if (this.intervalSystemState) {
@@ -162,13 +162,6 @@ export default {
   methods: {
     showSystemInfomation() {
       this.showSystemInfo = true
-    },
-    goToSetting(pageName) {
-      if (this.$store.state.currentUser.is_admin == 1) {
-        this.goPathNewWebView("/setting?pageName=" + pageName, this.$t('home.settingCenter'), { pageName: pageName })
-      } else {
-        this.showVsNotification(this.$t('common.noPermission'))
-      }
     },
     init() {
       this.getSystemState()
@@ -181,6 +174,9 @@ export default {
     getSystemState(force) {
       if (!this.$store.state.token) { return }
       if (this.loading) return
+      if(!this.isInHome()){
+        return
+      }
       this.loading = true
       this.api
         .post("/api/commonApi/getSystemState", {
@@ -193,7 +189,6 @@ export default {
           for (let i = 0; i < res.data.length; i++) {
             let title = res.data[i].title
             let value = res.data[i].value
-            console.log(title)
             if (title == "globalMemInfo") {
               //解析内存信息
               this.systemState.mem = JSON.parse(value)
@@ -205,13 +200,11 @@ export default {
             } else if (title == "globalCpuInfo") {
               //解析cpu信息
               this.systemState.cpu = JSON.parse(value)
-              console.log(this.systemState.cpu)
             } else if (title == "globalDiskInfo") {
               //解析磁盘
               this.diskList = JSON.parse(value)
               for (let i = 0; i < this.diskList.length; i++) {
                 let disk = this.diskList[i]
-                console.log(disk)
                 if (disk.use) {
                   this.diskList[i].usePercent = parseInt(this.diskList[i].use)
                 } else {
@@ -235,6 +228,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.sys-modal{
+  padding:16px !important;
+}
 .card-item {
   @media all and (max-width:640px) {
     width: 100% !important;

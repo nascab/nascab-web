@@ -5,42 +5,36 @@ import formatUtil from './formatUtil';
 class VideoHelper {
     constructor(vue) {
         this.vue = vue
-        this.primaryMovieSize = 1280 //原始文件无法播放的时候 首选的转码清晰度 
 
-        //比特率选项
-        this.optionsBitrate = [
-            { value: 320, label: '320Kbps' },
-            { value: 512, label: '512Kbps' },
-            { value: 1024, label: '1Mbps' },
-            { value: 2048, label: '2Mbps' },
-            { value: 3584, label: '3Mbps' },
-            { value: 4096, label: '4Mbps' },
-            { value: 5120, label: '5Mbps' },
-            { value: 8192, label: '8Mbps' },
-            { value: 12288, label: '12Mbps' },
-            { value: 15360, label: '16Mbps' },
-            { value: 20480, label: '20Mbps' },
-            { value: 30720, label: '30Mbps' },
-            { value: 40960, label: '40Mbps' },
-            { value: 51200, label: '50Mbps' },
-            { value: 61400, label: '60Mbps' },
-            { value: 81920, label: '80Mbps' },
-            { value: 102400, label: '100Mbps' }
+        this.primaryOptionPlay = { size: 1920, bitrate: 3584, label: "1080p 3mbps" }
+        this.optionsPlay = [
+
+            { size: 4096, bitrate: 51200, label: "4k 30mbps" },
+            { size: 4096, bitrate: 20480, label: "4k 20mbps" },
+            { size: 4096, bitrate: 10240, label: "4k 10mbps" },
+            { size: 4096, bitrate: 6144, label: "4k 6mbps" },
+            { size: 4096, bitrate: 4096, label: "4k 4mbps" },
+            { size: 1920, bitrate: 8192, label: "1080p 8mbps" },
+            { size: 1920, bitrate: 6144, label: "1080p 6mbps" },
+            { size: 1920, bitrate: 4096, label: "1080p 4mbps" },
+            { size: 1920, bitrate: 3584, label: "1080p 3mbps" },
+            { size: 1920, bitrate: 2048, label: "1080p 2mbps" },
+            { size: 1280, bitrate: 3584, label: "720p 3mbps" },
+            { size: 1280, bitrate: 2048, label: "720p 2mbps" },
+            { size: 1280, bitrate: 1024, label: "720p 1mbps" },
+            { size: 720, bitrate: 2048, label: "480p 2mbps" },
+            { size: 720, bitrate: 1024, label: "480p 1mbps" },
+            { size: 1, bitrate: 3584, label: this.vue.$t("video.code_raw") }
         ]
-        //分辨率选项
-        this.optionsPlaySize = [
-            { value: 1, label: this.vue.$t("video.code_raw") },
-            { value: 4096, minBitrate: 1024, maxBitrate: 102400, defaultBitrate: 4096, label: "4K" },
-            { value: 1920, minBitrate: 1024, maxBitrate: 40960, defaultBitrate: 3584, label: "1080P" },
-            { value: 1280, minBitrate: 1024, maxBitrate: 4096, defaultBitrate: 2048, label: "720P" },
-            { value: 720, minBitrate: 512, maxBitrate: 3584, defaultBitrate: 1024, label: "480P" },
-            { value: 480, minBitrate: 320, maxBitrate: 2048, defaultBitrate: 512, label: "240P" }
-        ]
+
+
         //播放速率选项
         this.optionsPlaySpeed = [
+            { value: 0.5, label: '0.5x' },
             { value: 1, label: '1x' },
-            { value: 1.25, label: '1.25x' },
-            { value: 1.5, label: '1.5x' }]
+            { value: 1.5, label: '1.5x' },
+            { value: 2, label: '2x' },
+            { value: 3, label: '3x' }]
 
         if (screenfull.isEnabled) {
             screenfull.on('change', () => {
@@ -49,22 +43,6 @@ class VideoHelper {
         }
         //隐藏导航栏
         jsBridge.setIsShowNavBar(false)
-    }
-    //从本地缓存读取之前的比特率
-    readBitrateFromLocal() {
-        let bitrateSave = localStorage.getItem("lastPlayBitrate");
-        if (bitrateSave) {
-            this.vue.videoBitRate = bitrateSave;
-        }
-        for (let i in this.vue.bitrateList) {
-            if (this.vue.bitrateList[i].value == bitrateSave) {
-                this.vue.selectedBitRateIndex = i
-            }
-        }
-    }
-    //将用户选取的比特率保存 下次使用
-    saveBitrateToLocal() {
-       localStorage.setItem('lastPlayBitrate', this.vue.videoBitRate)
     }
 
     changeVolume(value) {
@@ -174,11 +152,11 @@ class VideoHelper {
         }
     }
     download() {
-        let fullUrl=this.vue.indexObj.rawUrl
-        if(!fullUrl.startsWith("http")){
-             fullUrl = window.location.protocol + "//" + window.location.host + fullUrl
+        let fullUrl = this.vue.indexObj.rawUrl
+        if (!fullUrl.startsWith("http")) {
+            fullUrl = window.location.protocol + "//" + window.location.host + fullUrl
         }
-        console.log("fullUrl",fullUrl)
+        console.log("fullUrl", fullUrl)
         if (this.vue.isFromApp) {
             jsBridge.openInBrowser(fullUrl)
         } else {
@@ -199,16 +177,6 @@ class VideoHelper {
     disposeKeyEvent(target) {
         target.onkeydown = null
     }
-    savePlaySeek() {
-        if (this.vue.indexObj && this.vue.indexObj.id && this.vue.indexObj.duration) {
-            if ((this.vue.indexObj.duration - this.vue.seekSec) > 60) {
-                //记录进度 下次继续播放
-                localStorage.setItem('videoProgress' + this.vue.indexObj.id, this.vue.seekSec + "")
-            } else {
-                localStorage.removeItem('videoProgress' + this.vue.indexObj.id)
-            }
-        }
-    }
     //当选择了服务器上面的字幕文件
     onSelectServerSubtitlePath(serverSubtitlePath) {
         if (serverSubtitlePath) {
@@ -221,7 +189,7 @@ class VideoHelper {
     }
     //字幕上传成功回调
     uploadSubtitleSuc(response, file, fileList) {
-        console.log("response",response)
+        console.log("response", response)
         if (response.code) {
             return this.uploadSubtitleErr()
         }
@@ -236,111 +204,25 @@ class VideoHelper {
         console.log('字幕上传失败 提示用户')
         this.vue.showVsNotification(this.vue.$t('video.subtitleUploadFailed'))
     }
-    setSuitBitrateOptions(sizeOption) {
-        let indexObj = this.vue.indexObj
-        console.log(indexObj)
-        //筛选码率
-        if (indexObj.size && indexObj.duration) {
-            let videoRawBitrate = parseInt(indexObj.size / indexObj.duration * 8 / 1024)
-            console.log('视频原生码率:' + videoRawBitrate + "kb")
-            this.vue.bitrateList = this.optionsBitrate.filter((item) => {
-                if (item.value >= sizeOption.minBitrate && item.value <= sizeOption.maxBitrate) {
-                    if (item.value <= videoRawBitrate) {//大于文件原生码率的不添加
-                        return item
-                    }
-                }
-            }).reverse()
-            let maxOption = this.vue.bitrateList[0]
-            if (this.vue.bitrateList.length < 1 || maxOption.value < videoRawBitrate) {
-                //手动添加一个文件原生码率的选项
-                let showValue = parseFloat(parseInt(videoRawBitrate * 10) / 10)
-                let showUnit = 'Kbps'
-                if (showValue > 1024) {
-                    showValue = parseInt(showValue / 1024 * 10) / 10
-                    showUnit = 'Mbps'
-                }
-                this.vue.bitrateList.unshift({
-                    value: videoRawBitrate,
-                    label: this.vue.$t('video.originalBitrate') + ":" + showValue + showUnit
-                })
-            }
-            return videoRawBitrate
-        } else {
-            console.log('没有size和duration')
-            this.vue.bitrateList = this.optionsBitrate.reverse()
-            return false
-        }
 
-    }
-    setSuitSizeOptions() {
-        //设置合适的分辨率选项
-        let indexObj = this.vue.indexObj
-        this.vue.playSizeList = []
+    setSuitSizeOptions(indexObj) {
         if (indexObj.width && indexObj.height) {
-            let useSideLen = indexObj.width > indexObj.height ? indexObj.width : indexObj.height
-            //从高到低从分辨率选项里找
-            for (let i in this.optionsPlaySize) {
-                if (useSideLen >= this.optionsPlaySize[i].value) {
-                    this.vue.playSizeList.push(this.optionsPlaySize[i])
-                }
+            if (indexObj.width < 2000 && indexObj.height < 2000) {
+                //宽和高都小于2000 不显示4k选项
+                this.vue.playSizeList = this.optionsPlay.slice(5)
+                return
             }
-            //如果原始分辨率不在选项列表 在额外添加一个原始分辨率选项
-            console.log('useSideLen', useSideLen)
-            if (useSideLen > this.vue.playSizeList[1].value) {
-                this.vue.playSizeList.push({
-                    label: indexObj.width + "x" + indexObj.height,
-                    value: useSideLen,
-                    minBitrate: 1024,
-                    maxBitrate: 102400,
-                    defaultBitrate: 1024
-                })
-            }
-        } else {
-            console.log('this.playSizeList = this.optionsPlaySize')
-            this.vue.playSizeList = this.optionsPlaySize
         }
+        this.vue.playSizeList = this.optionsPlay
     }
     getVideoSuitResolution(indexObj) {//获取适合视频的分辨率
-        if (indexObj.width && indexObj.height) {
-            let useSideLen = indexObj.width > indexObj.height ? indexObj.width : indexObj.height
-            //从高到低从分辨率选项里找
-            for (let i in this.optionsPlaySize) {
-                if (this.optionsPlaySize[i].value < 240) continue
-                if (useSideLen >= this.optionsPlaySize[i].value) {
-                    console.log('····················合适的视频分辨率···················', this.optionsPlaySize[i].value)
-                    //设置适合这个分辨率的码率选项列表 并获取视频源码率
-                    let videoRawBitrate = this.setSuitBitrateOptions(this.optionsPlaySize[i])
-                    console.log('视频源码率', videoRawBitrate)
-                    //设置适合这个分辨率的码率当前值
-                    if (videoRawBitrate) {
-                        //用户上次使用的码率 如果能继续用就继续用
-                        let bitrateSave = localStorage.getItem("lastPlayBitrate");
-                        if (bitrateSave&&videoRawBitrate>=bitrateSave) {
-                            this.vue.videoBitRate = bitrateSave;
-                        }else{
-                            this.vue.videoBitRate = this.optionsPlaySize[i].defaultBitrate > videoRawBitrate ? videoRawBitrate : this.optionsPlaySize[i].defaultBitrate
-                            localStorage.setItem("lastPlayBitrate",this.vue.videoBitRate)
-                        }
-                    } else {
-                        this.vue.videoBitRate = this.optionsPlaySize[i].defaultBitrate
-                    }
-                    console.log('要使用的码率是', this.vue.videoBitRate)
-                    console.log("上次用户手动选择使用的码率",localStorage.lastPlayMovieSize)
-                    if(localStorage.lastPlayMovieSize&&this.optionsPlaySize[i].value>=localStorage.lastPlayMovieSize){
-                        return localStorage.lastPlayMovieSize
-                    }else{
-                        return this.optionsPlaySize[i].value
-                    }
-                }
-            }
-        }
-        console.log('··········没找到合适的分辨率··········')
-        return this.primaryMovieSize
+        this.vue.currentSizeOption = this.primaryOptionPlay
+        this.vue.videoBitRate = this.primaryOptionPlay.bitrate
+        return this.primaryOptionPlay.size
     }
     //修改播放速率
     changePlaySpeed(index) {
         let speedOption = this.optionsPlaySpeed[index]
-        console.log('speedOption', speedOption)
         this.vue.playSpeed = speedOption.value
         this.vue.vPlayer.playbackRate(speedOption.value)
     }
@@ -354,6 +236,7 @@ class VideoHelper {
         this.vue.subtitleStreamIndex = 0
         this.vue.uploadSubtitleFilePath = null
         this.vue.videoSameNameSubtitleFilePath = null
+        this.vue.setBurnState()
     }
     //切换全屏
     switchFullScreen() {
@@ -396,7 +279,7 @@ class VideoHelper {
         }
         jsBridge.setScreenDirection("PORTRAIT")
     }
-    onDestroy(){
+    onDestroy() {
         //销毁页面时候恢复自动横竖屏
         jsBridge.setScreenDirection("AUTO")
         jsBridge.setIsShowNavBar(true)
@@ -434,13 +317,30 @@ class VideoHelper {
                     this.vue.currentSubtitleStreamList.push({
                         label: tag,
                         value: streamIndex,
-                        language: stream.tags ? stream.tags.language : '',
+                        language: stream.tags && stream.tags.language ? stream.tags.language : '',
                         stream: stream
                     })
+
+
                 } else if (stream.codec_type == 'video') {//保存视频流 用于分析是否能播放源文件 里面有视频编码信息
                     this.vue.currentVideoStream = stream
                 }
             }
+            //根据首选字幕语言设置字幕索引
+            if (this.vue.currentSubtitleStreamList) {
+                console.log("this.vue.currentSubtitleStreamList",this.vue.currentSubtitleStreamList)
+                for (let i in this.vue.currentSubtitleStreamList) {
+                    let subStream = this.vue.currentSubtitleStreamList[i]
+                    if (subStream.language && this.vue.moviePreferLanguage) {
+                        if (subStream.language == this.vue.moviePreferLanguage) {
+                            console.log("首选字幕语言索引",i)
+                            this.vue.subtitleStreamIndex = i
+                            break
+                        }
+                    }
+                }
+            }
+
             if (this.vue.movieType != 1) {
                 this.getSameNameSubtitles(this.vue.indexObj.id, playFilePath)
             }
@@ -448,8 +348,15 @@ class VideoHelper {
     }
 
     //获取和视频文件同名的字幕文件
+
     getSameNameSubtitles(indexId, videoPath) {
+        console.log("调用 getSameNameSubtitles")
+        if (this.isGettingSameNameSubtties) {
+            return
+        }
+        this.isGettingSameNameSubtties = true
         let params = {}
+
         if (indexId) {
             params.id = indexId
         }
@@ -458,13 +365,14 @@ class VideoHelper {
         }
         this.vue.api
             .post('/api/movieApi/getSameNameSubtitles', params).then((res) => {
+                this.isGettingSameNameSubtties = false
                 if (!res.code) {
                     //用户设置的字号
 
                     let subtitlePathList = res.data
                     if (subtitlePathList.length > 0) {
                         //添加到现有字幕列表
-                        let rawLength=this.vue.currentSubtitleStreamList.length
+                        let rawLength = this.vue.currentSubtitleStreamList.length
                         for (let i in subtitlePathList) {
                             let subtitleItem = subtitlePathList[i]
                             this.vue.currentSubtitleStreamList.push({
@@ -473,17 +381,20 @@ class VideoHelper {
                                 type: 'path'
                             })
                         }
-                        if(rawLength<1){
+                        if (rawLength < 1) {
                             this.vue.chooseSubtitle(0)
                         }
                     }
                     // 设置用户自定义的字体大小
                     if (res.userFontSize) {
-                        this.vue.userFontSize = res.userFontSize*15 + "px"
-                    }else{
-                        this.vue.userFontSize =  "20px"
+                        this.vue.userFontSize = res.userFontSize * 15 + "px"
+                    } else {
+                        this.vue.userFontSize = "20px"
                     }
+
                 }
+            }).catch(err => {
+                this.isGettingSameNameSubtties = false
             })
     }
 

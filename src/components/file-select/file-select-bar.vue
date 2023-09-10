@@ -24,6 +24,7 @@
 <script>
 import folderBrowerOperationBar from "@/components/folder-brower/folder-brower-operation-bar.vue"
 export default {
+	name:"file-select-bar",
 	props: {
 		fileBrower: {
 			default: null,

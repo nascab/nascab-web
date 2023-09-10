@@ -1,10 +1,5 @@
 <template>
-	<vs-button :class="type"
-		style="height:40px;width:40px;border-radius:50%;z-index:5;text-align: center;line-height: 40px;"
-		@click="$emit('click')">
-		<Icon :type="iIcon" size="25" />
-	</vs-button>
-
+	<Button class="btn" :class="type" @click="$emit('click')" type="text" shape="circle" :icon="iIcon"></Button>
 </template>
 
 <script>
@@ -33,28 +28,39 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.primary {
-	background-color: $nas-main;
-	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+.btn {
+	height: 35px;
+	width: 35px
+}
 
+::v-deep .ivu-icon {
+	font-size: 20px;
+	line-height: 30px;
+}
+
+.primary {
+	color: white;
+	background-color: $nas-main;
 }
 
 .red {
+	color: white;
 	background-color: red;
-	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
-
 }
 
 .white {
 	color: $nas-main;
 	background-color: white;
-	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
-
 }
 
 .grey {
 	color: white;
-	background-color:  $nas-grey;
-	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
+	background-color: $nas-grey;
+}
+
+
+.dark-grey {
+	color: white;
+	background-color: #5f5f5f;
 }
 </style>

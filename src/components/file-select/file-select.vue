@@ -14,6 +14,7 @@ import folderBrowerOperationBar from "@/components/folder-brower/folder-brower-o
 import fileSelectBar from "@/components/file-select/file-select-bar.vue"
 
 export default {
+	name:"file-select",
 	props: {
 		initPath: {
 			default: '',

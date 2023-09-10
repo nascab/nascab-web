@@ -132,7 +132,7 @@
 			</div>
 		</div>
 		<!-- 添加任务对话框 -->
-		<Modal blur v-model="showAdd" footer-hide>
+		<Modal  v-model="showAdd" footer-hide>
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ operationType == 'update' ? $t('backup.updateTask') : $t('backup.createTask') }}

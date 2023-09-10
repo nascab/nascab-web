@@ -6,8 +6,17 @@
 				
 				<div class="flex-row" style="justify-content: right;flex-wrap: wrap;">
 					<p class="add-title">{{ $t('setting.photoSourceSettingAlert') }}</p>
-					<vs-button style="margin-left:15px;height:25px" @click="showAddExclude('excludePathPhoto')" border>{{ $t('setting.excludePath') }}</vs-button>
-					<vs-button style="margin-left:5px;height:25px" @click="showAddExclude('excludeFilenamePhoto')" border>{{ $t('setting.excludeFilename') }}</vs-button>
+				</div>
+
+				<div style="display:flex;align-items:center;margin-top:5px">
+					<a style="height:25px" @click="showAddExclude('excludePathPhoto')" border>{{
+						$t('setting.excludePath') }}</a>
+					<a style="margin-left:15px;height:25px" @click="showAddExclude('excludeFilenamePhoto')" border>{{
+						$t('setting.excludeFilename') }}</a>
+					<!-- 刷新索引按钮 -->
+					<a @click="refreshIndex('photo')" border style="margin-left:15px;height: 25px;">
+						{{ $t('setting.refreshIndex') }}
+					</a>
 				</div>
 				<Divider></Divider>
 				<div v-if="pathList.length > 0" style="width: 100%;overflow: auto;height: 100%;">
@@ -15,6 +24,7 @@
 						<!-- 当前路径 -->
 						<div class="item-title">
 							<span style="font-weight:bold">{{ $t('common.path') }} : </span>{{ item.path }}
+							
 						</div>
 						<!-- 当前状态 -->
 						<div class="item-title">
@@ -146,6 +156,13 @@ export default {
 
 	},
 	methods: {
+		refreshIndex(sourceType){
+			this.api.post('/api/sourceFolderApi/refreshIndex', {
+				sourceType: sourceType
+			}).then((res) => {
+				this.showVsNotification(this.$t('backup.orderSent'))
+			}).catch((error) => { })
+		},
 		showAddExclude(type){
 			this.excludeType=type
 			this.excludePathList=[]
@@ -313,6 +330,8 @@ export default {
 }
 
 .item-title {
+	display: flex;
+	align-items: center;
 	word-break: break-all;
 	margin-top: 10px;
 	margin-bottom: 10px;

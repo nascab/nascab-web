@@ -70,22 +70,30 @@
 							<div v-if="album.type == 'mode'">
 								<p class="item-subtitle max-line-one">{{ album.data_value.mode }}</p>
 							</div>
+
+							<!-- 条件相册 -->
+							<div v-if="album.type == 'condition'">
+								<p class="item-subtitle max-line-one">{{ album.data_value }}</p>
+							</div>
 						</template>
 						<template #interactions>
 							<vs-button icon>
 								<!-- 相册类型 -->
 								<div v-if="album.type == 'date'">
 									<!-- 智能日期相册 -->
-									<h3 v-if="album.data_value.type == 'aiDate'">{{ $t('album.aiDate') }}</h3>
-									<h3 v-if="album.data_value.type == 'fix'">{{ $t('album.fixDate') }}</h3>
-									<h3 v-if="album.data_value.type == 'section'">{{ $t('album.sectionDate') }}</h3>
-									<h3 v-if="album.data_value.type == 'holidays'">{{ $t('album.holidays') }}</h3>
+									<h3 v-if="album.data_value.type == 'aiDate'" class="album-type max-line-one">{{ $t('album.aiDate') }}</h3>
+									<h3 v-if="album.data_value.type == 'fix'" class="album-type max-line-one">{{ $t('album.fixDate') }}</h3>
+									<h3 v-if="album.data_value.type == 'section'" class="album-type max-line-one">{{ $t('album.sectionDate') }}</h3>
+									<h3 v-if="album.data_value.type == 'holidays'" class="album-type max-line-one">{{ $t('album.holidays') }}</h3>
 								</div>
 								<div v-if="album.type == 'geo'">
-									<h3>{{ $t('album.geoAlbum') }}</h3>
+									<h3 class=" max-line-one">{{ $t('album.geoAlbum') }}</h3>
 								</div>
 								<div v-if="album.type == 'mode'">
-									<h3>{{ $t('album.modeAlbum') }}</h3>
+									<h3 class=" max-line-one">{{ $t('album.modeAlbum') }}</h3>
+								</div>
+								<div v-if="album.type == 'condition'">
+									<h3 class=" max-line-one">{{ $t('photo.filterAlubm') }}</h3>
 								</div>
 							</vs-button>
 							<vs-button icon class="btn-chat" shadow primary @click.stop="showChangeNameModal(index)">
@@ -156,8 +164,8 @@ export default {
 				type: "DELETE"
 			}],
 			changeAlbumName: "",
-			itemBaseWidth: 220,
-			itemWidth: 220,
+			itemBaseWidth:200,
+			itemWidth: 200,
 			itemMargin: 10,
 			selectedAlbum: '',
 			showAlbumDetail: false,
@@ -275,9 +283,10 @@ export default {
 						// 	this.albumList.push(res.data[0])
 						// }
 						this.$nextTick(() => {
+							this.calImageWidth()
 							setTimeout(() => {
 								this.calImageWidth()
-							}, 100);
+							}, 300);
 						});
 					}
 					this.loading = false
@@ -410,5 +419,8 @@ export default {
 			}
 		}
 	}
+}
+.album-type{
+	flex-shrink: 0;
 }
 </style>

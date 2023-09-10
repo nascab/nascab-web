@@ -12,11 +12,18 @@
 			</div>
 			<Divider v-if="index!=userList.length-1"/>
 		</div>
+		<div v-if="userList.length<1" class="text-no-user">{{$t("user.noUserToChoose")}}</div>
 	</div>
 </template>
 
 <script>
 	export default {
+		props:{
+			hideAdmin:{
+				default:false,
+				type:Boolean
+			}
+		},
 		components: {},
 		data() {
 			return {
@@ -35,7 +42,13 @@
 				this.api.post('/api/usersApi/getAllUser', {}).then((res) => {
 					if (!res.code) {
 						console.log(res)
-						this.userList = res.userList
+						for(let uu of res.userList){
+							if(this.hideAdmin && uu.is_admin){
+								continue
+							}
+							this.userList.push(uu)
+						}
+						
 					}
 				}).catch((error) => {
 					if (error.code == 102) {
@@ -74,5 +87,8 @@
 
 	.usertype {
 		margin-left: 10px;
+	}
+	.text-no-user{
+		color:$nas-grey;
 	}
 </style>

@@ -3,7 +3,7 @@
 		<div style="display:flex;flex-direction:row;margin-bottom: 10px;">
 			<my-btn :title="$t('security.addOne')" @click="showAddIp = true"></my-btn>
 		</div>
-		<div style="width:100%;height:100%;overflow-y:auto;overflow-x:hidden;">
+		<div style="width:100%;height:100%;overflow-y:auto;overflow-x:hidden;" @scroll="onPageScroll">
 			<Card shadow :border="false" class="card-root" v-for="(ipItem, index) in ipList">
 				<div class="card-item">
 					<h4>IP:</h4>
@@ -60,12 +60,9 @@
 export default {
 	mounted() {
 		//在header的mounted中触发加载第一页数据 在onChooseRange
-		// 监听滚动条
-		window.addEventListener("scroll", this.onPageScroll, true);
 		this.getIpList()
 	},
 	beforeDestroy() {
-		window.removeEventListener("scroll", this.onPageScroll, true);
 	},
 	props: {
 		type: {

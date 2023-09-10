@@ -11,6 +11,8 @@
 				<!-- 添加到相册按钮 -->
 				<my-btn-icon v-if="showAddToAlbum" style="margin-right:10px;" iIcon="md-add"
 					@click="onAddToAlbum"></my-btn-icon>
+				<!-- 人物变更 -->
+				<my-btn-icon v-if="faceId" style="margin-right:10px;" iIcon="md-swap" @click="onSwitchToOtherPeople"></my-btn-icon>
 				<!-- 从相册移除 -->
 				<my-btn-icon v-if="showRemoveFromAlbum" style="margin-right:10px;" iIcon="md-remove"
 					@click="removeFromAlbum"></my-btn-icon>
@@ -23,8 +25,11 @@
 			<div class="bottom-root-pc">
 				<!-- 添加到相册按钮 -->
 				<my-btn v-if="showAddToAlbum" @click="onAddToAlbum" :title="$t('photo.addToAlbum')"></my-btn>
+				<!-- 人物变更 -->
+				<my-btn v-if="faceId" @click="onSwitchToOtherPeople" :title="$t('photo.changePeople')">
+				</my-btn>
 				<!-- 从相册移除 -->
-				<my-btn v-if="showRemoveFromAlbum" @click="removeFromAlbum" :title="$t('photo.removeFromAlbum')">
+				<my-btn v-if="showRemoveFromAlbum||faceId" @click="removeFromAlbum" :title="$t('photo.removeFromAlbum')">
 				</my-btn>
 				<!-- 删除按钮 -->
 				<my-btn @click="trashPhotos(1)" type="red" :title="$t('common.delete')">
@@ -41,13 +46,13 @@
 					<my-btn v-if="selectedList.length > 0" :title="$t('file.restore') + ':' + selectedList.length">
 					</my-btn>
 					<!-- 全部恢复 -->
-					<my-btn v-if="selectedList.length <1" :title="$t('file.restoreAll')"></my-btn>
+					<my-btn v-if="selectedList.length < 1" :title="$t('file.restoreAll')"></my-btn>
 				</div>
 				<div class="right-root" @click="deleteFromDisk()">
 					<my-btn v-if="selectedList.length > 0" type="red"
 						:title="$t('file.delete') + ':' + selectedList.length"></my-btn>
 					<!-- 全部删除 -->
-					<my-btn v-if="selectedList.length <1" :title="$t('file.deleteAll')" type="red"></my-btn>
+					<my-btn v-if="selectedList.length < 1" :title="$t('file.deleteAll')" type="red"></my-btn>
 				</div>
 			</div>
 			<!-- 取消已选 -->
@@ -56,26 +61,28 @@
 		</div>
 
 		<!-- 相册选择modal 让用户选择添加到哪个相册 -->
-		<vs-dialog v-model="showSelectAlbum">
+		<vs-dialog v-model="showSelectAlbum" scroll>
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{ $t('photo.whichAlbumWanToAdd') }}
 				</h4>
 			</template>
-			<Form label-position="top">
-				<!-- 待选相册列表 -->
-				<CellGroup>
-					<div v-for="(album, index) in albumList" @click="onAddToAlbumSelect(album)">
-						<Cell :title="album.name" />
-					</div>
-				</CellGroup>
-			</Form>
+			<!-- 待选相册列表 -->
+			<ordinary-album-content ref="ordinaryAlbum" :selectMode="true"></ordinary-album-content>
+			<template #footer>
+				  <vs-button block @click="onAddToAlbumSelect">
+					{{ $t("common.select") }}
+				  </vs-button>
+			  </template>
 		</vs-dialog>
 
 	</div>
 </template>
 
 <script>
+
+const ordinaryAlbumContent = () => import('@/views/photos/photoPages/ordinaryAlbumContent.vue')
+
 export default {
 	name: "photo-bottom-select",
 	props: {
@@ -95,24 +102,28 @@ export default {
 			default: '',
 			type: String
 		},
+		faceId: {
+			default: '',
+			type: String
+		},
 		photoList: {
 			type: Array,
 			default: () => []
 		},
 		trashMode: false //回收站模式 和正常模式ui不一样
 	},
+	components:{
+		ordinaryAlbumContent
+	},
 	data() {
 		return {
-			albumList: [],
 			showSelectAlbum: false,
 			selectedList: []
 		};
 	},
 	mounted() {
-		console.log("created onTrashMsg")
-
 		this.$bus.$on('onTrashMsg', (photoIndexId) => {
-			console.log("onTrashMsg onTrashMsg onTrashMsg",photoIndexId)
+			console.log("onTrashMsg onTrashMsg onTrashMsg", photoIndexId)
 			this.inOutTrashApi(1, false, [photoIndexId], () => {
 				this.$bus.$emit("removeIndexById", photoIndexId)
 			})
@@ -125,76 +136,76 @@ export default {
 	methods: {
 		//点击按钮添加到普通相册 弹出modal让用户选择添加到哪个相册
 		onAddToAlbum() {
-			if (this.albumList.length > 0) {
-				this.showSelectAlbum = true
-			} else {
-				this.getAlbumList(() => {
-					this.showSelectAlbum = true
-				})
+			this.showSelectAlbum = true
+		},
+		onSwitchToOtherPeople(){//人物变更
+			if (this.selectedList.length < 1) {
+				return
 			}
+			this.$bus.$emit("onSwitchToOtherPeople",this.selectedList)
 		},
 		removeFromAlbum() {
 			if (this.selectedList.length < 1) {
 				return
 			}
-			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('photo.removeFromAlbum') + "?", () => {
+			console.log("albumId" ,this.albumId)
+			if(this.faceId){
+				console.log("从人脸相册移出")
+				//从人脸相册移出 提交事件 让监听者去处理
+				this.$bus.$emit("onRemoveFromFace",this.selectedList)
+			}else if(this.ordinaryAlbumId){
+
+				console.log("从普通相册移出")
+				//从普通相册移出
+				this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('photo.removeFromAlbum') + "?", () => {
+					this.api
+						.post("/api/ordinaryAlbumApi/deleteFromAlbum", {
+							indexIdArr: this.selectedList,
+							albumId: this.ordinaryAlbumId
+						})
+						.then((res) => {
+							if (!res.code) {
+								console.log('deleteFromAlbum')
+								this.showVsNotification(this.$t('photo.removeFromAlbumSuc'));
+								this.$emit('onRemoveFromAlbum')
+								this.$emit('onUnSelect')
+							}
+						})
+						.catch((error) => { });
+				})
+			}
+			
+		},
+		onAddToAlbumSelect() {
+			if(this.$refs.ordinaryAlbum){
+
+				let albumId=this.$refs.ordinaryAlbum.getSelectedAlbumId()
+				if(!albumId){
+					return
+				}
+				//在弹出的选择相册对话框中选择了具体要添加到的相册
+				if (this.selectedList.length < 1) {
+					return
+				}
 				this.api
-					.post("/api/ordinaryAlbumApi/deleteFromAlbum", {
+					.post("/api/ordinaryAlbumApi/addToAlbum", {
 						indexIdArr: this.selectedList,
-						albumId: this.ordinaryAlbumId
+						albumId: albumId
 					})
 					.then((res) => {
 						if (!res.code) {
-							console.log('deleteFromAlbum')
-							this.showVsNotification(this.$t('photo.removeFromAlbumSuc'));
-							this.$emit('onRemoveFromAlbum')
 							this.$emit('onUnSelect')
+							this.showSelectAlbum = false
+							this.showVsNotification(this.$t('photo.addAlbumSuc'))
 						}
 					})
 					.catch((error) => { });
-			})
-		},
-		onAddToAlbumSelect(album) {
-			//在弹出的选择相册对话框中选择了具体要添加到的相册
-			if (this.selectedList.length < 1) {
-				return
-			}
-			this.api
-				.post("/api/ordinaryAlbumApi/addToAlbum", {
-					indexIdArr: this.selectedList,
-					albumId: album.id
-				})
-				.then((res) => {
-					if (!res.code) {
-						this.$emit('onUnSelect')
-						this.showSelectAlbum = false
-						this.showVsNotification(this.$t('photo.addAlbumSuc'))
-					}
-				})
-				.catch((error) => { });
+				}
+			
 
 		},
 		onUnSelect() {
 			this.$emit('onUnSelect')
-		},
-		getAlbumList(suc) {
-			this.api
-				.post("/api/ordinaryAlbumApi/getAllAlbum", {
-					cover: false
-				})
-				.then((res) => {
-					if (!res.code) {
-						if (res.data.length > 0) {
-							this.albumList = res.data;
-							if (suc) {
-								suc()
-							}
-						} else {
-							this.showVsAlertDialog(this.$t('common.alert'), this.$t('photo.youHaveNoAlbum'))
-						}
-					}
-				})
-				.catch((error) => { });
 		},
 		inOutApi(trash, needRefresh) {
 			this.inOutTrashApi(trash, needRefresh, this.selectedList, () => {
@@ -229,21 +240,30 @@ export default {
 		restoreAll(photoList) {
 			this.showVsConfirmDialog(this.$t('common.confirm'), photoList.length + this.$t('file.doAllRestore'),
 				() => {
-					for (let i = 0; i < photoList.length; i++) {
-						photoList[i].selected = true
-						this.selectedList.push(photoList[i].id)
-					}
-					this.inOutApi(0, true)
+					this.api.post('/api/photoApi/restoreTrashBinFiles', {
+					}).then((res) => {
+						if (!res.code) {
+							this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.operationSuccess') + ":" + this.$t('common.checkAfter'), () => {
+								//是否需要通知照片列表进行刷新
+								this.$emit('onNeedRefresh')
+							});
+						}
+					}).catch((error) => { })
 				})
 		},
 		//彻底删除全部已选
 		deleteAll(photoList) {
 			this.showVsConfirmDialog(this.$t('common.confirm'), photoList.length + this.$t('file.doAllDelete'), () => {
-				for (let i = 0; i < photoList.length; i++) {
-					photoList[i].selected = true
-					this.selectedList.push(photoList[i].id)
-				}
-				this.deleteApi(true)
+				this.api.post('/api/photoApi/clearTrashBin', {
+				}).then((res) => {
+					if (!res.code) {
+						this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.operationSuccess') + ":" + this.$t('common.checkAfter'), () => {
+							//是否需要通知照片列表进行刷新
+							this.$emit('onNeedRefresh')
+						});
+					}
+				}).catch((error) => { })
+
 			})
 		},
 		trashPhotos(trash) {

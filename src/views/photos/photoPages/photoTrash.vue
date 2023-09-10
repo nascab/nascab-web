@@ -300,13 +300,13 @@ export default {
 			} else if (this.selectedPhoto.type == 2) {
 				if (localStorage.getItem("rawPlayer") == "1") {
 					//调用原生播放器
-					jsBridge.playVideo(JSON.stringify({
+					jsBridge.playVideo({
 						playIndex: this.selectedPhotoIndex,
 						playList: this.$refs.photoContent.photoList,
 						token: this.$store.state.token,
 						fromFileBrower: false,
 						serverType: "photo"
-					}))
+					})
 				} else {
 					//继续使用网页播放器
 					this.showVideoDetail = true;

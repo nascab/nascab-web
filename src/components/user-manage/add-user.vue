@@ -46,7 +46,7 @@
 							trigger: 'blur'
 						},
 						{
-							min: 6,
+							min:2,
 							message: this.$t('registerAdmin.usernameLengthLimit'),
 							trigger: 'blur'
 						}
@@ -57,7 +57,7 @@
 							trigger: 'blur'
 						},
 						{
-							min: 6,
+							min: 2,
 							message: this.$t('registerAdmin.passwordLengthLimit'),
 							trigger: 'blur'
 						}

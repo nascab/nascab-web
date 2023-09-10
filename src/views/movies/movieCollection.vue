@@ -3,46 +3,55 @@
 
 		<!-- 无数据提示 -->
 		<my-nodata v-if="!loading && dataList.length < 1" @onBtnClick="showAdd" :title="$t('movie.addCollectionAlert')"
-			:btnTitle="$t('movie.addCollection')" style="position: absolute;width: 100%;margin-top: 150px;">
+			:btnTitle="$store.state.currentUser.is_admin == 1 ? $t('movie.addCollection') : null"
+			style="position: absolute;width: 100%;margin-top: 150px;">
 		</my-nodata>
 
-		<div style="width:100%;display:flex;height: 100%;flex-direction:row;overflow: hidden;">
+		<div :style="{ 'height': selectMode ? '450px' : '100%' }" style="display:flex;flex-direction:row;overflow: hidden;">
 			<!-- 列表 -->
 			<div class="album-list-root" ref="wrapper">
 				<vs-card v-for="(collection, index) in dataList" type='1' @click="onCollectionClick(index)"
-					@contextmenu="showRightMenu($event, $root, album, index)"
 					:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }">
 					<template #title>
 						<h3 class="max-line-one" style="text-align: left;">{{ collection.title }}</h3>
 					</template>
 					<template #img>
-						<img v-if="collection.collection_cover_path && collection.enable_pwd != 1" style="object-fit: cover;"
+						<img v-if="collection.collection_cover_path" style="object-fit: cover;"
 							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }"
-							v-lazy="axios.getRawFileUrl(collection.collection_cover_path,'cover.jpg')" />
-						
-						<img v-if="!collection.collection_cover_path && collection.enable_pwd != 1" style="object-fit: cover;"
-							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }"
+							v-lazy="axios.getRawFileUrl(collection.collection_cover_path, 'cover.jpg')" />
+
+						<img v-if="!collection.collection_cover_path && collection.enable_pwd != 1"
+							style="object-fit: cover;" :style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }"
 							src="@/static/photo/icon_movie_collection.png" />
 
 
-						<img v-if="collection.enable_pwd==1" style="object-fit: cover;"
-							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }"
+						<img v-if="!collection.collection_cover_path && collection.enable_pwd == 1"
+							style="object-fit: cover;" :style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }"
 							src="@/static/photo/icon_movie_collection_lock.png" />
+
+
+						<!-- 选中后的遮罩层 -->
+						<div v-if="collection.selected"
+							style="width:100%;height:100%;background-color:rgba(0, 0, 0, 0.5);position: absolute;display: flex;align-items: center;justify-content: center;">
+							<Icon type="md-checkmark-circle-outline" color='white' size='50' />
+						</div>
 					</template>
 					<template #text>
-						<p class="item-subtitle">{{ collection.create_time }}</p>
+						<p class="item-subtitle max-line-one">{{ collection.create_time }}</p>
 					</template>
 					<template #interactions>
-						<vs-button icon class="btn-chat" shadow primary @click.stop="showAdd(collection)">
+						<vs-button v-if="!selectMode && $store.state.currentUser.is_admin == 1" icon class="btn-chat" shadow primary
+							@click.stop="showAdd(collection)">
 							<Icon type="md-settings" size="20" />
 						</vs-button>
-						<vs-button icon class="btn-chat" shadow primary @click.stop="deleteCollection(collection)">
+						<vs-button v-if="!selectMode && $store.state.currentUser.is_admin == 1" icon class="btn-chat" shadow primary
+							@click.stop="deleteCollection(collection)">
 							<Icon type="md-trash" size="20" />
 						</vs-button>
 					</template>
 				</vs-card>
 				<!-- 添加影集 -->
-				<div v-if="dataList.length > 0" @click="showAdd()"
+				<div v-if="dataList.length > 0 && $store.state.currentUser.is_admin == 1" @click="showAdd()"
 					:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }"
 					style=" background-color: white;border-radius: 10px;display: flex;flex-direction: column;justify-content: center;cursor: pointer;">
 					<span class="nasIcons icon-add-album icon-add"></span>
@@ -67,21 +76,29 @@
 			</template>
 			<div style="display:flex;flex-direction:column;align-items:center">
 				<!-- 封面 -->
-				<img class="img-cover" v-if="coverPath" :src="axios.getRawFileUrl(coverPath,'cover.jpg')"/>
+				<img class="img-cover" v-if="coverPath" :src="axios.getRawFileUrl(coverPath, 'cover.jpg')" />
 				<!-- 选择封面 -->
-				<a style="margin-top:10px" @click="onChooseCover">{{coverPath ? $t("movie.deleteCover") :  $t("movie.addCover") }}</a>
+				<a style="margin-top:10px" @click="onChooseCover">{{ coverPath ? $t("movie.deleteCover") :
+					$t("movie.addCover") }}</a>
 			</div>
 			<!-- 内容 -->
 			<div style="word-break: break-all;text-align: left;max-width: 100%;">
 
 			</div>
 			<!-- 输入框 -->
-			<vs-input autocapitalize="off" autocorrect="off" type="text" v-model="inputCollectionName" :placeholder="$t('movie.addCollectionPlaceholder')">
+			<vs-input autocapitalize="off" autocorrect="off" type="text" v-model="inputCollectionName"
+				:placeholder="$t('movie.addCollectionPlaceholder')">
 				<template #icon>
 					<Icon color="#99AABF" type="ios-bookmarks" />
 				</template>
 			</vs-input>
+			<Divider></Divider>
 
+			<!-- 访问是否需要密码 -->
+			<div style="display:flex;align-items: center;">
+				<p style="margin-right: 20px;">{{ $t('movie.collectionIsNeedPwd') }}</p>
+				<i-switch v-model="enablePwd" />
+			</div>
 			<!-- 密码输入框 -->
 			<vs-input autocapitalize="off" autocorrect="off" v-if="enablePwd" type="password" v-model="password"
 				:placeholder="$t('movie.collectionPwdPlaceholder')">
@@ -89,19 +106,22 @@
 					<Icon color="#99AABF" type="ios-key" />
 				</template>
 			</vs-input>
-
-			<!-- 访问是否需要密码 -->
+			<Divider></Divider>
+			<!-- 是否共享给子用户 -->
 			<div style="display:flex;align-items: center;">
-				<p style="margin-right: 20px;">{{ $t('movie.collectionIsNeedPwd') }}</p>
-				<i-switch v-model="enablePwd" />
+				<p style="margin-right: 20px;">{{ $t('shareForSubUser') }}</p>
+				<i-switch v-model="shareForSubUser" />
 			</div>
+			<div style="margin-top:5px" v-if="shareForSubUser">
+				<p class="text-grey">{{ $t("movie.libraryUserAlert") }}</p>
+			</div>
+			<Divider></Divider>
 
 			<template #footer>
-				<div style="margin-top: 20px;margin-bottom: 10px;">
+				<div style="margin-bottom: 10px;">
 					<!-- 按钮 -->
-					<vs-button block @click="onAddBtnClick">
-						{{ dialogTitle }}
-					</vs-button>
+					<my-btn block @click="onAddBtnClick" :title="dialogTitle" style="width:100%">
+					</my-btn>
 				</div>
 
 			</template>
@@ -135,7 +155,8 @@
 			</template>
 		</vs-dialog>
 
-
+		<!-- 右键菜单 -->
+		<!-- <easy-cm @ecmcb="rightMenuClick" :list="rightMenuList"></easy-cm> -->
 	</div>
 </template>
 <script>
@@ -143,6 +164,12 @@ import collectionDetail from "@/views/movies/collectionDetail.vue"
 import axios from "@/plugins/axios";
 
 export default {
+	props: {
+		selectMode: {
+			default: false,
+			type: Boolean
+		}
+	},
 	created() {
 	},
 	mounted() {
@@ -160,8 +187,16 @@ export default {
 	},
 	data() {
 		return {
-			showChooseCover:false,
-			coverPath:"",
+			shareForSubUser: true,
+			rightMenuList: [{
+				text: this.$t('file.check'),
+				type: "CHECK",
+			}, {
+				text: this.$t('common.delete'),
+				type: "DELETE"
+			}],
+			showChooseCover: false,
+			coverPath: "",
 			showCollectionDetail: false,
 			dialogTitle: "",
 			selectedCollection: "",
@@ -175,30 +210,54 @@ export default {
 			enablePwd: false,
 			inputCollectionName: "",
 			editCollectionId: "",
-			collectionPwd: "" 
+			collectionPwd: "",
+			selectedIndex: false
 		};
 	},
 	methods: {
-		onChooseCover(){
-			if(this.coverPath){
-				this.coverPath=""
-			}else{
-			this.showChooseCover=true 
+		showRightMenu(event, root, collect, index) {
+			if (this.isMobile) return event.preventDefault()
+			this.selectedIndex = index
+			this.selectedCollection = collect
+			this.$easycm(event, root)
+		},
+		rightMenuClick(indexList) {
+			let type = this.rightMenuList[indexList[0]].type
+			if (type == 'CHECK') { //查看
+				this.onCollectionClick(this.selectedIndex)
+			} else if (type == 'DELETE') { //删除
+				this.deleteCollection(this.selectedCollection)
+			}
+		},
+		//选择模式 获取选中的相册id
+		getSelectedCollectionId() {
+			for (let item of this.dataList) {
+				if (item.selected) {
+					return item.id
+				}
+			}
+			return false
+		},
+		onChooseCover() {
+			if (this.coverPath) {
+				this.coverPath = ""
+			} else {
+				this.showChooseCover = true
 			}
 		},
 		//选择封面的回调
-		onSelectedCover(filePath){
-			if (!filePath.endsWith('.jpg') 
-			&& !filePath.endsWith('.jpeg')
-			&& !filePath.endsWith('.JPG')
-			&& !filePath.endsWith('.JPEG')
-			&& !filePath.endsWith('.png')
-			&& !filePath.endsWith('.PNG')) {
+		onSelectedCover(filePath) {
+			if (!filePath.endsWith('.jpg')
+				&& !filePath.endsWith('.jpeg')
+				&& !filePath.endsWith('.JPG')
+				&& !filePath.endsWith('.JPEG')
+				&& !filePath.endsWith('.png')
+				&& !filePath.endsWith('.PNG')) {
 				this.showVsAlertDialog(this.$t('common.alert'), this.$t('movie.coverFileNoSupport'));
 			} else {
 				this.showChooseCover = false
 				//调用修改接口
-				this.coverPath=filePath
+				this.coverPath = filePath
 			}
 		},
 		onPopstate() {
@@ -227,12 +286,20 @@ export default {
 				.catch((error) => { });
 		},
 		onCollectionClick(index) {
-			this.selectedCollection = this.dataList[index]
-			if (this.selectedCollection.enable_pwd == 1) {
-				this.$refs.inputPwdDialog.setShow(true)
+			// 选择模式
+			if (this.selectMode) {
+				for (let i in this.dataList) {
+					this.dataList[i].selected = (i == index)
+				}
+				this.$forceUpdate()
 			} else {
-				this.showCollectionDetail = true
-				this.pushState()
+				this.selectedCollection = this.dataList[index]
+				if (this.selectedCollection.enable_pwd == 1) {
+					this.$refs.inputPwdDialog.setShow(true)
+				} else {
+					this.showCollectionDetail = true
+					this.pushState()
+				}
 			}
 		},
 		//弹出对话框 创建/修改 影集
@@ -243,7 +310,8 @@ export default {
 				this.dialogTitle = this.$t("movie.editCollection")
 				this.editCollectionId = collection.id
 				this.inputCollectionName = collection.title
-				this.coverPath=collection.collection_cover_path
+				this.coverPath = collection.collection_cover_path
+				this.shareForSubUser=collection.share_for_subuser==1
 			} else {
 				this.dialogTitle = this.$t("movie.addCollection")
 				this.inputCollectionName = ""
@@ -266,7 +334,8 @@ export default {
 				title: this.inputCollectionName,
 				enablePwd: this.enablePwd ? "1" : "0",
 				pwd: this.password,
-				coverPath:this.coverPath
+				coverPath: this.coverPath,
+				shareForSubUser: this.shareForSubUser ? "1" : "0"
 			}).then((res) => {
 				if (!res.code) {
 					this.showAddDialog = false
@@ -297,6 +366,9 @@ export default {
 					this.dataList = res.data
 					this.$nextTick(() => {
 						this.calImageWidth()
+						setTimeout(() => {
+							this.calImageWidth()
+						}, 300);
 					})
 				}
 			}).catch((error) => { })
@@ -316,20 +388,15 @@ export default {
 }
 
 .list-root {
-	padding-top: 10px;
 	position: relative;
 	width: 100%;
 	height: 100%;
-
 	background-color: rgba(255, 255, 255, 0.6);
-	padding-left: 10px;
-	padding-right: 10px;
+	display: flex;
 
 	@media not all and (max-width:640px) {
 		border-top-left-radius: 20px;
 		border-top-right-radius: 20px;
-		padding-left: 20px;
-		padding-right: 20px;
 	}
 }
 
@@ -367,11 +434,12 @@ export default {
 	font-size: 50px;
 	color: $nas-main;
 }
-.img-cover{
-	width:100px;
-	height:100px;
-	border-radius:10px;
-	object-fit:cover;
+
+.img-cover {
+	width: 100px;
+	height: 100px;
+	border-radius: 10px;
+	object-fit: cover;
 
 }
 

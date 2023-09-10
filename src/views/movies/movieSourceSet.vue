@@ -5,9 +5,17 @@
 		<!-- 来源设置 -->
 		<div class="content-root">
 			<div class="flex-row" style="justify-content: right;flex-wrap: wrap;">
-					<p class="add-title">{{ $t('setting.movieSourceSettingAlert') }}</p>
-					<vs-button style="margin-left:15px;height:25px" @click="showAddExclude('excludePathMovie')" border>{{ $t('setting.excludePath') }}</vs-button>
-					<vs-button style="margin-left:5px;height:25px" @click="showAddExclude('excludeFilenameMovie')" border>{{ $t('setting.excludeFilename') }}</vs-button>
+				<p class="add-title">{{ $t('setting.movieSourceSettingAlert') }}</p>
+			</div>
+			<div style="display:flex;align-items:center;margin-top:5px">
+				<a style="height:25px" @click="showAddExclude('excludePathMovie')" border>{{
+					$t('setting.excludePath') }}</a>
+				<a style="margin-left:15px;height:25px" @click="showAddExclude('excludeFilenameMovie')" border>{{
+					$t('setting.excludeFilename') }}</a>
+				<!-- 刷新索引按钮 -->
+				<a @click="refreshIndex('movie')" border style="margin-left:15px;height: 25px;">
+					{{ $t('setting.refreshIndex') }}
+				</a>
 			</div>
 			<Divider></Divider>
 			<div v-if="pathList.length > 0" style="width: 100%;overflow: auto;height: 100%;">
@@ -42,6 +50,7 @@
 						<i-switch v-model="item.ignore_match_info" :true-value="0" :false-value="1"
 							@on-change="(value) => matchInfoSwitch(item, value)" />
 					</div>
+
 
 					<!-- 删除按钮 -->
 					<span @click="deletePath(item)"
@@ -95,18 +104,18 @@
 		</vs-dialog>
 
 		<!-- 路径排除对话框 -->
-		<vs-dialog v-model="showAddExcludeDialog"  scroll :full-screen="isMobile">
+		<vs-dialog v-model="showAddExcludeDialog" scroll :full-screen="isMobile">
 			<template #header>
 				<h4 v-if="excludeType" style="font-size: 16px;">
-				{{ excludeType=='excludePathMovie'?$t('setting.excludePath'):$t('setting.excludeFilename') }}
+					{{ excludeType == 'excludePathMovie' ? $t('setting.excludePath') : $t('setting.excludeFilename') }}
 				</h4>
 			</template>
 			<!-- 添加路径排除 -->
-			<Input  autocapitalize="off" autocorrect="off" search :enter-button="$t('common.add')" :placeholder="$t('setting.addExcludePathPlaceholder')"
-				@on-search="onAddExcludePath" />
+			<Input autocapitalize="off" autocorrect="off" search :enter-button="$t('common.add')"
+				:placeholder="$t('setting.addExcludePathPlaceholder')" @on-search="onAddExcludePath" />
 
-			<p v-if="excludePathList.length > 0" style="text-align: left;margin-top: 15px;color:#999999">		
-				{{ excludeType=='excludePathMovie'?$t('setting.excludePathAlert'):$t('setting.excludeFilenameAlert') }}:</p>
+			<p v-if="excludePathList.length > 0" style="text-align: left;margin-top: 15px;color:#999999">
+				{{ excludeType == 'excludePathMovie' ? $t('setting.excludePathAlert') : $t('setting.excludeFilenameAlert') }}:</p>
 			<div class="flex-row" style="margin-top: 5px;flex-wrap: wrap;">
 				<Tag v-for="item in excludePathList" type="dot" closable color="primary"
 					@on-close="onDeleteExcludePath(item)">{{ item }}</Tag>
@@ -142,7 +151,7 @@ export default {
 
 	data() {
 		return {
-			excludeType:"",
+			excludeType: "",
 			excludePathList: [],//排除路径列表
 			showAddExcludeDialog: false,//路径排除对话框 
 			showChangeSourcePosition: false,
@@ -157,16 +166,23 @@ export default {
 
 	},
 	methods: {
-		showAddExclude(type){
-			this.excludeType=type
-			this.excludePathList=[]
+		refreshIndex(sourceType) {
+			this.api.post('/api/sourceFolderApi/refreshIndex', {
+				sourceType: sourceType
+			}).then((res) => {
+				this.showVsNotification(this.$t('backup.orderSent'))
+			}).catch((error) => { })
+		},
+		showAddExclude(type) {
+			this.excludeType = type
+			this.excludePathList = []
 			this.getExcludeConfig()
-			this.showAddExcludeDialog=true
+			this.showAddExcludeDialog = true
 		},
 		onAddExcludePath(newPath) {
 			if (!newPath) return
-			if(newPath.length>35){
-				this.showVsAlertDialog(this.$t('common.alert'),this.$t('common.textTooLong'))
+			if (newPath.length > 35) {
+				this.showVsAlertDialog(this.$t('common.alert'), this.$t('common.textTooLong'))
 				return
 			}
 			for (let i in this.excludePathList) {
@@ -202,7 +218,7 @@ export default {
 		},
 		saveConfig() {
 			let params = {}
-			params[this.excludeType]=this.excludePathList
+			params[this.excludeType] = this.excludePathList
 			this.api.post('/api/commonApi/saveConfig', params).then((res) => {
 				if (!res.code) {
 					this.showVsNotification(this.$t('common.operationSuccess'))
@@ -326,7 +342,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .source-setting-root {
 
 	background-color: rgba(255, 255, 255, 0.6);

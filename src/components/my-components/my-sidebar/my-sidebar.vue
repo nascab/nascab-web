@@ -18,6 +18,10 @@
 <script>
 export default {
 	props: {
+		name:{
+			default: "sidebar",
+			type: String
+		},
 		initIndex: {
 			default: 0,
 			type: Number
@@ -34,7 +38,7 @@ export default {
 		};
 	},
 	created() {
-
+		
 	},
 	methods: {
 		itemClick(index) {

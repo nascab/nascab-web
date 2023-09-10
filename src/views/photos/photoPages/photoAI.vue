@@ -3,6 +3,15 @@
 		<div class="photo-ai-root">
 			<div style="display:flex; align-items:center;width:100%;padding: 10px 20px;height:70px;">
 				<my-menu-select :shrinkModeTh="300" @onItemClick="onChooseAIType" :optionList="AIMenuList"></my-menu-select>
+				
+				<Select v-if="aiTypeId == '2'" v-model="similarPageSize" style="width:100px;margin-left:10px" @on-change="onSimilarPageSizeChange">
+					<Option  :value="5" :key="5">{{$t("pageCount",{count:"5"})}}</Option>
+					<Option  :value="10" :key="10">{{$t("pageCount",{count:"10"})}}</Option>
+					<Option  :value="20" :key="20">{{$t("pageCount",{count:"20"})}}</Option>
+					<Option  :value="50" :key="50">{{$t("pageCount",{count:"50"})}}</Option>
+					<Option  :value="100" :key="100">{{$t("pageCount",{count:"100"})}}</Option>
+				</Select>
+					
 				<div style="flex:1;text-align:right;">
 					<span @click="showSetting" style="font-size:25px;color:#999999;" class="nasIcons icon-setting-system">
 					</span>
@@ -10,7 +19,7 @@
 			</div>
 			<photo-faces v-if="aiTypeId == '0'"></photo-faces>
 			<photo-classes v-if="aiTypeId == '1'"></photo-classes>
-			<photo-similar v-if="aiTypeId == '2'"></photo-similar>
+			<photo-similar ref="photoSimilar" :pageSize="similarPageSize" v-if="aiTypeId == '2'"></photo-similar>
 
 			<vs-dialog v-model="showSettingDialog">
 				<template #header>
@@ -37,6 +46,16 @@
 							style="height: 25px;line-height:25px;flex-shrink:0;min-width:60px;margin-left: 10px;z-index: 0;">
 							{{ $t('Reset') }}</vs-button>
 					</div>
+				</div>
+				<!-- 照片数量最低多少不显示人物 -->
+				<div style="width: 100%;display: flex;flex-direction: column;align-items: center;">
+					<div
+						style="display: flex;flex-direction: row;align-items: center;margin-top: 20px;justify-content: flex-start;width: 100%;">
+						<div style="margin-right: 20px;">{{ $t('photo.aiFaceMinPhotoCount') }}</div>
+						<Input v-model="settingData.aiFaceMinPhotoCount" type="number" clearable style="width: 50px" />
+
+					</div>
+
 				</div>
 				<!-- 重复照片扫描开关 -->
 				<div style="width: 100%;display: flex;flex-direction: column;align-items: center;">
@@ -74,6 +93,7 @@ export default {
 	},
 	data() {
 		return {
+			similarPageSize:5,
 			showSettingDialog: false,
 			aiTypeId: "0",
 			AIMenuList: [{
@@ -88,6 +108,7 @@ export default {
 			}
 			],
 			settingData: {
+				aiFaceMinPhotoCount:5,
 				aiSimilarPhotoEnable: false,
 				aiClassesEnable: false,
 				aiFaceEnable: false,
@@ -101,6 +122,12 @@ export default {
 
 	},
 	methods: {
+		onSimilarPageSizeChange(pageSize){
+			this.similarPageSize=pageSize
+			this.$nextTick(function(){
+				this.$refs.photoSimilar.getDealList()
+			})
+		},
 		showSetting() {
 			this.showSettingDialog = true
 			this.getAllConfig()
@@ -158,6 +185,8 @@ export default {
 						this.settingData.aiFaceEnable = configItem.value == '1'
 					} else if (configItem.title == 'aiSimilarPhotoEnable') {
 						this.settingData.aiSimilarPhotoEnable = configItem.value == '1'
+					} else if (configItem.title == 'aiFaceMinPhotoCount') {
+						this.settingData.aiFaceMinPhotoCount = configItem.value
 					}
 
 				}

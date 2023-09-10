@@ -4,7 +4,12 @@
     <!-- logo和刷新 -->
     <div class="top-root" v-if="tabIndex == 0">
       <img class="logo" src="@/static/common/naslogo.png" />
-      <img class="refresh" src="@/static/mobile/ic_refresh.png" @click="$bus.$emit('onChangeBg')" />
+
+       <!-- 刷新按钮 -->
+      <vs-button icon style="background-color: white; flex-shrink: 0">
+        <Icon color="#333333"  @click="$bus.$emit('onChangeBg')" type="md-refresh" size="18" />
+      </vs-button>
+      <!-- <img class="refresh" src="@/static/mobile/ic_refresh.png" @click="$bus.$emit('onChangeBg')" /> -->
     </div>
     <div class="layout">
       <div v-show="tabIndex == 0">
@@ -94,7 +99,7 @@
       </div>
     </div>
 
-    <vs-dialog prevent-close blur v-model="showUserSetting">
+    <vs-dialog prevent-close  v-model="showUserSetting">
       <user-setting @onClose="showUserSetting = false"></user-setting>
     </vs-dialog>
   </div>
@@ -117,6 +122,7 @@ export default {
   computed: {},
   data() {
     return {
+      showMenuArr: ["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"],
       tabIndex: 0,//底部选中的index
       showUserSetting: false,
       rightMenuList: [{
@@ -141,23 +147,23 @@ export default {
     homeMenuList() {
       return [
         // 照片管理
-        { id: "photoManage", src: require("@/static/mobile/ic_photo.png"), path: "/photoTimeline", title: this.$t("home.photoManage"), isShow: true },
+        { id: "photoManage", src: require("@/static/mobile/ic_photo.png"), path: "/photoTimeline", title: this.$t("home.photoManage"), isShow:this.showMenuArr.includes('photoManage')},
         // 影音管理
-        { id: "movieManage", src: require("@/static/mobile/ic_movie.png"), path: "/movies", title: this.$t("home.movieManage"), isShow: true },
+        { id: "movieManage", src: require("@/static/mobile/ic_movie.png"), path: "/movies", title: this.$t("home.movieManage"), isShow: this.showMenuArr.includes('movieManage') },
         //  文件浏览器
-        { id: "filesBrower", src: require("@/static/mobile/ic_folder.png"), path: "/filesBrower", title: this.$t("home.fileBrower"), isShow: true },
+        { id: "filesBrower", src: require("@/static/mobile/ic_folder.png"), path: "/filesBrower", title: this.$t("home.fileBrower"), isShow: this.showMenuArr.includes('filesBrower') },
         //  备份
-        { id: "backup", src: require("@/static/mobile/ic_backup.png"), path: "/backup", title: this.$t("home.backup"), isShow: this.$store.state.currentUser.is_admin == 1 },
+        { id: "backup", src: require("@/static/mobile/ic_backup.png"), path: "/backup", title: this.$t("home.backup"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('backup')  },
       ]
     },
     homeMenuListB() {
       return [
         // 分享
-        { id: "sharing", src: require("@/static/mobile/ic_share.png"), path: "/share", title: this.$t("home.sharing"), isShow: this.$store.state.currentUser.is_admin == 1 },
+        { id: "sharing", src: require("@/static/mobile/ic_share.png"), path: "/share", title: this.$t("home.sharing"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('sharing') },
         // 私有空间
-        { id: "privateSpace", src: require("@/static/mobile/ic_private.png"), path: "/privateSpace", title: this.$t("photo.privateSpace"), isShow:true },
+        { id: "privateSpace", src: require("@/static/mobile/ic_private.png"), path: "/privateSpace", title: this.$t("photo.privateSpace"), isShow: this.showMenuArr.includes('privateSpace') },
         // 安全
-        { id: "security", src: require("@/static/mobile/ic_security.png"), path: "/security", title: this.$t("home.securityCenter"), isShow: true },
+        { id: "security", src: require("@/static/mobile/ic_security.png"), path: "/security", title: this.$t("home.securityCenter"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('security') },
         // 配置中心
         { id: "settingCenter", src: require("@/static/mobile/ic_setting.png"), path: "/setting", title: this.$t("home.settingCenter"), isShow: this.$store.state.currentUser.is_admin == 1 },
         // 终端
@@ -199,6 +205,11 @@ export default {
             })
           }
         }, 500)
+
+        this.api.post('/api/usersApi/logout',{
+					token:this.$store.state.token,
+          hideLoading: true
+				}).then((res) => {})
       })
     },
     uploadClick() {
@@ -228,7 +239,15 @@ export default {
             }
           }
         }
-      }).catch((error) => { })
+        if (res.showMenuArr) {
+          this.showMenuArr = res.showMenuArr
+        }else{
+          this.showMenuArr=["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"]
+        }
+        console.log(this.showMenuArr)
+      }).catch((error) => {
+        this.showMenuArr=["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"]
+       })
     },
     getNasAccountInfo() {
       this.api
@@ -373,7 +392,7 @@ export default {
   z-index: 2;
   display: flex;
   width: 100%;
-  height: 50px;
+  height: 55px;
   justify-content: space-around;
   position: fixed;
   bottom: 0;
@@ -385,10 +404,11 @@ export default {
   .tabbar-item {
     display: flex;
     flex-direction: column;
+    align-items: center;
 
     img {
-      height: 24px;
-      width: 24px;
+      height: 22px;
+      width: 22px;
     }
 
     p {

@@ -198,37 +198,7 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-.album-detail-header {
-	padding-left: 30px;
-	padding-right: 30px;
-	height: 80px;
 
-	@media all and (max-width:640px) {
-		padding-left: 10px;
-		padding-right: 10px;
-	}
-
-	position: absolute;
-	flex-shrink: 0;
-	z-index: 2;
-	width: 100%;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.album-detail-content {
-	width: 100%;
-	height: 100%;
-	padding-top: 80px;
-
-	@media not all and (max-width:640px) {
-		padding-left: 30px;
-		padding-right: 30px;
-	}
-
-}
 
 .icon-add {
 	margin-top: 30px;

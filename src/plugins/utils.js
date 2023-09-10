@@ -64,7 +64,7 @@ function filterMovieName(fname) {
 let checkDouban = function (filename, doubanId) {
     if (doubanId) {
         let doubanUrl = "https://movie.douban.com/subject/"
-        window.open(doubanUrl + doubanId, '_blank')
+        window.open(doubanUrl + (doubanId+'').trim(), '_blank')
     } else {
         filename = filename.substr(0, filename.lastIndexOf("."))
         let zhName = filename.replace(/[^\u4E00-\u9FA5]/g, '')
@@ -80,9 +80,10 @@ let checkDouban = function (filename, doubanId) {
 }
 // 传id按照id搜索 传名字按名字
 let checkImdb = function (filename, imdbId) {
+    console.log("imdbId",imdbId)
     if (imdbId) {
         let imdbUrl = "https://www.imdb.com/title/"
-        window.open(imdbUrl + imdbId, '_blank')
+        window.open(imdbUrl + imdbId.trim(), '_blank')
     } else {
         filename = filename.substr(0, filename.lastIndexOf("."))
         let zhName = filename.replace(/[^\u4E00-\u9FA5]/g, '')

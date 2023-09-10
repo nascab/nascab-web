@@ -17,7 +17,7 @@
 			</div>
 		</div>
 		<!-- 游标 -->
-		<div v-if="showTimeLine" :style="{ top: cursorTop + 'px' }" class="cursor-root">
+		<div v-show="showTimeLine" :style="{ top: cursorTop + 'px' }" class="cursor-root">
 			<!--  底部线 -->
 			<div class="cursor-line"></div>
 			<p class="cursor-text">
@@ -115,9 +115,10 @@ export default {
 
 		},
 		mouseMove(e) {
-			if (!this.rootWrapper) {
-				this.rootWrapper = this.$refs.timeLineRoot.getBoundingClientRect();
+			if(!this.$refs.timeLineRoot){
+				return
 			}
+			this.rootWrapper = this.$refs.timeLineRoot.getBoundingClientRect();
 			this.cursorTop = e.pageY - this.rootWrapper.top
 		},
 		mouseEnter(e) {
@@ -125,7 +126,7 @@ export default {
 			this.showTimeLine = true
 		},
 		itemMouseEnter(item) {
-			console.log('itemMouseEnter')
+			console.log('itemMouseEnter', this.cursorTop)
 			this.cursorDateStr = item.yearMonth
 		},
 		mouseLeave(e) {
@@ -134,7 +135,7 @@ export default {
 				if (!this.mouseInTimeLine && !this.scrolling) {
 					this.showTimeLine = false
 				}
-			},1000)
+			}, 1000)
 		},
 		onTimeClick(index) {
 			console.log('onTimeClick')
@@ -177,7 +178,7 @@ export default {
 
 		},
 		//获取时间轴
-		getTimeLine(fileType, geohash, albumId, ordinaryAlbumId, searchStr, aiClassId, faceId) {
+		getTimeLine(fileType, geohash, albumId, ordinaryAlbumId, searchStr, aiClassId, faceId, sourceFolderList) {
 			// 先获取时间轴
 			let params = {
 				type: parseInt(fileType),
@@ -199,6 +200,9 @@ export default {
 			}
 			if (faceId) {
 				params['faceId'] = faceId
+			}
+			if (sourceFolderList) {
+				params['sourceFolderList'] = sourceFolderList
 			}
 			this.api
 				.post("/api/photoApi/getTimeLineDateList", params)

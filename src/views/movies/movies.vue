@@ -12,17 +12,19 @@
 		<div class="main-layout nas-padding-right-zero">
 			<!-- 左侧边栏 -->
 			<div class="sidebar-root">
-				<my-sidebar ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
+				<my-sidebar name="movies"  ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
 			</div>
 			<!-- 左侧边栏-手机 -->
 			<div class="sidebar-mobile-root">
-				<my-sidebar-mobile ref="sidebarMobile" @onItemClick="setLeftMenuId"
+				<my-sidebar-mobile  name="movies" ref="sidebarMobile" @onItemClick="setLeftMenuId"
 					:optionList="sideOptionList"></my-sidebar-mobile>
 			</div>
 			<!-- 影视列表 -->
 			<div style="width: 100%;height: 100%;">
-				<movie-list @setViewType="setViewType" v-if="viewType == 'list'" ref="movieList">
+				<movie-list :restoreFilter="true" @setViewType="setViewType" v-if="viewType == 'list'" ref="movieList">
 				</movie-list>
+				<!-- 合集 -->
+				<movie-library v-if="viewType == 'library'"></movie-library>
 				<!-- 文件夹视图 -->
 				<folder serverType="movie" v-if="viewType == 'folder'"></folder>
 				<!-- 影音设置 -->
@@ -46,14 +48,32 @@ import sourceSetMovie from "@/views/movies/movieSourceSet.vue"
 import movieHistory from "@/views/movies/movieHistory.vue"
 import movieCollection from "@/views/movies/movieCollection.vue"
 import movieAiCollection from "@/views/movies/movieAiCollection.vue"
+//电影合集
+import movieLibrary from "@/views/movies/movieLibrary.vue"
 
 export default {
 	mounted() {
-	
+		//根据缓存选择加载左侧菜单的哪一页
+		let hasCacheViewType=false
+		if(localStorage.movieViewType){
+			for(let i in this.sideOptionList){
+				if(this.sideOptionList[i].id==localStorage.movieViewType){
+					this.viewType=localStorage.movieViewType
+					hasCacheViewType=true
+					if(this.$refs.sidebarMobile)this.$refs.sidebarMobile.setIndex(i)
+					if(this.$refs.sidebar)this.$refs.sidebar.setIndex(i)
+					break 
+				}
+			}
+		}
+		if(!hasCacheViewType){
+			this.viewType="list"
+		}
 	},
 	beforeDestroy() {
 	},
 	components: {
+		movieLibrary,
 		movieAiCollection,
 		movieCollection,
 		movieHistory,
@@ -65,12 +85,13 @@ export default {
 	},
 	data() {
 		return {
-			viewType: 'list',
+			viewType: '',
 			sideOptionList: [{
 				id: 'list',
 				title: this.$t('movie.viewVideoList'),
 				font: "nasIcons icon-movies-library"
 			},
+			
 			{
 				id: 'folder',
 				title: this.$t('movie.viewFolder'),
@@ -80,6 +101,11 @@ export default {
 				id: 'history',//观看历史
 				title: this.$t('movie.history'),
 				font: "nasIcons icon-movie-history"
+			}
+			,{//合集
+				id: 'library',
+				title: this.$t('movie.library'),
+				font: "nasIcons icon-ziliaoku"
 			},
 			{
 				id: 'aiCollections',//智能影集
@@ -117,12 +143,14 @@ export default {
 		setLeftMenuId(menu) {
 			let menuId = menu.id
 			this.viewType = menuId
+			window.localStorage.movieViewType=menuId
 		}
 	}
 }
 </script>
 <style lang="scss" scoped>
 .movies-root {
+	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 	width: 100%;

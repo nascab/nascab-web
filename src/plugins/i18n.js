@@ -2,6 +2,8 @@ import Vue from 'vue'
 import VueI18n from 'vue-i18n'
 import iviewen from '@/plugins/myViewDesign/locale/lang/en-US';
 import iviewzh from '@/plugins/myViewDesign/locale/lang/zh-CN';
+import iviewzhtw from '@/plugins/myViewDesign/locale/lang/zh-TW';
+import zhTW from '@/languages/zh-TW.json'
 import zhCn from '@/languages/zh-CN.json'
 import enUs from '@/languages/en-US.json'
 Vue.use(VueI18n)
@@ -9,6 +11,7 @@ Vue.use(VueI18n)
 const messages = {
   'zh-CN': Object.assign(zhCn, iviewzh),
   'en-US': Object.assign(enUs,iviewen),
+  'zh-TW': Object.assign(zhTW, iviewzhtw)
 };
 
 const i18n = new VueI18n({

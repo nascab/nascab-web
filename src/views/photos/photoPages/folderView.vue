@@ -2,24 +2,25 @@
 	<div class="folder-root">
 		<div class="folder-header">
 			<div class="top-operation">
-				<!-- 返回上一级 pc-->
-				<div class="nas-mobile-none">
-					<my-btn style="margin-right: 20px;" @click="returnLast" v-if="currentParentPath"
-						:title="$t('file.returnLastPath')">
-					</my-btn>
+
+				<!-- grid list 切换 -->
+				<div :style="{'margin-left': itemMargin + 'px'}">
+					<span v-if="showType == 'grid'" class="nasIcons icon-grid operation-icon "
+						@click="showType = 'list'"></span>
+					<span v-else class="nasIcons icon-list operation-icon" @click="showType = 'grid'"></span>
 				</div>
-				<!-- 返回上一级 app-->
-				<div class="nas-mobile-show">
-					<my-btn-icon style="margin-right:10px;" iIcon="md-arrow-back" @click="returnLast"></my-btn-icon>
-				</div>
-				<my-menu-select v-if="currentParentPath" @onItemClick="onChooseFileType" :optionList="typeMenuOptionList">
+
+				<my-menu-select style="margin-right:20px" v-if="currentParentPath" @onItemClick="onChooseFileType" :optionList="typeMenuOptionList">
 				</my-menu-select>
+
+
 				<!-- 改变图片大小 -->
 				<div>
 					<Slider class="zoom-slider" show-tip="never" v-model="sliderValue" :min="sliderMin" :max="sliderMax"
 						:step="10" @on-input="onSizeChange">
 					</Slider>
 				</div>
+
 
 				<div class="search-root">
 					<!-- 搜索栏 -->
@@ -28,45 +29,58 @@
 			</div>
 
 		</div>
-		<div style="width:100%;height:100%;display:flex;flex-direction:column;overflow: hidden;padding-top: 60px;">
-			<div class="file-list" ref="photoWrapper">
+		<div style="width:100%;height:100%;display:flex;flex-direction:column;overflow: hidden;padding-top: 70px;">
+			<!-- 返回上一级 -->
+			<div  v-if="currentParentPath" style="height:30px;margin-bottom:10px" @click="returnLast">
+				<Button type="dashed" style="text-align:left;width:100%;text-align:center;border-radius:20px">{{$t("file.returnLastPath")}}</Button>
+		   </div>
+			<div class="file-list" ref="photoWrapper" @scroll="onPageScroll">
+				
 
 				<div style="cursor: pointer;" v-for="(file, index) in indexFileList"
-					:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }" :key="file.id"
-					@touchstart="touchstart($event, file, index)" @touchend="touchend"
+					:style="{ 'margin': itemMargin + 'px', 'width': showType == 'grid' ? itemWidth + 'px' : '100%' }"
+					:key="file.id" @touchstart="touchstart($event, file, index)" @touchend="touchend"
 					@contextmenu="showRightMenu($event, $root, file, index)">
 
 					<!-- 文件夹类型 -->
-					<div v-if="parseInt(file.is_file) == 0" class="item-folder" @click="clickFolder(index)">
+					<div v-if="parseInt(file.is_file) == 0"
+						:class="{ 'item-folder': showType == 'grid', 'item-folder-list': showType == 'list' }"
+						@click="clickFolder(index)">
 						<img :style="{ 'width': itemWidth + 'px' }" src="@/static/folder/icon_folder.png" />
-						<p class="filename" style="width: 100%;">{{ file.root ? file.path : file.filename }}</p>
+						<p :class="{ 'filename': showType == 'grid', 'filename-list': showType == 'list' }">{{ file.root ?
+							file.path : file.filename }}</p>
 					</div>
-					<vs-tooltip>
-						<!-- 图片 -->
-						<div v-if="parseInt(file.is_file) == 1" class="item-folder" @click="clickFile(index)">
-							<div style="display: flex;align-items: center;justify-content: center;">
-								<div style="position: relative;display: flex;align-items: center;justify-content: center;">
-									<img @dragstart.prevent v-lazy="file.url" style="object-fit: cover;border-radius: 10px;"
-										:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }" />
 
+					<!-- 图片 -->
+					<div v-if="parseInt(file.is_file) == 1"
+						:class="{ 'item-folder': showType == 'grid', 'item-folder-list': showType == 'list' }"
+						@click="clickFile(index)">
+						<div style="display: flex;align-items: center;justify-content: center;">
+							<div style="position: relative;display: flex;align-items: center;justify-content: center;">
+								<img @dragstart.prevent v-lazy="file.url" style="object-fit: cover;border-radius: 10px;"
+									:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }" />
+								<!-- 播放按钮 -->
+								<div class="icon-play-root" v-if="file.type == 2">
+									<!-- 视频的时长 -->
+									
+									<Button type="text" ghost  style="height:30px;" >
+										<span class="nasIcons icon-play" style="font-size:30px;line-height:30px" ></span>
+									</Button>
 
-									<!-- 播放按钮 -->
-									<div class="icon-play-root" v-if="file.type == 2">
-										<!-- 视频的时长 -->
-										<span style="color: white;font-size: 30px;" class="nasIcons icon-play"></span>
-										<p class="icon-duration">{{ utils.formatSeconds(file.duration) }}</p>
-
-									</div>
+									<p class="icon-duration">{{ utils.formatSeconds(file.duration) }}</p>
 
 								</div>
+
 							</div>
-							<p class="filename" style="width: 100%;margin-top: 5px;">{{ file.filename }}</p>
 						</div>
-						<template #tooltip>
-							<p style="word-break: break-all;">{{ file.tipName }}</p>
-						</template>
-					</vs-tooltip>
+						<p :class="{ 'filename': showType == 'grid', 'filename-list': showType == 'list' }">{{ file.filename
+						}}
+						</p>
+					</div>
+
 				</div>
+
+
 				<!-- 底部的loading和没有更多 -->
 				<div style="display: flex;justify-content: center;width: 100%;flex-direction:column;align-items:center">
 					<!-- 手动加载更多的按钮 -->
@@ -92,10 +106,6 @@
 				ref="videoPlayer"></video-detail>
 		</Modal>
 
-		<!-- 返回顶部按钮 -->
-		<my-btn-icon v-if="showToTopBtn" style="position:fixed;right:10px;bottom:55px;z-index:9999;" iIcon="md-arrow-up"
-			@click="$refs.photoWrapper.scrollTo({ top: 0, behavior: 'smooth' })"></my-btn-icon>
-
 
 		<!-- 右键菜单 -->
 		<easy-cm @ecmcb="rightMenuClick" :list="rightMenuList"></easy-cm>
@@ -120,13 +130,16 @@
 					{{ $t('movie.whichCollectionWantoMove') }}
 				</h4>
 			</template>
-			<div v-for="collection in collectionList">
-				<div class="collection-item" @click="onSelectCollection(collection)">
-					{{ collection.title }}
-				</div>
-			</div>
-			<div v-if="collectionList&&collectionList.length<1" class="collection-item">{{ $t('movie.noCollection') }}</div>
+			<movie-collection-list ref="movieCollectionList" :selectMode="true"></movie-collection-list>
+			<template #footer>
+				<vs-button block @click="onSelectCollection">
+				  {{ $t("common.select") }}
+				</vs-button>
+			</template>
 		</vs-dialog>
+
+		<!-- 右侧自定义滚动条 -->
+		<my-scroll-bar ref="scrollBar" v-if="!showCollectionSelectDialog&&!showPhotoDetail&&!showVideoDetail"></my-scroll-bar>
 	</div>
 </template>
 
@@ -137,6 +150,8 @@ import photoDetail from "@/views/photos/components/photoDetail.vue";
 //视频点击详情
 import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import jsBridge from "@/plugins/jsBridge"
+const movieCollectionList = () => import('@/views/movies/movieCollection.vue')
+import myScrollBar from "@/components/my-components/my-scrollbar/my-scrollbar"
 
 export default {
 	props: {
@@ -146,14 +161,15 @@ export default {
 		},
 	},
 	components: {
+		myScrollBar,
+		movieCollectionList,
 		photoDetail,
 		videoDetail,
 	},
 	data() {
 		return {
+			showType: "grid",//展示方式
 			showCollectionSelectDialog: false,//选择影集的对话框
-			collectionList: null,
-			showToTopBtn: false,
 			typeMenuOptionList: [{
 				title: this.$t('photo.all'),
 				id: "0"
@@ -167,11 +183,11 @@ export default {
 				title: this.$t('common.folder'),
 				id: "3"
 			}],
-			sliderMin: 130,
+			sliderMin: 100,
 			sliderMax: 300,
-			sliderValue: 130,
-			itemBaseWidth: 130,
-			itemWidth: 130,
+			sliderValue: 100,
+			itemBaseWidth: 100,
+			itemWidth: 100,
 			itemMargin: 5,
 			indexFileList: [],
 			showFileType: '0',
@@ -198,7 +214,6 @@ export default {
 	created() {
 		this.getFileTree('')
 		// 监听滚动条
-		window.addEventListener("scroll", this.onPageScroll, true);
 		window.addEventListener("resize", this.calImageWidth);
 		let saveSliderValue = localStorage.getItem('folderImageSize')
 		if (saveSliderValue && parseInt(saveSliderValue) >= 100) {
@@ -210,7 +225,6 @@ export default {
 
 	},
 	beforeDestroy() {
-		window.removeEventListener("scroll", this.onPageScroll, true);
 		window.removeEventListener("resize", this.calImageWidth);
 		window.removeEventListener('popstate', this.onPopstate);
 
@@ -273,34 +287,31 @@ export default {
 		},
 		showChooseCollection() {
 			this.showCollectionSelectDialog = true
-			if (this.collectionList == null) {
-				this.api.post('/api/movieApi/getCollection', {
-				}).then((res) => {
+		},
+		onSelectCollectionApi() {
+			if(this.$refs.movieCollectionList){
+				let collectionId=this.$refs.movieCollectionList.getSelectedCollectionId()
+				if(!collectionId){
+					return
+				}
+				// 移动到影集
+				let params = {
+					collectionId: collectionId
+				}
+				if (this.selectedFile.id) {
+					params.indexId = this.selectedFile.id
+				} else {
+					params.filepath = this.selectedFile.path
+					params.filename = this.selectedFile.filename
+				}
+				this.api.post('/api/movieApi/addIndexToCollection', params).then((res) => {
 					if (!res.code) {
-						this.collectionList = res.data
+						this.showCollectionSelectDialog = false
+						this.showVsNotification(this.$t('common.operationSuccess'))
+						this.removeSelectedFileFromList()
 					}
 				}).catch((error) => { })
 			}
-		},
-		onSelectCollectionApi(collection) {
-			// 移动到影集
-			let params={
-				collectionId: collection.id
-
-			}
-			if(this.selectedFile.id){
-				params.indexId=this.selectedFile.id
-			}else{
-				params.filepath=this.selectedFile.path
-				params.filename=this.selectedFile.filename
-			}
-			this.api.post('/api/movieApi/addIndexToCollection',params ).then((res) => {
-				if (!res.code) {
-					this.showCollectionSelectDialog = false
-					this.showVsNotification(this.$t('common.operationSuccess'))
-					this.removeSelectedFileFromList()
-				}
-			}).catch((error) => { })
 		},
 		onSelectCollection(collection) {
 			if (this.selectedFile.is_file != 1) {
@@ -336,6 +347,9 @@ export default {
 			if (this.showPhotoDetail || this.showVideoDetail) {
 				this.showPhotoDetail = false
 				this.showVideoDetail = false
+			} else if (this.currentParentPath) {
+				//非root 路径后退
+				this.returnLast()
 			} else {
 				this.$router.go(-1)
 			}
@@ -372,6 +386,9 @@ export default {
 			if (this.showPhotoDetail || this.showVideoDetail || this.loading) {
 				return
 			}
+			if (this.$refs.scrollBar) {
+				this.$refs.scrollBar.onScroll(e)
+			}
 			//滚动的时候清空计时器 防止触发菜单
 			if (this.longPressTimeout) {
 				clearTimeout(this.longPressTimeout);
@@ -380,7 +397,6 @@ export default {
 			this.dealOnPageScroll(e, () => {
 				this.loadNextPage();
 			}, (showTopBtn) => {
-				this.showToTopBtn = showTopBtn
 			})
 		},
 		returnLast() {
@@ -389,22 +405,22 @@ export default {
 			this.loading = false
 			this.indexFileList = []
 			this.showFileType = '0'
-			let lastIsSourcePaht = false
+			let lastIsSourcePath = false
 			for (let i = 0; i < this.sourcePathList.length; i++) {
 				if (this.currentParentPath == this.sourcePathList[i]) {
 					//上级目录是来源根目录
-					lastIsSourcePaht = true
+					lastIsSourcePath = true
 					break
 				}
 			}
-			if (lastIsSourcePaht) {
+			if (lastIsSourcePath) {
 				//加载最外层
-				this.getFileTree('')
+				this.getFileTree('', false, true)
 			} else {
 				//加载上一层 切分目录 去掉最后一段
 				let lastSepIndex = this.currentParentPath.lastIndexOf(this.systemSep)
 				let targetPath = this.currentParentPath.substr(0, lastSepIndex)
-				this.getFileTree(targetPath)
+				this.getFileTree(targetPath, false, true)
 			}
 		},
 		loadNextPage() {
@@ -416,6 +432,7 @@ export default {
 			this.loading = false
 			this.indexFileList = []
 			this.showFileType = "0"
+			this.searchStr = ""
 			if (this.selectedFile.root) {
 				//根路径直接使用
 				this.getFileTree(this.selectedFile.path)
@@ -425,6 +442,7 @@ export default {
 			}
 		},
 		clickFile(index) {
+
 			// 非编辑模式 点击后进入详情展示
 			if (this.indexFileList[index].type == 1) {
 				this.showPhotoDetail = true;
@@ -435,13 +453,13 @@ export default {
 			} else if (this.indexFileList[index].type == 2) {
 				if (localStorage.getItem("rawPlayer") == "1") {
 					//调用原生播放器
-					jsBridge.playVideo(JSON.stringify({
+					jsBridge.playVideo({
 						playIndex: index,
 						playList: this.indexFileList,
 						token: this.$store.state.token,
 						fromFileBrower: false,
 						serverType: this.serveType
-					}))
+					})
 				} else {
 					//继续使用网页播放器
 					this.showVideoDetail = true;
@@ -453,7 +471,7 @@ export default {
 			}
 		},
 		//获取文件树
-		getFileTree(parent, append) {
+		getFileTree(parent, append, isGoBack) {
 			let count = 100
 			if (this.loading || !this.hasMore) {
 				console.log("return")
@@ -479,6 +497,7 @@ export default {
 				.post("/api/photoApi/getFileTreePhoto", params)
 				.then((res) => {
 					if (!res.code) {
+
 						if (!parent) {
 							//获取跟目录的时候保存起来 返回上一级的时候判断用
 							for (let i = 0; i < res.data.length; i++) {
@@ -518,11 +537,17 @@ export default {
 						} else {
 							this.indexFileList = res.data
 						}
+
 					}
 					this.loading = false
 					this.$nextTick(() => {
 						this.calImageWidth()
 					})
+					if (!isGoBack) {
+						//非后退的情况下 pushstate
+						console.log("this.pushState()")
+						this.pushState()
+					}
 					console.log('hasMore', this.hasMore)
 				})
 				.catch((error) => {
@@ -534,6 +559,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.operation-icon {
+	font-size: 30px;
+	color: $nas-main;
+	margin-right: 20px;
+	line-height: 30px;
+	cursor: pointer;
+}
+
 .filename {
 	color: $nas-text-title;
 	word-break: break-all;
@@ -542,6 +575,19 @@ export default {
 	-webkit-box-orient: vertical;
 	-webkit-line-clamp: 3;
 	overflow: hidden;
+	width: 100%;
+	margin-top: 5px;
+}
+
+.filename-list {
+	color: $nas-text-title;
+	word-break: break-all;
+	text-align: left;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 5;
+	overflow: hidden;
+	margin-left: 10px;
 }
 
 .folder-header {
@@ -557,7 +603,7 @@ export default {
 
 	.top-operation {
 		width: 100%;
-		height: 60px;
+		height: 70px;
 		display: flex;
 		align-items: center;
 		padding-left: 20px;
@@ -601,24 +647,31 @@ export default {
 		border-top-right-radius: 20px;
 	}
 
-	padding-left: 10px;
-	padding-right: 10px;
+	padding-left: 20px;
+	padding-right: 20px;
+
+	@media all and (max-width:640px) {
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+
 	width: 100%;
 	height: 100%;
 	background-color: rgba(255, 255, 255, 0.6);
 }
 
 .zoom-slider {
-	margin-left: 20px;
+	margin-right: 20px;
 	width: 60px;
 	display: inline-flex;
 
 	@media all and (max-width:640px) {
 		width: 40px;
-		margin-left: 10px;
+		margin-right: 15px;
 	}
 
 }
+
 
 .file-list {
 	scrollbar-width: none;
@@ -649,6 +702,16 @@ export default {
 
 }
 
+.item-folder-list {
+	width: 100%;
+	flex-wrap: nowrap;
+	position: relative;
+	justify-content: flex-start;
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+}
+
 
 
 .icon-play-root {
@@ -669,9 +732,7 @@ export default {
 	}
 
 	.icon-duration {
-		margin-right: 8px;
-		margin-top: 3px;
-		font-size: 16px;
+		text-align: center;
 		color: white;
 		// font-weight: bold;
 	}
@@ -687,5 +748,4 @@ export default {
 	font-size: 16px;
 	border-radius: 5px;
 	color: $nas-text-grey;
-}
-</style>
+}</style>

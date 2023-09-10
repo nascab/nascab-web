@@ -14,8 +14,9 @@
 		<!-- 头部控制条 -->
 		<div class="video-controller-top" @click="videoClick" v-if="showCustomController">
 			<!-- 返回按钮 -->
+
 			<div class="icon-root" @click.stop="onClose" style="margin-left:20px">
-				<Icon type="md-arrow-round-back" size="35" color="white" />
+				<span class="icon_controller_xxl nasIcons icon-back" style="font-size:20px"></span>
 			</div>
 
 			<div @click="videoClick">
@@ -26,7 +27,6 @@
 			<!-- 视频名 分辨率 码率 -->
 			<div @click="videoClick">
 				<p v-if="movieSize && videoBitRate" class="video-name">{{ resolutionStr }}
-					<span v-if="movieSize != 1">{{ parseFloat(parseInt(videoBitRate / 1024 * 10) / 10) }}Mbps</span>
 				</p>
 			</div>
 
@@ -39,7 +39,7 @@
 				<!-- 全屏切换 -->
 				<div class="icon-root" @click="videoHelper.switchFullScreen()">
 					<!-- <Icon color="white" type="md-expand" size="35" /> -->
-					<span class="icon_controller_s nasIcons icon-fullscreen"></span>
+					<span class="icon_controller_m nasIcons icon-fullscreen"></span>
 				</div>
 			</div>
 			<div class="controller-slider" style="justify-content:space-between">
@@ -56,10 +56,8 @@
 					</div>
 					<!-- 播放暂停 -->
 					<div style="margin-left: 40px;margin-right: 40px;">
-						<span v-if="!isPlaying" @click="switchPlay()"
-							class="icon_controller_xxxl nasIcons icon-play"></span>
-						<span v-if="isPlaying" @click="switchPlay()"
-							class="icon_controller_xxxl nasIcons icon-pause"></span>
+						<span v-if="!isPlaying" @click="switchPlay()" class="icon_controller_xxl nasIcons icon-play"></span>
+						<span v-if="isPlaying" @click="switchPlay()" class="icon_controller_xxl nasIcons icon-pause"></span>
 					</div>
 					<!-- 下一个 -->
 					<div>
@@ -80,11 +78,11 @@
 						</div>
 						<!-- 播放暂停 -->
 						<div class="icon-root">
-							<span v-if="!isPlaying && playCanUse" @click="switchPlay()"
+							<span v-if="!isPlaying" @click="switchPlay()"
 								class="icon_controller_m nasIcons icon-play"></span>
-							<span v-if="isPlaying && playCanUse" @click="switchPlay()"
+							<span v-if="isPlaying" @click="switchPlay()"
 								class="icon_controller_m nasIcons icon-pause"></span>
-							<Spin color="white" v-if="!playCanUse"></Spin>
+							<!-- <Spin color="white" v-if="!playCanUse"></Spin> -->
 						</div>
 						<!-- 下一个 -->
 						<div class="icon-root">
@@ -92,13 +90,13 @@
 						</div>
 						<!-- 信息 -->
 						<div class="icon-root">
-							<span style="margin-left:30px" v-if="!fromFileBrower" @click="showExif = !showExif"
-								class="icon_controller_m nasIcons icon-exif-info"></span>
+							<span style="margin-left:10px" v-if="!fromFileBrower" @click="showExif = !showExif"
+								class="icon_controller_s nasIcons icon-exif-info"></span>
 						</div>
 						<!-- 下载 -->
 						<div class="icon-root">
 							<span style="margin-left:10px" v-if="videoHelper" @click="videoHelper.download()"
-								class="icon_controller_m nasIcons icon-download"></span>
+								class="icon_controller_s nasIcons icon-download"></span>
 						</div>
 					</div>
 				</div>
@@ -106,10 +104,10 @@
 					<!-- 音量 -->
 					<Poptip class="nas-mobile-none" trigger="hover" v-if="playCanUse" :title="$t('video.volumn')">
 						<div class="icon-root">
-							<Icon v-if="!isMuted" color="white" type="md-volume-up" size="35"
-								@click="videoHelper.setMuted(true)" />
-							<Icon v-else color="white" type="md-volume-off" size="35"
-								@click="videoHelper.setMuted(false)" />
+							<span v-if="!isMuted" @click="videoHelper.setMuted(true)"
+								class="icon_controller_m nasIcons icon-sound-on"></span>
+							<span v-else @click="videoHelper.setMuted(false)"
+								class="icon_controller_m nasIcons icon-sound-off"></span>
 						</div>
 						<template #content>
 							<div style="padding-left:14px;padding-right:14px">
@@ -119,53 +117,12 @@
 							</div>
 						</template>
 					</Poptip>
-					<!-- 字幕 -->
-					<Poptip v-if="playCanUse" :title="$t('movie.subtitle')">
-						<div class="icon-root">
-							<Icon color="white" type="ios-closed-captioning" size="35" />
-						</div>
-						<template #content>
-							<!-- 关闭字幕的选项 -->
-							<div class="option-item" v-if="currentSubtitleStreamList.length > 0" @click="closeSubtitle">
-								<p>{{ $t('video.closeSubtitle') }}</p>
-								<Icon v-if="isCloseSubtitle" style="margin-left:3px" type="md-checkmark" size="20"
-									color="#333" />
-							</div>
-							<!-- 使用自定义上传的字幕的时候显示 -->
-							<div class="option-item" v-if="uploadSubtitleFilePath">
-								<p class="subtitleTitle">{{ uploadSubtitleName }}</p>
-								<Icon style="margin-left:3px" type="md-checkmark" size="20" color="#333" />
-							</div>
-							<div style="height:150px;overflow-y: scroll;"
-								v-if="currentSubtitleStreamList && currentSubtitleStreamList.length > 0">
-								<div class="option-item" v-for="(item, index) in currentSubtitleStreamList"
-									@click="chooseSubtitle(index)" :key="item.value">
-									<p class="subtitleTitle">{{ item.label }}</p>
-									{{ item.language ? '-' + item.language : '' }}
-									<Icon style="margin-left:3px"
-										v-if="index == subtitleStreamIndex && !uploadSubtitleFilePath && !isCloseSubtitle"
-										type="md-checkmark" size="20" color="#333" />
-								</div>
-							</div>
-							<!-- 上传字幕文件 -->
-							<Upload :on-error="onUploadErr" :on-success="onUploadSuc" :show-upload-list="false"
-								:action="normalUploadUrl" :format="['ass', 'srt', 'vtt']" accept=".ass,.srt,.vtt"
-								:webkitdirectory="false">
-								<Button icon="ios-cloud-upload-outline">{{ $t('movie.selectLocalSubtitles') }}</Button>
-							</Upload>
-							<!-- 选择服务器上的字幕 -->
-							<Button style="margin-top:10px" @click="showChooseSubtitle = true"
-								icon="ios-cloud-upload-outline">{{
-									$t('movie.selectSubtitleInServer')
-								}}</Button>
 
-						</template>
-					</Poptip>
 
 					<!-- 音轨 -->
 					<Poptip v-if="playCanUse" :title="$t('movie.audioIndex')">
 						<div class="icon-root">
-							<Icon color="white" type="md-musical-notes" size="35" />
+							<span class="icon_controller_m nasIcons icon-music"></span>
 						</div>
 						<template #content>
 							<!-- 声道数量显示 -->
@@ -184,39 +141,74 @@
 						</template>
 					</Poptip>
 
-					<!-- 码率 -->
-					<Poptip v-if="movieSize != 1" :title="$t('movie.bitrate')">
+
+					<!-- 字幕 -->
+					<Poptip v-if="playCanUse" :title="$t('movie.subtitle')">
 						<div class="icon-root">
-							<Icon color="white" type="md-film" size="35" />
+							<span class="icon_controller_l nasIcons icon-subtitles"></span>
 						</div>
 						<template #content>
-							<div class="option-item" @click="bitChoose(item.value, index)"
-								v-for="(item, index) in bitrateList" :key="item.value">
-								<p>{{ item.label }}</p>
-								<Icon style="margin-left:3px" v-if="item.value == videoBitRate" type="md-checkmark"
-									size="20" color="#333" />
+							<!-- 关闭字幕的选项 -->
+							<div class="option-item" v-if="currentSubtitleStreamList.length > 0" @click="closeSubtitle">
+								<p>{{ $t('video.closeSubtitle') }}</p>
+								<Icon v-if="isCloseSubtitle" style="margin-left:3px" type="md-checkmark" size="20"
+									color="#333" />
 							</div>
+							<!-- 使用自定义上传的字幕的时候显示 -->
+							<div class="option-item" v-if="uploadSubtitleFilePath">
+								<p class="subtitleTitle">{{ uploadSubtitleName }}</p>
+								<Icon style="margin-left:3px" type="md-checkmark" size="20" color="#333" />
+							</div>
+							<div style="height:150px;overflow-y: scroll;"
+								v-if="currentSubtitleStreamList && currentSubtitleStreamList.length > 0">
+								<div class="option-item" v-for="(item, index) in currentSubtitleStreamList"
+									@click="chooseSubtitle(index)" :key="index">
+									<p class="subtitleTitle">
+										{{ item.label.length > 15 ? "..." + item.label.substr(item.label.length - 14) :
+											item.label }}
+									</p>
+									{{ item.language ? '-' + item.language : '' }}
+									<Icon style="margin-left:3px"
+										v-if="index == subtitleStreamIndex && !uploadSubtitleFilePath && !isCloseSubtitle"
+										type="md-checkmark" size="20" color="#333" />
+								</div>
+							</div>
+							<!-- 上传字幕文件 -->
+							<Upload :on-error="onUploadErr" :on-success="onUploadSuc" :show-upload-list="false"
+								:action="normalUploadUrl" :before-upload="onSubtitleBeforeUpload"
+								:format="['ass', 'srt', 'vtt']" accept=".ass,.srt,.vtt" :webkitdirectory="false">
+								<Button icon="ios-cloud-upload-outline">{{ $t('movie.selectLocalSubtitles') }}</Button>
+							</Upload>
+							<!-- 选择服务器上的字幕 -->
+							<Button style="margin-top:10px" @click="showChooseSub()" icon="ios-cloud-upload-outline">{{
+								$t('movie.selectSubtitleInServer')
+							}}</Button>
+
 						</template>
 					</Poptip>
 
+
 					<!-- 转码分辨率 -->
-					<Poptip :title="$t('movie.resolution')">
+					<Poptip :title="$t('transcode')">
 						<div class="icon-root">
-							<Icon color="white" type="md-tablet-landscape" size="35" />
+							<span class="icon_controller_l nasIcons icon-hd"></span>
 						</div>
 						<template #content>
-							<div class="option-item" @click="onChooseMovieSize(item.value, index)"
-								v-for="(item, index) in playSizeList" :key="item.value">
-								<p>{{ item.label }}</p>
-								<Icon style="margin-left:3px" v-if="item.value == movieSize" type="md-checkmark" size="20"
-									color="#333" />
+							<div class="size-list-root">
+								<div class="option-item" @click="onChooseMovieSize(item.size, item.bitrate, index)"
+									v-for="(item, index) in playSizeList" :key="item.label">
+									<p>{{ item.label }}</p>
+									<Icon style="margin-left:3px"
+										v-if="item.size == movieSize && item.bitrate == videoBitRate" type="md-checkmark"
+										size="20" color="#333" />
+								</div>
 							</div>
 						</template>
 					</Poptip>
 					<!-- 播放速率 -->
 					<Poptip v-if="playCanUse" :title="$t('movie.playRate')">
 						<div class="icon-root">
-							<Icon color="white" type="md-flash" size="35" />
+							<span class="icon_controller_m nasIcons icon-play-speed"></span>
 						</div>
 						<template #content>
 							<div class="option-item" @click="videoHelper.changePlaySpeed(index)"
@@ -227,12 +219,11 @@
 							</div>
 						</template>
 					</Poptip>
-
 				</div>
 			</div>
 		</div>
 
-
+		<!-- 选择服务器上的字幕 -->
 		<vs-dialog v-model="showChooseSubtitle" scroll :full-screen="isMobile">
 			<template #header>
 				<h4 style="font-size: 16px;">
@@ -240,7 +231,8 @@
 				</h4>
 			</template>
 			<file-select ref="fileSelector" v-if="showChooseSubtitle" parent="root" @onSelect='onSelectSubtitleFile'
-				@onCancel="showChooseSubtitle = false" :fileType="0"></file-select>
+				@onCancel="showChooseSubtitle = false" :fileType="0"
+				:initPath="indexObj.path ? indexObj.path : ''"></file-select>
 			<template #footer>
 				<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
 					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
@@ -285,15 +277,15 @@ export default {
 			if (this.movieSize == 1) {
 				return str += this.$t('video.code_raw') + " [" + this.$t('video.rawPlayAlert') + "]"
 			} else {
-				let option = this.playSizeList.filter((item) => {
-					if (item.value == this.movieSize) return item
-				})
-				return option[0] ? (str += option[0].label) : ""
+				return str += this.currentSizeOption ? this.currentSizeOption.label : ""
 			}
 		}
 	},
 	data() {
 		return {
+			moviePreferLanguage: "",
+			burnSubtitle: false,//是否需要服务端烧录字幕
+			showChoosePlaySize: false,//是否显示选择分辨率的抽屉组件
 			isAddingHistory: false,
 			showChooseSubtitle: false,
 			canPlayRawFile: true,//是否支持源文件
@@ -311,12 +303,12 @@ export default {
 			playResolutionList: [],//分辨率码率选项
 			playSpeedList: [],//播放速率
 			playSizeList: [],//分辨率选项
-			bitrateList: [],//码率选项
-			videoBitRate: 3584, //默认比特率
 			movieSize: 1,
 			isMuted: false, //是否为静音
 			playCanUse: false,
 			token: utils.getToken(),
+			videoBitRate: 3584, //默认比特率
+			currentSizeOption: null,
 			utils: utils,
 			baseUrl: axios.baseUrl, //服务器地址
 			normalUploadUrl: axios.uploadUrl() + "&uploadSubtitle=1&overMode=over",
@@ -343,6 +335,7 @@ export default {
 			isFullScreen: false,
 			userFontSize: '1.5rem',
 			ifContinueAlertIndexId: "",
+			skippedEnd: false,//当前视频是否已经执行过跳过片尾 防止多次触发的标记
 			currentVideoStream: false//当前的视频流信息
 		};
 	},
@@ -350,11 +343,8 @@ export default {
 		//创建helper 给转码选项赋值
 		this.videoHelper = new VideoHelper(this)
 		this.playSpeedList = this.videoHelper.optionsPlaySpeed
-		this.videoHelper.readBitrateFromLocal()//读取缓存的比特率
 		this.videoHelper.setKeyEvent(document)//设置键盘按键响应
 		//设置当前正在播放视频的状态
-		let playerCount = sessionStorage.getItem('player-count')
-		sessionStorage.setItem('player-count', playerCount ? parseInt(playerCount) + 1 : 1)
 
 		//以页面形式打开处理
 		let passParams = this.$route.params
@@ -383,17 +373,22 @@ export default {
 			this.vPlayer = null
 		}
 		document.onkeydown = null
-		//设置停止播放视频的状态
-		let playerCount = sessionStorage.getItem('player-count')
-		sessionStorage.setItem('player-count', playerCount ? parseInt(playerCount) - 1 : 0)
-
-
 	},
 	methods: {
+		//展示字幕选择
+		showChooseSub() {
+			this.showChooseSubtitle = true
+		},
+		onSubtitleBeforeUpload(file) {
+			return new Promise((resolve, reject) => {
+				this.normalUploadUrl = axios.uploadUrl() + "&uploadSubtitle=1&overMode=over&filename=" + file.name
+				return resolve(file)
+			})
+		},
 		//选择了服务器的字幕的回调
 		onSelectSubtitleFile(filePath) {
 			console.log(filePath)
-			if (!filePath.endsWith('.ass') && !filePath.endsWith('.srt')) {
+			if (!filePath.endsWith('.ass') && !filePath.endsWith('.srt') && !filePath.endsWith('.vtt')) {
 				this.showVsAlertDialog(this.$t('common.alert'), this.$t('movie.subtitleNoSupport'));
 			} else {
 				this.showChooseSubtitle = false
@@ -409,16 +404,28 @@ export default {
 		onUploadErr() {//上传失败回调
 			this.videoHelper.uploadSubtitleErr()
 		},
-		showBitrateAlert() {
-			this.showVsAlertDialog(this.$t('common.alert'), this.$t('video.whatIsBitate'))
-		},
 		//关闭字幕
 		closeSubtitle() {
 			this.isCloseSubtitle = true
 			this.uploadSubtitleFilePath = null
 			this.videoSameNameSubtitleFilePath = null
 			this.textTrackUrl = ''
+			if (this.burnSubtitle) {
+				console.log("关闭字幕 当前正在烧录字幕 并且正在转码 需要重新设置转码 让服务器关闭字幕烧录 ")
+				//选择了图片字幕 需要服务端烧录 并且转码才可以显示 
+				this.burnSubtitle = false
+				this.playIndex(this.indexObj, true);
+			}
 			this.setSubtitleTrackUrl()
+		},
+		//设置是否需要字幕烧录参数
+		setBurnState() {
+			if (this.currentSubtitleStreamList.length > this.subtitleStreamIndex) {
+				let selectedSubtitleIfNeedBurn = formatUtil.isPictureSubtitle(this.currentSubtitleStreamList[this.subtitleStreamIndex])
+				this.burnSubtitle = selectedSubtitleIfNeedBurn
+			} else {
+				this.burnSubtitle = false
+			}
 		},
 		chooseSubtitle(index) {
 			this.isCloseSubtitle = false
@@ -429,9 +436,18 @@ export default {
 			let selectedSubtitle = this.currentSubtitleStreamList[index]
 			if (selectedSubtitle.type == 'path') {
 				//选择的是与视频同名的字幕文件
-				console.log("选择的是与视频同名的字幕文件")
+				console.log("选择的是与视频同名的字幕文件 非内置字幕")
 				this.uploadSubtitleName = selectedSubtitle.label
 				this.videoSameNameSubtitleFilePath = selectedSubtitle.value
+			}
+			//标记选择的字幕是否需要烧录
+			let selectedSubtitleIfNeedBurn = formatUtil.isPictureSubtitle(this.currentSubtitleStreamList[this.subtitleStreamIndex])
+			if (this.burnSubtitle || selectedSubtitleIfNeedBurn) {
+				this.burnSubtitle = selectedSubtitleIfNeedBurn
+				console.log("烧录状态 :", this.burnSubtitle)
+
+				//选择了图片字幕 需要服务端烧录 并且转码才可以显示 
+				this.playIndex(this.indexObj, true);
 			}
 			this.setSubtitleTrackUrl()
 		},
@@ -458,12 +474,7 @@ export default {
 			this.audioStreamIndex = index
 			this.playIndex(this.indexObj, true)
 		},
-		bitChoose(bit, index) {
-			this.videoBitRate = bit
-			this.playIndex(this.indexObj, true)
-			//保存选定的比特率 下次使用
-			this.videoHelper.saveBitrateToLocal()
-		},
+
 		onMouse(e) {
 			this.noMoveTime = 0
 		},
@@ -472,11 +483,14 @@ export default {
 			this.noMoveTime = 0
 			return this.showCustomController = !this.showCustomController
 		},
-		onChooseMovieSize(movieSize) {
+		onChooseMovieSize(movieSize, bitrate, index) {
+			this.showChoosePlaySize = false
 			if (movieSize == 1) {
 				if (!this.canPlayRawFile) {
 					return this.showVsNotification(this.$t('video.videoIsNotSupportCoding'))
 				}
+				localStorage.setItem("lastPlayIsTransCode", "0")
+
 				//如果正在转吗 则停止
 				if (this.isPlayingM3u8) this.videoHelper.stopPlayId()
 
@@ -488,18 +502,19 @@ export default {
 					this.vPlayer.currentTime(this.seekSec)
 				}
 				this.vPlayer.autoplay('play')
-				this.uploadSubtitleName = null
-				this.uploadSubtitleFilePath = null
-				if (this.videoSameNameSubtitleFilePath) {
-					//之前选的是视频同名字幕 播放源文件的时候要恢复为默认第一个字幕
-					this.subtitleStreamIndex = 0
-					this.videoSameNameSubtitleFilePath = null
-				}
-				localStorage.removeItem("lastPlayIsTransCode")
+				// this.uploadSubtitleName = null
+				// this.uploadSubtitleFilePath = null
+				// if (this.videoSameNameSubtitleFilePath) {
+				// 	//之前选的是视频同名字幕 播放源文件的时候要恢复为默认第一个字幕
+				// 	this.subtitleStreamIndex = 0
+				// 	this.videoSameNameSubtitleFilePath = null
+				// }
 			} else {
+				this.currentSizeOption = this.playSizeList[index]
 				//保存一下是转码播放 切换视频后默认转码
 				localStorage.setItem("lastPlayIsTransCode", "1")
 				this.pauseVideo()
+				this.videoBitRate = bitrate
 				this.setMovieSize(movieSize)
 				this.playIndex(this.indexObj, true);
 				//保存用户选的分辨率
@@ -540,13 +555,15 @@ export default {
 				}
 			}
 			if (nextIndex == -1) {
-				return this.showVsNotification(this.$t("video.noMoreVideo"));
+				this.showVsNotification(this.$t("video.noMoreVideo"))
+				return false;
 			}
 			this.currentIndex = nextIndex;
 			this.videoHelper.resetValue()
 			this.vPlayer.autoplay('play')
 			this.movieSize = this.videoHelper.getVideoSuitResolution(this.indexObj)
 			this.playIndex(this.indexObj, localStorage.lastPlayIsTransCode && localStorage.lastPlayIsTransCode == "1");
+			return true;
 		},
 		errorCb(err) {
 
@@ -558,6 +575,7 @@ export default {
 		canplayCb(e) {
 			console.log(' canplayCb canplayCb canplayCb')
 			this.playCanUse = true
+
 		},
 		pauseCb() {
 			this.isPlaying = false;
@@ -611,16 +629,24 @@ export default {
 		onTimeUpdateCb() {
 			if (!this.isPlaying) return
 			this.noMoveTime += 1
-			if (this.noMoveTime >= 30 && this.isPlaying) {
+			if (this.noMoveTime >= 60 && this.isPlaying) {
 				//一段时间没有移动 隐藏自定义控制
 				this.showCustomController = false
 			}
 			this.seekSec = this.vPlayer.currentTime()
-			//3秒保存一次当前播放位置
-			if (this.seekSec && parseInt(this.seekSec) % 10 == 0) {
-				this.videoHelper.savePlaySeek()
+			//n秒保存一次当前播放位置
+			if (this.seekSec && parseInt(this.seekSec) % 15 == 0) {
 				if (this.serverType == "movie" && !this.fromFileBrower && !this.fromFileBrower) {
 					this.addHistory(this.seekSec)
+				}
+			}
+
+			//如果设置了自动跳过片尾
+			if (this.indexObj.skip_open_end == 1 && !this.skippedEnd) {
+				let leftSeconds = this.indexObj.duration - this.seekSec
+				if (this.indexObj.end_duration > 0 && this.indexObj.end_duration > leftSeconds) {
+					this.skippedEnd = true
+					return this.onNext()
 				}
 			}
 		},
@@ -690,6 +716,7 @@ export default {
 							if (that.movieSize == 1) {
 								//之前是源文件 转码试试
 								that.playIndex(that.indexObj, true)
+								that.showVsNotification(that.$t("video.autoTranscodeStart"))
 							} else {
 								that.showVsConfirmDialog(that.$t('common.confirm'), that.$t('video.errorRetryPlay'), () => {
 									that.playIndex(that.indexObj, true)
@@ -737,34 +764,25 @@ export default {
 		},
 		//设置分辨率
 		setMovieSize(sizeValue) {
-			if (sizeValue != 1) {
-				let sizeOption = this.videoHelper.optionsPlaySize.filter((item) => {
-					if (item.value == sizeValue) return item
-				})[0]
-				if (!sizeOption) {
-					sizeOption = this.playSizeList.filter((item) => {
-						if (item.value == sizeValue) return item
-					})[0]
-				}
-				let videoRawBitRate = this.videoHelper.setSuitBitrateOptions(sizeOption)
-				this.videoBitRate = (videoRawBitRate && (sizeOption.defaultBitrate > videoRawBitRate)) ? videoRawBitRate : sizeOption.defaultBitrate
-			}
 			this.movieSize = sizeValue
 		},
 		//获取转码url
 		getTransCodeUrl() {
-			//原来播放的是原始 现在转码 选默认码率
+			//原来播放的是原始 现在转码 
 			if (this.movieSize == 1) {
 				this.setMovieSize(this.videoHelper.getVideoSuitResolution(this.indexObj))
 			}
 			let transFormat = formatUtil.getTranscodeFormat(this.indexObj)
 			let indexObj = this.indexObj
-			console.log("this.indexObj", this.indexObj)
 			let prifixPart = `${axios.baseUrl}/api/transCode/play/stream.${transFormat}?format=${transFormat}&`
 			if (transFormat == 'm3u8') {
 				prifixPart += `playId=${this.playId}&`
 			}
 			let lastPart = `&token=${this.token}&size=${this.movieSize}&seek=${this.seek}&videobit=${this.videoBitRate}&subtitleIndex=${this.subtitleStreamIndex}&audioIndex=${this.audioStreamIndex}&ac=${this.audioChannel}`
+			if (this.burnSubtitle) {
+				//设置为1 告诉服务器需要烧录字幕
+				lastPart += `&burn=1`
+			}
 			let playUrl = `${prifixPart}serverType=${this.serverType}&indexId=${indexObj.id}${lastPart}`;
 			if (this.fromFileBrower) {//从文件夹来的 要带着filePath
 				playUrl = `${prifixPart}filePath=${indexObj.filePath}${lastPart}`;
@@ -775,6 +793,7 @@ export default {
 			} else {
 				this.fromPrivateSpace = false
 			}
+
 			return playUrl
 		},
 		setSubtitleTrackUrl() {
@@ -799,18 +818,27 @@ export default {
 				//使用上传字幕
 				this.isCloseSubtitle = false
 				subtitleUrl += `&subtitleFile=${axios.encodePath(this.uploadSubtitleFilePath)}`
+				if (this.burnSubtitle) {
+					this.burnSubtitle = false
+					this.playIndex(this.indexObj, true);
+				}
 			} else if (this.videoSameNameSubtitleFilePath) {
 				//使用的是视频同名字幕
 				this.isCloseSubtitle = false
 				subtitleUrl += `&subtitleFile=${axios.encodePath(this.videoSameNameSubtitleFilePath)}`
+				if (this.burnSubtitle) {
+					this.burnSubtitle = false
+					this.playIndex(this.indexObj, true);
+				}
 			} else {
 				if (this.currentSubtitleStreamList.length <= this.subtitleStreamIndex) {
 					return this.textTrackUrl = ""
 				}
 				selectedSubtitleObj = this.currentSubtitleStreamList[this.subtitleStreamIndex]
-				if (selectedSubtitleObj.stream && selectedSubtitleObj.stream['codec_name'] == 'pgssub') {
-					//选择了图片字幕 需要烧录 
-					return this.textTrackUrl = ""
+				//使用了图片字幕
+				if (formatUtil.isPictureSubtitle(selectedSubtitleObj)) {
+					this.textTrackUrl = ""
+					return
 				}
 			}
 
@@ -846,24 +874,32 @@ export default {
 		},
 		playIndex(indexObj, playTransCode, seekValue, forcePlayRaw) {
 			console.log('playIndex', indexObj)
+			this.skippedEnd = false
 			if (seekValue) {
 				this.seek = seekValue
 			} else {
 				this.seek = this.seekSec
 			}
 			// 为影片设置合适的分辨率选项
-			this.videoHelper.setSuitSizeOptions()
+			this.videoHelper.setSuitSizeOptions(indexObj)
 			this.playCanUse = false
 			this.isPlaying = false
 			this.indexObj = indexObj
 			this.currentAudioStreamList = []
 			this.currentSubtitleStreamList = []
 			let settingPlayUrl = () => {
-				this.canPlayRawFile = formatUtil.getCanPlayRawFile(this.currentVideoStream, this.indexObj)
+				this.canPlayRawFile = formatUtil.getCanPlayRawFile(
+					this.currentVideoStream,
+					this.indexObj,
+					this.currentAudioStreamList[this.audioStreamIndex],
+					this.currentSubtitleStreamList[this.subtitleStreamIndex],
+					this.uploadSubtitleFilePath)
+				console.log("canPlayRawFile", this.canPlayRawFile)
 				if (!playTransCode) {
 					if (!forcePlayRaw && !this.canPlayRawFile) {
 						console.log('不能播放源文件 强制转码')
 						//不能播源文件 自动切换为转码
+						this.setBurnState()
 						return this.playIndex(indexObj, true)
 					} else {
 						//播放源文件
@@ -891,9 +927,25 @@ export default {
 						serverType: this.serverType
 					}).then((res) => {
 						if (!res.code) {
-							this.indexObj.stream_info = res.data.stream_info
+							this.indexObj = {
+								...this.indexObj,
+								...res.data
+							}
+							//首选语言
+							if (res.moviePreferLanguage) {
+								this.moviePreferLanguage = res.moviePreferLanguage
+							}
+							console.log("this.moviePreferLanguage", this.moviePreferLanguage)
 							this.videoHelper.parseAudioAndSubtitles()
 							settingPlayUrl()
+							//如果设置了自动跳过片头
+							if (this.indexObj.skip_open_end == 1) {
+								if (this.indexObj.open_duration > 0 && this.indexObj.open_duration < (this.indexObj.duration - 10)) {
+									console.log("跳过片头:" + this.indexObj.open_duration)
+									this.changeSeekFromSlider(this.indexObj.open_duration)
+									return this.showVsNotification(this.$t('movie.skippingMovieTitle'))
+								}
+							}
 						}
 					})
 			} else if (this.fromFileBrower) {
@@ -902,6 +954,10 @@ export default {
 				//从文件夹来的 没有索引 需要先获取视频信息 解析字幕音频轨等
 				this.api.post('/api/transCode/getVideoInfoByPath', params).then((res) => {
 					if (!res.code) {
+						//首选语言
+						if (res.moviePreferLanguage) {
+							this.moviePreferLanguage = res.moviePreferLanguage
+						}
 						this.indexObj.stream_info = res.streams
 						this.indexObj.duration = res.duration
 						this.videoHelper.parseAudioAndSubtitles(indexObj.filePath)
@@ -930,13 +986,19 @@ export default {
 						if (!res.code) {
 							let history = res.data
 							if (history) {
-								//询问用户是否恢复进度
-								this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('movie.continuePlay', {
-									lastTime: utils.formatSeconds(history.time)
-								}), () => {
-									//继续播放
-									this.changeSeekFromSlider(history.time)
-								}, null, this.$t('movie.resumePlay'), this.$t('movie.playBegain'))
+								//如果上次的观看历史在片头或片尾的范围内 则不提示了
+								let openDuration = this.indexObj.open_duration ? parseInt(this.indexObj.open_duration) : 30
+								let endDuration = this.indexObj.end_duration ? parseInt(this.indexObj.end_duration) : 30
+								if (history.time > openDuration && history.time < (this.indexObj.duration - endDuration)) {
+									//询问用户是否恢复进度
+									this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('movie.continuePlay', {
+										lastTime: utils.formatSeconds(history.time)
+									}), () => {
+										//继续播放
+										this.changeSeekFromSlider(history.time)
+									}, null, this.$t('movie.resumePlay'), this.$t('movie.playBegain'))
+								}
+
 							}
 						}
 					}).catch(err => {
@@ -952,7 +1014,9 @@ export default {
 			if (this.indexObj.spaceId) {
 				this.fromPrivateSpace = true
 			}
-			this.playIndex(this.indexObj, localStorage.lastPlayIsTransCode && localStorage.lastPlayIsTransCode == "1");
+			// this.playIndex(this.indexObj, localStorage.lastPlayIsTransCode && localStorage.lastPlayIsTransCode == "1");
+			localStorage.lastPlayIsTransCode = "0"
+			this.playIndex(this.indexObj, false);
 		}
 	},
 };

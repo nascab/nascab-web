@@ -44,7 +44,7 @@ export default {
 					trigger: 'blur'
 				},
 				{
-					min: 6,
+					min: 2,
 					message: this.$t('registerAdmin.passwordLengthLimit'),
 					trigger: 'blur'
 				}
@@ -55,7 +55,7 @@ export default {
 					trigger: 'blur'
 				},
 				{
-					min: 6,
+					min: 2,
 					message: this.$t('registerAdmin.passwordLengthLimit'),
 					trigger: 'blur'
 				}
@@ -66,7 +66,7 @@ export default {
 					trigger: 'blur'
 				},
 				{
-					min: 6,
+					min: 2,
 					message: this.$t('registerAdmin.passwordLengthLimit'),
 					trigger: 'blur'
 				}

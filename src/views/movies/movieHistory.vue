@@ -5,12 +5,13 @@
 			<div style="display: flex;align-items: center;justify-content: space-between;width: 100%;">
 				<div style="display: flex;align-items: center;flex: 1;">
 					<!-- grid list 切换 -->
-					<div>
-						<Icon color="#386DF2" size="35" class="icon-showtype" v-if="showType == 'grid'" type="ios-apps"
-							@click="onSelectShowType('list')" />
-						<Icon color="#386DF2" size="35" class="icon-showtype" v-else type="md-list"
-							@click="onSelectShowType('grid')" />
+
+					<div :style="{'margin-left': itemMargin + 'px'}">
+						<span v-if="showType == 'grid'" class="nasIcons icon-grid operation-icon "
+						@click="onSelectShowType('list')"></span>
+						<span v-else class="nasIcons icon-list operation-icon" @click="onSelectShowType('grid')"></span>
 					</div>
+
 					<!-- 改变图片大小 -->
 					<div class="nas-mobile-none">
 						<Slider v-if="showType == 'grid'" class="zoom-slider" show-tip="never" v-model="sliderValue"
@@ -36,7 +37,12 @@
 					<div class="cover-root" style="width:100%">
 						<!-- 封面 禁用浏览器默认的事件-->
 						<img class="movie-cover" v-lazy="movie.url" :style="{ height: itemWidth / 3 * 4.5 + 'px' }" />
-						<img v-if="movie.hover" class="icon-play" src="@/static/icon_play.png" />
+						<!-- <img v-if="movie.hover" class="icon-play" src="@/static/icon_play.png" /> -->
+
+						<Button type="text" ghost v-if="movie.hover" style="height:40px;position:absolute" >
+							<span class="nasIcons icon-play" style="font-size:40px;line-height:40px" ></span>
+						</Button>
+
 						<!-- 视频的时长 -->
 						<p class="icon-duration">{{ utils.formatSeconds(movie.duration) }}</p>
 					</div>
@@ -46,7 +52,6 @@
 						{{ movie.filename }}
 						<span v-if="movie.movie_year && movie.movie_year > 1000">[{{ parseInt(movie.movie_year) }}]</span>
 					</p>
-
 
 				</div>
 				<div @click="movieClick(index)" v-for="(movie, index) in movieList" v-if="showType == 'list'"
@@ -59,10 +64,12 @@
 						<div class="cover-root">
 							<!-- 封面 -->
 							<img class="movie-cover-list" v-lazy="movie.url" />
-							<Button type="primary" v-if="movie.hover" class="icon-play" shape="circle"
-								icon="md-play"></Button>
+								<Button type="text" ghost v-if="movie.hover" style="height:40px;position:absolute" >
+									<span class="nasIcons icon-play" style="font-size:40px;line-height:40px" ></span>
+								</Button>
 							<!-- 视频的时长 -->
 							<p class="icon-duration-list">{{ utils.formatSeconds(movie.duration) }}</p>
+							
 
 							<!-- 电影评分 -->
 							<div v-if="movie.movie_douban_score && movie.movie_douban_score > 0" class="movie-score-bg">
@@ -72,28 +79,28 @@
 							</div>
 						</div>
 
-						<div v-if="movie.hover"
-							style="position: absolute;left: 15px;top: 5px;height: 30px;display: flex;align-items: center;">
-							<img v-if="movieList[index].movie_douban_id"
-								@click.stop="utils.checkDouban(movieList[index].filename, parseInt(movieList[index].movie_douban_id))"
-								style="width: 30px;height: 30px;" src="@/static/social-douban.png" />
-							<img v-if="movieList[index].movie_imdb_id"
-								@click.stop="utils.checkImdb(movieList[index].filename, movieList[index].movie_imdb_id)"
-								style="border-radius: 5px; width: 30px;height: 30px;margin-left: 10px;"
-								src="@/static/icon_imdb.png" />
-
-
-						</div>
+					
 						<!-- 名称 -->
 						<div style="display:flex;flex-direction:column;height: 100%;">
 							<p class="filename max-line-three">
 								{{ movie.filename }}
 							</p>
-							<p class="filepath max-line-three">
-								{{ movie.path }}
+							<div class="list-item-line">
+								<span class="item-title">{{ $t("common.folder") }}:</span>
+								<span class="item-content">{{ movie.path }}</span>
+							</div>
+							<!-- 视频的时长 -->
+							<p class="list-item-line">
+								<span class="item-title">{{ $t("video.duration") }}:</span>
+								<span class="item-content">{{ utils.formatSeconds(movie.duration) }}
+									<span style="margin-left:5px">[{{ movie.sizeStr }}]</span>
+								</span>
 							</p>
-							<p class="filepath max-line-three">
-								{{ movie.sizeStr }}
+							<!-- 上次看到 -->
+							<p class="list-item-line">
+								<span class="item-title">{{ $t("movie.lastTime") }}:</span>
+								<span class="item-content">{{ utils.formatSeconds(movie.time) }}
+								</span>
 							</p>
 						</div>
 
@@ -125,7 +132,7 @@
 		<!-- 电影详情页 -->
 		<Modal v-model="showMovieInfoDetail" fullscreen footer-hide class-name="modal-style-nopadding"
 			@onClose="showMovieInfoDetail = false">
-			<movie-info-detail @onClose="showMovieInfoDetail = false" :propsDetailMovieList="movieList"
+			<movie-info-detail  @onClose="showMovieInfoDetail = false" :propsDetailMovieList="movieList" 
 				:propsDetailIndex="selectedIndex" ref="movieInfoDetail" v-if="showMovieInfoDetail" @onMarkType="markType">
 			</movie-info-detail>
 		</Modal>
@@ -196,11 +203,11 @@ export default {
 			showToTopBtn: false,
 			showVideoDetail: false,
 			rightMenuList: [],
-			sliderMin: 150,
+			sliderMin: 120,
 			sliderMax: 280,
-			sliderValue: 150,
-			itemBaseWidth: 150,
-			itemWidth: 150,
+			sliderValue: 120,
+			itemBaseWidth: 120,
+			itemWidth: 120,
 			itemMargin: 6,
 			sortField: 'recent',
 			sortType: 'desc',
@@ -221,6 +228,7 @@ export default {
 
 	},
 	methods: {
+		
 		onPopstate() {
 			//后退按钮被点击 如果当前正在播放视频 则关闭视频 如果每播放 则后退
 			if (this.showMovieInfoDetail || this.showVideoDetail) {
@@ -286,18 +294,18 @@ export default {
 				})
 			}
 			console.log('file.is_tvplay', file.is_tvplay)
-			if (file.is_tvplay == 1) {
-				this.rightMenuList.push({
-					text: this.$t('movie.setAsMovie'),
-					type: "setAsMovie"
-				})
+			// if (file.is_tvplay == 1) {
+			// 	this.rightMenuList.push({
+			// 		text: this.$t('movie.setAsMovie'),
+			// 		type: "setAsMovie"
+			// 	})
 
-			} else {
-				this.rightMenuList.push({
-					text: this.$t('movie.setAsTv'),
-					type: "setAsTv"
-				})
-			}
+			// } else {
+			// 	this.rightMenuList.push({
+			// 		text: this.$t('movie.setAsTv'),
+			// 		type: "setAsTv"
+			// 	})
+			// }
 		},
 		showRightMenu(event, root, file, index) {
 			if (this.isMobile) return event.preventDefault()
@@ -393,8 +401,10 @@ export default {
 		calImageWidth() {
 			if (!this.$refs.listWrapper) {
 				return
+			}			
+			if (this.isMobile) {
+				this.itemBaseWidth = 120
 			}
-
 			let wrapper = this.$refs.listWrapper.getBoundingClientRect();
 			let itemWidth = this.utils.calItemWidth(wrapper, this.itemBaseWidth, this.itemMargin)
 			if (itemWidth) this.itemWidth = itemWidth
@@ -510,6 +520,21 @@ export default {
 	width: 90%;
 }
 
+.operation-icon {
+	font-size: 30px;
+	line-height: 30px;
+	color: $nas-main;
+	margin-right: 20px;
+	cursor: pointer;
+	span{
+		font-size: 30px;
+	}
+
+	@media all and (max-width:640px) {
+		margin-right: 15px;
+	}
+}
+
 .movie-list-root {
 	position: relative;
 	width: 100%;
@@ -578,11 +603,10 @@ export default {
 
 	.movie-cover-list {
 		pointer-events: none;
-		margin-left: 10px;
 		border-radius: 10px;
-		background-color: black;
-		width: 150px;
-		height: 200px;
+		background-color: white;
+		width: 120px;
+		height: 160px;
 		object-fit: cover;
 		box-shadow: 5px 5px 10px rgba(0, 0, 0, .2);
 
@@ -599,6 +623,7 @@ export default {
 		margin-top: 15px;
 	}
 
+
 	.filename {
 		font-size: 16px;
 		font-weight: bold;
@@ -609,6 +634,23 @@ export default {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+
+	.list-item-line {
+		font-size: 14px;
+		margin-right: 20px;
+		text-align: left;
+		margin-left: 20px;
+		word-break: break-all;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		margin-top: 10px;
+
+		.item-title {
+			font-weight: bold;
+			margin-right: 5px;
+		}
+
+	}
 }
 
 .cover-root {
@@ -618,19 +660,13 @@ export default {
 	position: relative;
 }
 
-.icon-play {
-	border-radius: 50%;
-	width: 60px;
-	height: 60px;
-	position: absolute;
-}
 
 .icon-duration {
 	font-size: 14px;
 	color: #eee;
 	position: absolute;
-	left: 5%;
-	bottom: 5%;
+	left: 6px;
+	bottom: 6px;
 	font-weight: bold;
 }
 
@@ -639,15 +675,15 @@ export default {
 	font-size: 14px;
 	color: #eee;
 	position: absolute;
-	left: 15%;
-	bottom: 5%;
+	left: 6px;
+	bottom: 6px;
 	font-weight: bold;
 }
 
 .movie-cover {
 	pointer-events: none; //禁止响应点击事件
 	border-radius: 10px;
-	background-color: black;
+	background-color: white;
 	width: 100%;
 	object-fit: cover;
 	box-shadow: 5px 5px 10px rgba(0, 0, 0, .2);

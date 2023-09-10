@@ -3,20 +3,19 @@
 
 		<!-- 无数据提示 -->
 		<my-nodata v-if="!loading && dataList.length < 1" @onBtnClick="showAdd" :title="$t('movie.addSmartCollectionAlert')"
-			:btnTitle="$t('movie.addSmartCollection')" style="position: absolute;width: 100%;margin-top: 150px;">
+			:btnTitle="$store.state.currentUser.is_admin == 1?$t('movie.addSmartCollection'):null" style="position: absolute;width: 100%;margin-top: 150px;">
 		</my-nodata>
 
 		<div style="width:100%;display:flex;height: 100%;flex-direction:row;overflow: hidden;">
-			<!-- 相册列表 -->
+			<!-- 列表 -->
 			<div class="album-list-root" ref="photoWrapper">
 				<vs-card v-for="(collection, index) in dataList" type='1' @click="onCollectionClick(index)"
-					@contextmenu="showRightMenu($event, $root, album, index)"
 					:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }">
 					<template #title>
 						<h3 class="max-line-one" style="text-align: left;">{{ collection.title }}</h3>
 					</template>
 					<template #img>
-						<img v-if="collection.collection_cover_path && collection.enable_pwd != 1" style="object-fit: cover;"
+						<img v-if="collection.collection_cover_path" style="object-fit: cover;"
 							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }"
 							v-lazy="axios.getRawFileUrl(collection.collection_cover_path,'cover.jpg')" />
 						
@@ -25,24 +24,24 @@
 							src="@/static/photo/icon_movie_collection.png" />
 
 
-						<img v-if="collection.enable_pwd==1" style="object-fit: cover;"
+						<img v-if="!collection.collection_cover_path && collection.enable_pwd==1" style="object-fit: cover;"
 							:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }"
 							src="@/static/photo/icon_movie_collection_lock.png" />
 					</template>
 					<template #text>
-						<p class="item-subtitle">{{ collection.create_time }}</p>
+						<p class="item-subtitle">{{collection.data_value? collection.data_value:collection.create_time }}</p>
 					</template>
 					<template #interactions>
-						<!-- <vs-button icon class="btn-chat" shadow primary @click.stop="showAdd(collection)">
+						<vs-button v-if="$store.state.currentUser.is_admin == 1" icon class="btn-chat" shadow primary @click.stop="showAdd(collection)">
 							<Icon type="md-settings" size="20" />
-						</vs-button> -->
-						<vs-button icon class="btn-chat" shadow primary @click.stop="deleteCollection(collection)">
+						</vs-button>
+						<vs-button  v-if="$store.state.currentUser.is_admin == 1" icon class="btn-chat" shadow primary @click.stop="deleteCollection(collection)">
 							<Icon type="md-trash" size="20" />
 						</vs-button>
 					</template>
 				</vs-card>
 				<!-- 添加影集 -->
-				<div v-if="dataList.length > 0" @click="showAdd()"
+				<div v-if="dataList.length > 0 && $store.state.currentUser.is_admin == 1" @click="showAdd()"
 					:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }"
 					style=" background-color: white;border-radius: 10px;display: flex;flex-direction: column;justify-content: center;cursor: pointer;">
 					<span class="nasIcons icon-add-album icon-add"></span>
@@ -57,13 +56,14 @@
 
 		<!-- 新增/编辑对话框 -->
 		<Modal v-model="showAddDialog" footer-hide>
-			<smart-collection-add  @onAdd="onAddFinish"></smart-collection-add>
+			<smart-collection-add :editCollection="editCollection" v-if="showAddDialog"  @onAdd="onAddFinish"></smart-collection-add>
 		</Modal>
 
+		<!-- 影集详情 -->
 		<Modal v-model="showCollectionDetail" fullscreen footer-hide :closable="false" class-name="modal-style-nopadding">
 			<collection-detail @onClose="showCollectionDetail = false" v-if="showCollectionDetail"
 				:collectionId="selectedCollection.id" :title="selectedCollection.title"
-				:collectionPwd="collectionPwd"></collection-detail>
+				:collectionPwd="collectionPwd" :isAiCollection="true"></collection-detail>
 		</Modal>
 
 
@@ -72,7 +72,7 @@
 			:content="$t('registerAdmin.placeholderPassword')">
 		</my-dialog-input>
 
-
+		<!-- <easy-cm @ecmcb="rightMenuClick" :list="rightMenuList"></easy-cm> -->
 
 	</div>
 </template>
@@ -99,7 +99,14 @@ export default {
 	},
 	data() {
 		return {
-
+			editCollection:null,
+			rightMenuList: [{
+				text: this.$t('file.check'),
+				type: "CHECK",
+			}, {
+				text: this.$t('common.delete'),
+				type: "DELETE"
+			}],
 			showCollectionDetail: false,
 			dialogTitle: "",
 			selectedCollection: "",
@@ -110,13 +117,28 @@ export default {
 			loading: false,
 			showAddDialog: false,
 			inputCollectionName: "",
-			collectionPwd: ""
+			collectionPwd: "",
+			selectedIndex: false
 		};
 	},
 	computed: {
 
 	},
 	methods: {
+		showRightMenu(event, root, collect, index) {
+			if (this.isMobile) return event.preventDefault()
+			this.selectedIndex = index
+			this.selectedCollection = collect
+			this.$easycm(event, root)
+		},
+		rightMenuClick(indexList) {
+			let type = this.rightMenuList[indexList[0]].type
+			if (type == 'CHECK') { //查看
+				this.onCollectionClick(this.selectedIndex)
+			} else if (type == 'DELETE') { //删除
+				this.deleteCollection(this.selectedCollection)
+			}
+		},
 		onPopstate() {
 			console.log("后退点击")
 			//后退按钮被点击 如果当前正在播放视频 则关闭视频 如果每播放 则后退
@@ -157,6 +179,7 @@ export default {
 		},
 		//弹出对话框 创建/修改 影集
 		showAdd(collection) {
+			this.editCollection=collection
 			if (collection) {
 				this.dialogTitle = this.$t("movie.editCollection")
 				this.inputCollectionName = collection.title
@@ -215,20 +238,15 @@ export default {
 }
 
 .list-root {
-	padding-top: 10px;
 	position: relative;
 	width: 100%;
 	height: 100%;
 
 	background-color: rgba(255, 255, 255, 0.6);
-	padding-left: 10px;
-	padding-right: 10px;
 
 	@media not all and (max-width:640px) {
 		border-top-left-radius: 20px;
 		border-top-right-radius: 20px;
-		padding-left: 20px;
-		padding-right: 20px;
 	}
 }
 

@@ -7,7 +7,7 @@
 		<div class="nas-mobile-none">
 			<my-header></my-header>
 		</div>
-		<my-btn-icon v-if="!isFromApp" type="grey" class="nas-mobile-show" style="position:fixed;bottom:50px;left:15px;" iIcon="md-home" @click="goHome()"></my-btn-icon>
+		<my-btn-icon v-if="!isFromApp" type="grey" class="nas-mobile-show" style="position:fixed;bottom:50px;left:15px;z-index:1000" iIcon="md-home" @click="goHome"></my-btn-icon>
 		<!-- 无数据提示 -->
 		<my-nodata v-if="!loading && spaceList.length < 1" @onBtnClick="showAddModal = true"
 			:title="$t('private.privateSpaceDescA')"
@@ -47,7 +47,7 @@
 							<!-- 创建日期 -->
 							<template #text>
 								<div style="display: flex;justify-content: flex-start;width: 100%;">
-									<p style="word-break: break-all;text-align: left;pointer-events: none;">
+									<p style="word-break: break-all;text-align: left;pointer-events: none;" class="max-line-one">
 										{{ space.create_time }}
 									</p>
 								</div>
@@ -163,8 +163,8 @@ export default {
 				type: "DELETE",
 			}],
 			spaceNewName: "",
-			itemBaseWidth: 240,
-			itemWidth: 240,
+			itemBaseWidth: 230,
+			itemWidth: 230,
 			itemMargin: 10,
 			showExportModal: false,
 			showImportModal: false,

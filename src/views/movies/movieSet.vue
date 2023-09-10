@@ -14,9 +14,10 @@
 				<div v-if="decoderList.length > 1"
 					style="display: flex;flex-direction: row;align-items: center;margin-top: 20px;justify-content: flex-start;width: 100%;">
 					<div style="margin-right: 20px;">{{ $t('setting.videoDecoder') }}</div>
-					<Select v-model="settingData.transCodeDecoder" style="width:120px;">
+					<Select @on-change="onDecoderChange" v-model="settingData.transCodeDecoder" style="width:120px;">
 						<Option v-for="(item, i) in decoderList" :value="item" :key="i">{{ item }}</Option>
 					</Select>
+					<div style="margin-left:10px" class="text-grey">{{ decoderDesc }}</div>
 				</div>
 				<!-- 视频编码器选择 -->
 				<div
@@ -25,8 +26,26 @@
 					<Select @on-change="onEncoderChange" v-model="settingData.transCodeEncoder" style="width:120px;">
 						<Option v-for="(item, i) in encoderList" :value="item" :key="i">{{ item }}</Option>
 					</Select>
-					<div style="margin-left:10px">{{ encoderDesc }}</div>
+					<div style="margin-left:10px" class="text-grey">{{ encoderDesc }}</div>
 				</div>
+				<!-- 转码速度选择 -->
+				<div
+					style="display: flex;flex-direction: row;align-items: center;margin-top: 20px;justify-content: flex-start;width: 100%;">
+					<div style="margin-right: 20px;">{{ $t('transcodeSpeed') }}</div>
+					<Select v-model="settingData.transcodeSpeed" style="width:90px;">
+						<Option v-for="(item, i) in transcodeSpeedList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+					</Select>
+					<p style="text-align:left;margin-left:5px" class="text-grey">{{$t("transcodeSpeedAlert")}}</p>
+				</div>
+				<!-- 首选字幕语言 -->
+				<div
+					style="display: flex;flex-direction: row;align-items: center;margin-top: 20px;justify-content: flex-start;width: 100%;">
+					<div style="margin-right: 20px;">{{ $t('movie.primaryLanguage') }}</div>
+					<Select v-model="settingData.moviePreferLanguage" style="width:90px;">
+						<Option v-for="(item, i) in languageList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+					</Select>
+				</div>
+				
 				<!-- 转码临时文件家 -->
 				<div
 					style="display: flex;flex-direction: row;align-items: center;margin-top: 20px;justify-content: flex-start;width: 100%;">
@@ -115,6 +134,7 @@ export default {
 			encoderDesc: "",
 			decoderDesc: "",
 			settingData: {
+				moviePreferLanguage:"chi",
 				movieShowMatchName: false,
 				useFolderPictureAsPoster: false,
 				subtitleSize: 1.5,
@@ -122,8 +142,77 @@ export default {
 				transCodeEncoder: "",
 				transCodeDecoder: "",
 				transcodePath: "",
+				transcodeSpeed:"medium",
 				subtitlePreGen:true //字幕预提取
-			}
+			},
+			languageList:[
+				{
+					value:"chi",//中文
+					label:this.$t("language.chi")
+				},
+				{
+					value:"eng",//
+					label:this.$t("language.eng")
+				},
+				{
+					value:"ger",//
+					label:this.$t("language.ger")
+				},
+				{
+					value:"spa",//
+					label:this.$t("language.spa")
+				},
+				{
+					value:"fre",//
+					label:this.$t("language.fre")
+				},
+				{
+					value:"jpn",//
+					label:this.$t("language.jpn")
+				},
+				{
+					value:"kor",//
+					label:this.$t("language.kor")
+				}
+			],
+			transcodeSpeedList:[
+				{
+					value:"ultrafast",
+					label:this.$t("ultrafast")
+				},
+				// {
+				// 	value:"superfast",
+				// 	label:this.$t("superfast")
+				// },
+				// {
+				// 	value:"veryfast",
+				// 	label:this.$t("veryfast")
+				// },
+				// {
+				// 	value:"faster",
+				// 	label:this.$t("faster")
+				// },
+				{
+					value:"fast",
+					label:this.$t("fast")
+				},
+				{
+					value:"medium",
+					label:this.$t("medium")
+				},
+				{
+					value:"slow",
+					label:this.$t("slow")
+				},
+				// {
+				// 	value:"slower",
+				// 	label:this.$t("slower")
+				// },
+				// {
+				// 	value:"veryslow",
+				// 	label:this.$t("veryslow")
+				// }
+			]
 		}
 	},
 	computed: {
@@ -133,6 +222,14 @@ export default {
 		onPathSelect(path) {
 			this.settingData.transcodePath = path
 			this.showChooseFolder = false
+		},
+		onDecoderChange(selectDecoder) {
+			if(selectDecoder=="qsv"||selectDecoder=="dxva2"||selectDecoder=="d3d11va"){
+				//提示用户这些解码器可能出现问题
+				this.decoderDesc=this.$t("decoderErrorAlert")
+			}else{
+				this.decoderDesc=""
+			}
 		},
 		//视频编码器解释
 		onEncoderChange(selectEncoder) {
@@ -191,7 +288,11 @@ export default {
 						this.settingData.useFolderPictureAsPoster = configItem.value == '1'
 					} else if (configItem.title == 'subtitlePreGen') {
 						this.settingData.subtitlePreGen = configItem.value == '1'
-					} 
+					} else if (configItem.title == 'transcodeSpeed') {
+						this.settingData.transcodeSpeed = configItem.value
+					} else if(configItem.title=="moviePreferLanguage"){
+						this.settingData.moviePreferLanguage = configItem.value
+					}
 					if (!this.settingData.transCodeEncoder) {
 						//用户没选过编码器 用列表里面的第一个
 						if (this.encoderList.length > 0) {

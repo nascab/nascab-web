@@ -5,10 +5,11 @@
 			<div v-if="targetPath" style="font-weight:bold">
 				{{ $t('upload.targetFolder') + " : " }}
 			</div>
-			<Tag color="primary" style="border-radius:20px" v-if="targetPath" closable @on-close="targetPath = ''">{{
-				targetPath }}</Tag>
+			<Tag type="border" style="border-radius:20px;margin-bottom:10px" v-if="targetPath" closable
+				@on-close="targetPath = ''">{{
+					targetPath }}</Tag>
 			<!-- 选择上传文件夹 -->
-			<Button v-else @click="selectPath" type="primary" style="border-radius:20px">{{ $t('upload.selectTargetFolder')
+			<Button v-else @click="selectPath" type="dashed" style="border-radius:20px">{{ $t('upload.selectTargetFolder')
 			}}</Button>
 
 			<!-- 最近使用的文件夹 -->
@@ -43,6 +44,7 @@
 				{{ $t('upload.folder') }}
 			</vs-radio>
 		</div>
+		<!-- 上传组件 -->
 		<Upload v-if="uploadType == 'files'" :action="uploadUrl" ref="upload" :show-upload-list="false"
 			:on-error="onUploadError" :on-success="onUploadSuccess" :before-upload="onBeforeUpload"
 			:on-progress="onUploadProgress" v-show="targetPath || spaceId" multiple type="drag" :webkitdirectory="false">
@@ -56,21 +58,20 @@
 				</div>
 			</div>
 		</Upload>
-
+		<!-- 上传组件 文件夹 -->
 		<Upload v-if="uploadType == 'folder'" :action="uploadUrl" ref="upload" :show-upload-list="false"
 			:on-error="onUploadError" :on-success="onUploadSuccess" :before-upload="onBeforeUpload"
 			:on-progress="onUploadProgress" v-show="targetPath || spaceId" multiple type="select" :webkitdirectory="true">
 			<div style="padding: 20px 0;position: relative;">
 				<Icon type="ios-cloud-upload" size="52" style="color: #3399ff;cursor: pointer;"></Icon>
 				<div style="display:flex;align-items: center;justify-content: center;">
-					<p>{{ this.$t('file.chooseFolder') }}</p>
+					<p>{{ this.$t('file.clickChooseFolder') }}</p>
 					<Button style="margin-left: 3px;" v-if="uploadList.length > 0" @click.stop="clearRecord"
 						@click="uploadList = []" size="small">{{ $t('upload.clearRecord') }}</Button>
 				</div>
 			</div>
 		</Upload>
 		<!-- 上传文件列表 -->
-
 		<div
 			style="width:100%; max-height: 300px;padding-bottom: 20px;display: flex;flex-direction: column;align-items: center;">
 			<Menu v-if="uploadList && uploadList.length > 0" mode="horizontal" active-name="all"
@@ -87,9 +88,9 @@
 				<MenuItem name="error">
 				{{ $t("common.faild") }}
 				</MenuItem>
-
 			</Menu>
 			<div style="overflow:auto;height:100%;width:100%">
+				<!-- 上传记录列表 -->
 				<div v-for="(item, index) in uploadList"
 					style="padding:10px;display:flex;flex-direction: column;border-bottom: 1px solid #eee;width:100%;"
 					v-if="item.status == recordType || recordType == 'all'">
@@ -105,8 +106,11 @@
 						<!-- 文件名称 -->
 						<div style="text-align: left;flex: 1;word-break: break-all;"
 							:class="{ uploadError: item.status == 'error' }">{{ item.name }}</div>
+						<!-- 重试按钮 -->
+						<Icon @click="retryUpload(item)" v-if="item.status == 'error'"
+							style="flex-shrink: 0; cursor: pointer;margin-right:5px" type="md-refresh" size="20"></Icon>
 						<!-- 删除按钮 -->
-						<Icon style="flex-shrink: 0; cursor: pointer;" type="ios-trash" @click="handleRemove(item, index)"
+						<Icon style="flex-shrink: 0; cursor: pointer;" type="md-trash" @click="handleRemove(item, index)"
 							size="20"></Icon>
 					</div>
 					<Progress v-if="item.status == 'uploading'" :percent="item.percentage" hide-info></Progress>
@@ -178,6 +182,18 @@ export default {
 		this.lastUsePath = localStorage.getItem('lastUsePath')
 	},
 	methods: {
+
+		retryUpload(uploadItem) {
+			for (let i = this.uploadList.length - 1; i >= 0; i--) {
+				if (this.uploadList[i] == uploadItem) {
+					this.uploadList.splice(i, 1)
+				}
+			}
+			//点击了记录 如果是失败的 触发重试
+			if (uploadItem.status == 'error' && uploadItem.uploadFile) {
+				this.$refs.upload.addUploadFile(uploadItem.uploadFile)
+			}
+		},
 		clearRecord() {
 			this.uploadList = []
 		},
@@ -191,6 +207,9 @@ export default {
 						status: "error",
 						name: this.$t('common.tokenExpire')
 					})
+					return reject()
+				}
+				if (file.name == ".DS_Store") {
 					return reject()
 				}
 				if (file.name.length > 120) {
@@ -208,13 +227,36 @@ export default {
 					})
 					return reject()
 				}
-				let uploadUrl = axios.uploadUrl() + `&savePath=${axios.encodePath(this.targetPath)}&overMode=${this.overMode}&filename=${file.name}`
-				if (this.spaceId) {
-					uploadUrl = axios.privateSpaceUploadUrl() + `&spaceId=${this.spaceId}&overMode=over&spaceToken=${this.$store.state.privateSpace[this.spaceId]}&filename=${file.name}`
+				let uploadUrl = axios.uploadUrl() + `&savePath=${axios.encodePath(this.targetPath)}&overMode=${this.overMode}`
+				//添加相对路径参数 用于保持子文件夹结构
+				if (file.webkitRelativePath) {
+					uploadUrl += `&relativePath=${axios.encodePath(file.webkitRelativePath)}`
 				}
+				if (this.spaceId) {
+					uploadUrl = axios.privateSpaceUploadUrl() + `&spaceId=${this.spaceId}&overMode=over&spaceToken=${this.$store.state.privateSpace[this.spaceId]}&encodeFilename=${axios.encodePath(file.name)}`
+				} else {
+					uploadUrl += `&encodeFilename=${axios.encodePath(file.name)}`
+				}
+
 				this.uploadUrl = uploadUrl
 				file.uploadUrl = uploadUrl
+				console.log("!!file", file)
 				return resolve(file)
+				// console.log("onBeforeUpload",file)
+				// this.detectFileExist(file.webkitRelativePath || file.name, (exist) => {
+				// 	if (exist) {
+				// 		//文件已存在
+				// 		this.uploadList.unshift({
+				// 			status: "error",
+				// 			name: this.$t('common.fileExist') + ":" + file.name
+				// 		})
+				// 		return reject()
+				// 	} else {
+
+				// 	}
+
+				// })
+
 			})
 		},
 		//从列表删除
@@ -247,8 +289,7 @@ export default {
 			}
 		},
 		//上传成功的回调
-		onUploadSuccess(response, file, fileList) {
-			console.log(response, file, fileList)
+		onUploadSuccess(response, file, fileList, uploadFile) {
 			//先把uploading状态的移除掉
 			for (let i in this.uploadList) {
 				if (this.uploadList[i].uid == file.uid) {
@@ -260,17 +301,16 @@ export default {
 				//失败了
 				this.uploadList.unshift({
 					status: "error",
-					name: file.name + ':' + response.message
+					name: file.name + ':' + response.message,
+					uploadFile: uploadFile
 				})
 			} else {
 				//成功了
-				console.log('上传成功', file)
 				this.$emit('fileUploaded', file)
 				this.uploadList.unshift(file)
 			}
 		},
 		onUploadProgress(event, file, fileList) {
-			console.log('更新进度')
 			for (let i in this.uploadList) {
 				if (this.uploadList[i].uid == file.uid) {
 					this.uploadList[i].percentage = file.percentage
@@ -287,6 +327,7 @@ export default {
 				file: file
 			})
 		},
+		//上传失败回调
 		onUploadError(error, response, file) {
 			for (let i in this.uploadList) {
 				if (this.uploadList[i].uid == file.uid) {
@@ -296,7 +337,8 @@ export default {
 			}
 			this.uploadList.unshift({
 				status: "error",
-				name: file ? file.name + ":" + this.$t('upload.uploadFail') : this.$t('upload.uploadFail')
+				name: file ? file.name + ":" + this.$t('upload.uploadFail') : this.$t('upload.uploadFail'),
+				uploadFile: file
 			})
 		},
 		selectRecrentFolder() {
@@ -318,6 +360,28 @@ export default {
 		},
 		selectPath() {
 			this.showChooseFolder = true
+		},
+		//上传件检查文件是否已存在
+		detectFileExist(fileName, onExist) {
+			console.log("检测文件是否存在 detectFileExist")
+			//检查选择的文件夹是否有写入权限
+			this.api
+				.post("/api/file/fileExist", {
+					folderPath: axios.encodePath(this.targetPath),
+					fileName: fileName
+				})
+				.then((res) => {
+					console.log("文件存在结果", res)
+					if (onExist) {
+						onExist(res.code == 1)
+					}
+				})
+				.catch((error) => {
+					console.log("文件存在结果", error)
+					if (onExist) {
+						onExist(error.code == 1)
+					}
+				});
 		},
 		onSelectPath(path) {
 			//检查选择的文件夹是否有写入权限

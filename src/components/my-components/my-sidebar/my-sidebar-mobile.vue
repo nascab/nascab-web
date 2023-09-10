@@ -4,7 +4,7 @@
 		<!-- 回到首页 app内部不显示-->
 		<my-btn-icon v-if="!isFromApp" type="grey" class="nas-mobile-show" style="position:fixed;bottom:135px;left:15px;" iIcon="md-home" @click="goHome()"></my-btn-icon>
 		<!-- 切换边栏 -->
-		<my-btn-icon type="grey" class="nas-mobile-show" style="position:fixed;bottom:65px;left:15px;" iIcon="md-reorder" @click="(activeSidebar = !activeSidebar)"></my-btn-icon>
+		<my-btn-icon type="grey" class="nas-mobile-show" style="position:fixed;bottom:75px;left:15px;" iIcon="md-reorder" @click="(activeSidebar = !activeSidebar)"></my-btn-icon>
 
 		<vs-sidebar absolute v-model="selectedIndex" :open.sync="activeSidebar">
 
@@ -67,7 +67,9 @@ export default {
 			console.log('itemClick', index)
 			this.selectedIndex = index
 			this.activeSidebar = false
-			this.$emit('onItemClick', this.optionList[index])
+			this.$nextTick(()=>{
+				this.$emit('onItemClick', this.optionList[index])
+			})
 
 		},
 		setIndex(index) {
@@ -94,5 +96,10 @@ export default {
 .logo {
 	object-fit: contain;
 	height: 25px;
+}
+.grey {
+	color: white;
+	background-color:  $nas-grey;
+	box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15), 0 5px 10px 0 rgba(0, 0, 0, 0.15);
 }
 </style>

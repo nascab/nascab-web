@@ -4,12 +4,16 @@
 			<div class="header-right">
 				<div style="display: flex;align-items: center;">
 					<!-- 改变图片显示模式 -->
-					<div class="root-img-mode">
-						<Icon color="#386DF2" size="35" class="icon-showtype" v-if="showMode == 'cover'" type="ios-apps"
-							@click="onChangeShowMode" />
-						<Icon color="#386DF2" size="35" class="icon-showtype" v-else type="md-list"
-							@click="onChangeShowMode" />
+					<div>
+						<span v-if="showMode == 'cover'" class="nasIcons icon-grid icon-showtype"
+							@click="onChangeShowMode"></span>
+						<span v-else class="nasIcons icon-list icon-showtype" @click="onChangeShowMode"></span>
 					</div>
+					<!-- 筛选按钮 -->
+					<Badge :offset="[5, 0]" :count="showSourceFilter ? filterConditionCount : 0" class="icon-showtype">
+						<span v-if="showSourceFilter" class="nasIcons icon-filter " style="font-size: 30px;"
+							@click="showFilterDialog = true"></span>
+					</Badge>
 					<!-- 全部/照片/视频 -->
 					<my-menu-select @onItemClick="onChooseDataType" :optionList="typeMenuOptionList"></my-menu-select>
 					<!-- 范围选择 -->
@@ -46,12 +50,37 @@
 			</div>
 		</div>
 
+		<!-- 筛选来源文件夹 -->
+		<vs-dialog v-model="showFilterDialog" scroll>
+			<template #header>
+				<h4 class="not-margin">
+					{{ $t('movie.conditionFilter') }}
+				</h4>
+			  </template>
+			<div>
+				<p style="width:100%;text-align:left;margin-top: 15px;">{{ $t('movie.selectSourceFolder') }}</p>
+				<CheckboxGroup v-model="selectedSourceFolder" @on-change="onFilterFinish">
+					<Checkbox class="source-item max-line-one" v-for="source in sourceFolderList" :label="source" border>{{
+						''+source}}</Checkbox>
+				</CheckboxGroup>
+			</div>
+		</vs-dialog>
 	</div>
 </template>
 
 <script>
 export default {
 	props: {
+		//是否恢复上次的筛选项
+		restoreFilter: {
+			default: false,
+			type: Boolean
+		},
+		//是否显示来源文件夹筛选
+		showSourceFilter: {
+			default: false,
+			type: Boolean
+		},
 		datePrefix: {
 			default: "",
 			type: String
@@ -73,8 +102,16 @@ export default {
 			type: Boolean
 		}
 	},
+	computed: {
+		filterConditionCount: function () {
+			return this.selectedSourceFolder.length
+		}
+	},
 	data() {
 		return {
+			showFilterDialog: false,
+			sourceFolderList: [],
+			selectedSourceFolder: [],//已选的来源文件夹
 			showAndroidPlayerSetting: false,
 			typeMenuOptionList: [{
 				title: this.$t('photo.all'),
@@ -140,9 +177,85 @@ export default {
 			})
 		}
 		//触发加载第一页数据
-		this.$emit('onChooseRange', this.showRangeType)
+		this.getSourceFolder()
+
 	},
 	methods: {
+		//获取来源文件夹
+		getSourceFolder() {
+			this.api.post('/api/sourceFolderApi/getPathByType', {
+				type: 'photo',
+			}).then((res) => {
+				if (!res.code) {
+					//查询是否设置了来源文件夹 没有设置用户设置
+					if (this.$store.state.currentUser.is_admin == 1) {
+						if (res.data.length < 1) {
+							this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
+								'photo.noSourceSetAlert'), () => {
+									this.goPath('/photoSourceSet')
+								}, null, this.$t('photo.goToSet'))
+						} else {
+							for (let i in res.data) {
+								if (res.data[i].exist == 0) {
+									this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
+										'photo.sourcePathUnusable', { path: res.data[i].path }), () => {
+											this.goPath('/photoSourceSet')
+										}, null, this.$t('photo.goToSet'))
+									break
+								}
+							}
+
+
+						}
+					}
+					for (let i in res.data) {
+						this.sourceFolderList.push(res.data[i].path)
+					}
+					if (this.restoreFilter) {
+						//从本地读取上次选择的缓存 如果还存在 则恢复上次选择的 否则加载第一页
+						if (localStorage.cacheSelectedSourceFolderJSON) {
+							try {
+								let catchSelectedList = JSON.parse(localStorage.cacheSelectedSourceFolderJSON)
+								for (let i in catchSelectedList) {
+									for (let j in this.sourceFolderList) {
+										if (catchSelectedList[i] == this.sourceFolderList[j]) {
+											this.selectedSourceFolder.push(catchSelectedList[i])
+										}
+									}
+								}
+								if (this.selectedSourceFolder.length > 0) {
+									this.onFilterFinish()
+								} else {
+									this.loadFirstPage()//加载第一页
+								}
+							} catch (e) {
+								this.loadFirstPage()//加载第一页
+							}
+						} else {
+							this.loadFirstPage()//加载第一页
+						}
+					} else {
+						this.loadFirstPage()//加载第一页
+					}
+				}
+			}).catch((error) => { })
+		},
+		loadFirstPage() {
+			this.$emit('onChooseRange', this.showRangeType)
+		},
+		onFilterFinish() {
+			let selectedSourceFolderJSON = this.selectedSourceFolder.length > 0 ? JSON.stringify(this.selectedSourceFolder) : ""
+			this.$emit('onChooseSource', selectedSourceFolderJSON)
+			//缓存一下
+			if (this.restoreFilter) {
+				if (selectedSourceFolderJSON) {
+					localStorage.cacheSelectedSourceFolderJSON = selectedSourceFolderJSON
+				} else {
+					window.localStorage.removeItem("cacheSelectedSourceFolderJSON")
+				}
+			}
+
+		},
 		onSearch(searchStr) {
 			this.searchStr = searchStr
 			this.$emit('onSearch', this.searchStr)
@@ -235,6 +348,22 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.icon-showtype {
+	color: $nas-main;
+	font-size: 30px;
+	margin-right: 20px;
+
+	@media all and (max-width:640px) {
+		margin-right: 10px;
+	}
+}
+
+.source-item {
+	display: block;
+	margin-top: 10px;
+	text-align: left;
+}
+
 .layout-header-bar {
 	min-width: 600px;
 	height: 100%;
@@ -301,13 +430,6 @@ export default {
 	}
 }
 
-.root-img-mode {
-	margin-right: 20px;
-
-	@media all and (max-width:640px) {
-		margin-right: 15px;
-	}
-}
 
 .zoom-slider {
 

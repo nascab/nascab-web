@@ -4,7 +4,7 @@
       <Divider>DDNS<Icon @click="showVsAlertDialog($t('common.alert'), $t('setting.ddnsExplain'))" style="margin-left: 10px;" type="ios-help-circle-outline" /></Divider>
       <div class="list-root">
         <div class="item-root">
-          <span class="item-text-left">{{ $t("nascab.myDomain") }}:</span>
+          <span class="item-text-left">{{ $t("nascab.ddnsDomain") }}:</span>
           <div v-if="currentVipInfo && currentVipInfo.subdomain"
             style="display: flex; flex-direction: row; align-items: center">
             <a class=" enable-text-select" @click="lanIpClick('https://')">{{ currentVipInfo.subdomain }}{{
@@ -108,9 +108,9 @@ export default {
   mounted() {
     window.addEventListener("message", this.dealIframeMessage);
     this.getNasAccountInfo();
-    this.timer = setInterval(() => {
-      this.getDDNSState()
-    }, 5000);
+    if(this.timer==null){
+      this.timer = setInterval( this.getDDNSState, 5000);
+    }
     this.getDDNSState()
     this.getDDNSType()
   },
@@ -118,6 +118,7 @@ export default {
     window.removeEventListener("message", this.dealIframeMessage);
     if (this.timer) {
       clearInterval(this.timer)
+      this.timer=null
     }
   },
   methods: {

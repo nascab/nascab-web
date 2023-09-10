@@ -28,27 +28,47 @@
             {{ apiServerStateStr }}<a style="margin-left: 5px;" @click="changeProtocal">[{{ protocal }}]</a>
           </p>
           <div v-if="ipv4List.length > 0" v-for="lanIp in ipv4List"
-            @click="showQrCodeDialog('http://' + lanIp.ip + ':' + apiServer.port)"
-            class="card-item-title access-link ">
-            <div v-if="protocal=='http'" class="enable-text-select"> {{ 'http://' + lanIp.ip + ":" + apiServer.port }}</div>
-            <div class="enable-text-select" v-if="apiServerHttps && apiServerHttps.port && protocal=='https'"> {{ 'https://' + lanIp.ip + ":" + apiServerHttps.port }}
+            @click="showQrCodeDialog('http://' + lanIp.ip + ':' + apiServer.port)" class="card-item-title access-link ">
+            <div v-if="protocal == 'http'" class="enable-text-select"> {{ 'http://' + lanIp.ip + ":" + apiServer.port }}
+            </div>
+            <div class="enable-text-select" v-if="apiServerHttps && apiServerHttps.port && protocal == 'https'"> {{
+              'https://' + lanIp.ip + ":" + apiServerHttps.port }}
             </div>
           </div>
           <div v-if="ipv4List.length < 1" class="card-item-title access-link">
             {{ $t("state.netStateNoFound") }}
           </div>
         </Card>
-      <!-- 我的域名 -->
-      <Card :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }">
+        <!-- ddns域名 -->
+        <Card :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }">
           <p class="card-title">
-            {{ $t("nascab.myDomain") }}
+            {{ $t("nascab.ddnsDomain") }}
+            <Icon @click="showVsAlertDialog($t('common.alert'), $t('state.ddnsAlert'))" style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" />
           </p>
           <div class="card-item-title access-link">
             <a v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.subdomain" class=" enable-text-select">
-            {{ nasAccountInfo.vipInfo.subdomain }}{{ nasAccountInfo.vipInfo.proxyDomain }}</a>
+              {{ nasAccountInfo.vipInfo.subdomain }}{{ nasAccountInfo.vipInfo.proxyDomain }}</a>
             <!-- 去设置 -->
             <span v-if="!nasAccountInfo.vipInfo || !nasAccountInfo.vipInfo.subdomain" @click="goToSetting('ddns')"
               class="card-item-title access-link">
+              {{ $t('photo.goToSet') }}
+            </span>
+          </div>
+        </Card>
+        <!-- 内网穿透域名 -->
+        <Card :class="{ 'card-item-mobile': mobileLayout, 'card-item': !mobileLayout }">
+          <p class="card-title">
+            {{ $t("nascab.proxyDomain") }}
+            <Icon @click="showVsAlertDialog($t('common.alert'), $t('state.natAlert'))" style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" />
+          </p>
+          <div class="card-item-title access-link">
+            <a v-if="nasAccountInfo.vipInfo && nasAccountInfo.vipInfo.proxy_subdomain"
+              @click="showQrCodeDialog(`https://${nasAccountInfo.vipInfo.proxy_subdomain + nasAccountInfo.vipInfo.proxyDomain}`)"
+              class=" enable-text-select">
+              {{ `https://${nasAccountInfo.vipInfo.proxy_subdomain + nasAccountInfo.vipInfo.proxyDomain}` }}</a>
+            <!-- 去设置 -->
+            <span v-if="!nasAccountInfo.vipInfo || !nasAccountInfo.vipInfo.proxy_subdomain"
+              @click="goToSetting('remoteAccess')" class="card-item-title access-link">
               {{ $t('photo.goToSet') }}
             </span>
           </div>
@@ -61,12 +81,15 @@
               style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" />
           </p>
           <div v-if="ipv6List.length > 0" v-for="lanIp in ipv6List"
-            @click="showQrCodeDialog('http://[' + lanIp.ip + ']:' + apiServer.port)"
-            class="card-item-title access-link">
-            <div class="enable-text-select" v-if="apiServer&&protocal=='http'" style="text-overflow: ellipsis;word-break: break-all;"> {{ 'http://[' + lanIp.ip + "]:" + apiServer.port }}</div>
-            <div class="enable-text-select" v-if="apiServerHttps && apiServerHttps.port&&protocal=='https'" style="text-overflow: ellipsis;word-break: break-all;"> {{ 'https://[' + lanIp.ip + "]:" + apiServerHttps.port }} </div>
+            @click="showQrCodeDialog('http://[' + lanIp.ip + ']:' + apiServer.port)" class="card-item-title access-link">
+            <div class="enable-text-select" v-if="apiServer && protocal == 'http'"
+              style="text-overflow: ellipsis;word-break: break-all;"> {{ 'http://[' + lanIp.ip + "]:" + apiServer.port }}
+            </div>
+            <div class="enable-text-select" v-if="apiServerHttps && apiServerHttps.port && protocal == 'https'"
+              style="text-overflow: ellipsis;word-break: break-all;"> {{ 'https://[' + lanIp.ip + "]:" +
+                apiServerHttps.port }} </div>
           </div>
-          <div v-if="ipv6List.length < 1" class="card-item-title access-link" 
+          <div v-if="ipv6List.length < 1" class="card-item-title access-link"
             @click="showVsAlertDialog($t('common.alert'), $t('state.ipv6alert'))">
             {{ $t("state.netStateNoFound") }}
           </div>
@@ -135,7 +158,7 @@ export default {
   },
   data() {
     return {
-      protocal:"http",
+      protocal: "http",
       loading: false,
       showUrlDialog: false,
       showUrl: "",
@@ -158,9 +181,9 @@ export default {
     this.getServerState();
   },
   created() {
-    this.intervalSystemState = setInterval(() => {
-      this.getServerState();
-    }, 20000);
+    if (this.intervalSystemState == null) {
+      this.intervalSystemState = setInterval(this.getServerState, 10000);
+    }
   },
   beforeDestroy() {
     if (this.intervalSystemState) {
@@ -169,16 +192,10 @@ export default {
     }
   },
   methods: {
-    changeProtocal(){
-      this.protocal=this.protocal=="http"?"https":"http"
+    changeProtocal() {
+      this.protocal = this.protocal == "http" ? "https" : "http"
     },
-    goToSetting(pageName) {
-      if (this.$store.state.currentUser.is_admin == 1) {
-        this.goPathNewWebView("/setting?pageName=" + pageName, this.$t('home.settingCenter'), { pageName: pageName })
-      } else {
-        this.showVsNotification(this.$t('common.noPermission'))
-      }
-    },
+
     lanIpClick(url) {
       let clip = navigator.clipboard
       if (clip) {
@@ -221,6 +238,9 @@ export default {
       //没登陆的情况下不获取
       if (!this.$store.state.token) {
         return;
+      }
+      if (!this.isInHome()) {
+        return
       }
       if (this.loading) return
       this.loading = true
@@ -266,7 +286,6 @@ export default {
             } else if (res.data[i].title == "globalIpList") {
               //设置服务运行状态字符串
               ipList = JSON.parse(res.data[i].value);
-              console.log("ipList", ipList)
             }
           }
           this.ipv4List = []
@@ -408,5 +427,4 @@ export default {
 .access-link {
   cursor: pointer;
   color: $nas-main !important;
-}
-</style>
+}</style>

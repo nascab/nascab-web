@@ -47,7 +47,7 @@
 		</vs-dialog>
 
 		
-		<vs-dialog blur v-model="showChooseUser" >
+		<vs-dialog  v-model="showChooseUser" >
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{$t('common.chooseUser')}}

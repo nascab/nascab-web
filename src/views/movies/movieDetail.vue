@@ -1,18 +1,39 @@
 <template>
-	<div class="movie-detail-root">
+	<div class="movie-detail-root" ref="detailRoot">
 		<!-- 关闭按钮 -->
-		<vs-button icon class="closs-btn" @click="$emit('onClose')">
-			<Icon type="md-close-circle" size="25" />
-		</vs-button>
+		<!-- <Button shape="circle" type="primary" class="closs-btn" @click="$emit('onClose')" icon="md-close-circle"></Button> -->
+		<!-- 电影截图/海报 -->
+		<img class="top-bg" v-if="movieIndexObj" :src="movieIndexObj.url"/>
+		<div class="top-operation-bar">
+			<Button type="text" ghost @click="$emit('onClose')">
+				<span class="icon_controller_xxl nasIcons icon-back" style="font-size:20px"></span>
+			</Button>
+			
+			<!-- 匹配名称 -->
+			<div  class="movie-info-item-header" v-if="movieIndexObj.filename">
+				<div class="movie-info-item-content enable-text-select max-line-one" style="color:#ddd;font-size:18px">{{ movieIndexObj.movie_info_name ||
+					movieIndexObj.filename }}
+				</div>
+			</div>
+			
+			<!-- 喜爱 -->
+			<div  class="favorite-root" v-if="movieIndexObj">
+				<span @click.stop="showVideoSettingDialog=true" class="nasIcons icon-settings" style="color:#fff;font-size:22px;padding-bottom:2px"></span>
+				<span @click.stop="favoriteMovie()" class="nasIcons icon-xihuan-shi" :style="{ 'color': movieIndexObj.favorite ? '#DE4545' : 'white' }"></span>
+			</div>
+
+		</div>
 		<!-- myheader占位 -->
 		<div class="main-layout">
+			<!-- 站位 -->
+			<div style="height:60px"></div>
 			<!-- 上部电影信息区域 -->
 			<!-- 海报 手机端 自己占用一行 -->
 			<div class="nas-mobile-show">
 				<div
 					style="width:100%;margin-bottom:40px;display:flex;align-items:center;flex-direction:column;position: relative;">
 					<img style="width:100%;object-fit:contain;border-radius: 10px;" v-lazy="movieIndexObj.url"
-						@click="playMovie()" />
+						@click="playMovie(true)" />
 					<!-- 电影评分 -->
 					<div v-if="movieIndexObj.movie_douban_score && movieIndexObj.movie_douban_score > 0"
 						class="movie-score-bg">
@@ -21,15 +42,15 @@
 						}}</span>
 					</div>
 					<!-- 手机端播放按钮-->
-					<img src="@/static/icon_play.png" @click="playMovie()"
-						style="width:60px;height:60px;position:absolute;bottom: -30px;right: 30px;" />
+					<img src="@/static/icon_play.png" @click="playMovie(true)"
+						style="width:60px;height:60px;position:absolute;bottom: -30px;right: 30px; " />
 				</div>
 			</div>
-			<Card style="width: 100%;" class="top-root-card">
+			<div style="width: 100%;" class="top-root-card">
 				<div class="top-root">
 					<div class="poster-parent nas-mobile-none">
 						<!-- 电影截图/海报 -->
-						<img class="img-poster" v-lazy="movieIndexObj.url" @click="playMovie()" />
+						<img class="img-poster" v-lazy="movieIndexObj.url" @click="playMovie(true)" />
 
 						<!-- 电影评分 -->
 						<div v-if="movieIndexObj.movie_douban_score && movieIndexObj.movie_douban_score > 0"
@@ -38,8 +59,6 @@
 								movieIndexObj.movie_douban_score
 							}}</span>
 						</div>
-
-
 						<!-- 豆瓣/imdb跳转 -->
 						<div style="position: absolute;top: 10px;left: 10px;">
 							<img v-if="movieIndexObj.movie_douban_id"
@@ -50,31 +69,34 @@
 								style="border-radius: 5px; width: 30px;height: 30px;margin-left: 10px;cursor: pointer;"
 								src="@/static/icon_imdb.png" />
 						</div>
-						<img src="@/static/icon_play.png" @click="playMovie()"
-							style="width:60px;height:60px;position:absolute;cursor: pointer;" />
+
+						<!-- 播放按钮 -->
+						<Button type="text" ghost @click.stop="playMovie(true)"  style="height:60px;position:absolute">
+							<span class="nasIcons icon-play" style="font-size:60px;line-height:60px" ></span>
+						</Button>
 					</div>
 					<!-- 电影名/电影信息 -->
 					<div class="top-movie-info-root">
-						<!-- 匹配名称 -->
 						<div class="movie-info-item-header" v-if="movieIndexObj.movie_info_name || movieIndexObj.filename">
-							<div class="movie-info-item-content enable-text-select">{{ movieIndexObj.movie_info_name ||
+							<div class="movie-info-item-content enable-text-select" style="color:white;font-size:18px;margin-bottom:10px">{{ movieIndexObj.movie_info_name ||
 								movieIndexObj.filename }}
 								<span v-if="movieIndexObj.movie_year">({{ parseInt(movieIndexObj.movie_year)
 								}})</span>
 								<span v-if="movieIndexObj.movie_regions">({{ movieIndexObj.movie_regions }})</span>
 								<span v-if="movieIndexObj.movie_release_date">({{ movieIndexObj.movie_release_date
 								}})</span>
-								<span v-if="movieIndexObj.movie_language">({{ movieIndexObj.movie_language
-								}})</span>
 								<span v-if="movieIndexObj.movie_release_date">({{ movieIndexObj.movie_release_date
 								}})</span>
 								<!-- 信息有误? -->
-								<a style="margin-left:10px;color:#99AABF;" v-if="movieIndexObj.movie_info_name"
+								<a style="margin-left:10px;color:#99AABF;font-size:14px" v-if="movieIndexObj.movie_info_name"
 									@click="onSearchMovieInfo">{{
 										$t('movie.wrongInfo')
 									}}?</a>
 							</div>
 						</div>
+						<!-- 上次看到： -->
+						<a style="margin-bottom:10px" v-if="lastTvEpisodeIndex&&lastTvEpisodeIndex.filename!=movieIndexObj.filename" @click.stop="otherTvClick(lastTvEpisodeIndex)">{{ $t("movie.continueWatch") }}: {{lastTvEpisodeIndex.filename}}</a>
+						
 						<!-- 文件名 -->
 						<div class="movie-info-item" v-if="movieIndexObj.filename">
 							<div class="movie-info-item-title">{{ $t('common.folder') }}:</div>
@@ -94,68 +116,73 @@
 						</div>
 
 						<!-- 未找到电影信息 是会员 提示未找到-->
-						<div class="no-movie-info" v-if="!movieIndexObj.movie_info_name && vipInfo">
+						<div class="no-movie-info" style="color:white" v-if="!movieIndexObj.movie_info_name && vipInfo">
 							{{ $t('movie.noMovieInfoFound') }}
-							<a style="margin-left:10px;color:#99AABF;" @click="showSearchMovieInfo = true">{{
+							<a style="margin-left:10px;color:white;" @click="showSearchMovieInfo = true">{{
 								$t('common.search')
 							}}</a>
 						</div>
 						<!-- 未找到电影信息 还不是会员 提示升级可以自动匹配 -->
-						<div class="no-movie-info" v-if="!movieIndexObj.movie_info_name && !vipInfo">
+						<div class="no-movie-info" style="color:white" v-if="!movieIndexObj.movie_info_name && !vipInfo">
 							{{ $t('movie.upgradeAutoMatch') }}
-							<a style="margin-left:10px;color:#99AABF" @click="goToSetting('nasAccount')">{{
+							<a style="margin-left:10px;" @click="goToSetting('nasAccount')">{{
 								$t('nascab.upgrade')
 							}}</a>
 						</div>
 
 						<!-- 又名 -->
 						<div class="movie-info-item" v-if="movieIndexObj.movie_alias">
-							<div class="movie-info-item-title">{{ $t('movie.alias') }}:</div>
+							<p class="movie-info-item-title">{{ $t('movie.alias') }}:</p>
 							<p class="movie-info-item-content">{{ movieIndexObj.movie_alias }}</p>
 						</div>
 						<!-- 导演 -->
 						<div class="movie-info-item" v-if="movieIndexObj.movie_director">
-							<div class="movie-info-item-title">{{ $t('movie.director') }}:</div>
+							<p class="movie-info-item-title">{{ $t('movie.director') }}:</p>
 							<p class="movie-info-item-content">{{ movieIndexObj.movie_director }}</p>
 						</div>
 						<!-- 主演 -->
 						<div class="movie-info-item" v-if="movieIndexObj.movie_actor">
-							<div class="movie-info-item-title">{{ $t('movie.actors') }}:</div>
+							<p class="movie-info-item-title">{{ $t('movie.actors') }}:</p>
 							<p class="movie-info-item-content">{{ movieIndexObj.movie_actor }}</p>
 						</div>
 
 						<!-- 类型 -->
 						<div class="movie-info-item" v-if="movieIndexObj.movie_genres">
-							<div class="movie-info-item-title">{{ $t('movie.genres') }}:</div>
+							<p class="movie-info-item-title">{{ $t('movie.genres') }}:</p>
 							<p class="movie-info-item-content">{{ movieIndexObj.movie_genres }}</p>
+						</div>
+						<!-- 语言 -->
+						<div class="movie-info-item" v-if="movieIndexObj.movie_regions">
+							<p class="movie-info-item-title">{{ $t('movie.regions') }}:</p>
+							<p class="movie-info-item-content">{{ movieIndexObj.movie_regions }}</p>
 						</div>
 						<!-- 剧情简介 -->
 						<div class="movie-info-item" v-if="movieIndexObj.movie_storyline">
-							<div class="movie-info-item-title">{{ $t('movie.storyline') }}:</div>
+							<p class="movie-info-item-title">{{ $t('movie.storyline') }}:</p>
 							<p class="movie-info-item-content">{{ movieIndexObj.movie_storyline }}</p>
 						</div>
 						<!-- nfo位置 -->
 						<div class="movie-info-item" v-if="movieIndexObj.nfoFullPath">
-							<div class="movie-info-item-title">NFO {{$t("common.file")}}:</div>
+							<p class="movie-info-item-title">NFO {{ $t("common.file") }}:</p>
 							<p class="movie-info-item-content enable-text-select">{{ movieIndexObj.nfoFullPath }}</p>
 						</div>
 					</div>
 				</div>
-				
+
 				<div style="position:absolute;right: 10px;bottom: 10px;">
 					<!-- 删除nfo -->
-					<a v-if="movieIndexObj.nfoFullPath" @click="deleteNfoFile" style="margin-right:20px">{{$t("common.delete")}} nfo {{$t("common.file")}}</a>
+					<a v-if="movieIndexObj.nfoFullPath" @click="deleteNfoFile" style="margin-right:20px">{{
+						$t("common.delete") }} nfo {{ $t("common.file") }}</a>
 
 					<!-- 清除电影信息 -->
-					<a v-if="movieIndexObj.movie_info_name && !movieIndexObj.nfoFullPath" 
-						@click="clearMovieInfo">{{
-							$t('movie.clearMovieInfo')
-						}}</a>
+					<a v-if="movieIndexObj.movie_info_name && !movieIndexObj.nfoFullPath" @click="clearMovieInfo">{{
+						$t('movie.clearMovieInfo')
+					}}</a>
 				</div>
-				
-			</Card>
+
+			</div>
 			<!-- 同文件夹内海报 -->
-			<Card class="mid-root" v-if="sameFolderImgList && sameFolderImgList.length > 0">
+			<div class="mid-root" v-if="sameFolderImgList && sameFolderImgList.length > 0">
 				<div class="recent-title">
 					{{ $t('movie.relatedPictures') }}
 				</div>
@@ -165,37 +192,52 @@
 						<img v-lazy="poster" />
 					</div>
 				</vue-horizontal>
-			</Card>
+			</div>
 			<!-- 其他剧集 -->
-			<Card class="mid-root" v-if="otherTv && otherTv.length > 0">
+			<div class="mid-root" v-if="movieIndexObj && movieIndexObj.is_tvplay == 1">
 				<div class="recent-title" style="display: flex;justify-content: space-between;">
-					<span>{{ $t('movie.otherTv') }}</span>
-					<my-search :placeholder="$t('movie.searchPlaceHolder')" @onSearch="onSearchOtherTv"></my-search>
-
+					<span>{{ $t('movie.otherTv') }}({{ tvListCount }})</span>
+					<my-search btnType="dark-grey" :placeholder="$t('movie.searchPlaceHolder')" :keepSmall="true" @onSearch="onSearchOtherTv"></my-search>
 				</div>
+
+				<!-- 剧集列表分区 -->
+				<vue-horizontal class="tv-section-root">
+					<div v-for="section in tvPageSectionList" @click="onTvSectionClick(section.index)"
+						:class="{ 'tv-section-item-selected': section.index == tvPageSectionIndex, 'tv-section-item': section.index != tvPageSectionIndex }">
+						<span v-if="section.min != section.max">{{ section.min }}-{{ section.max }}</span>
+						<span v-else>{{ section.max }}</span>
+					</div>
+				</vue-horizontal>
+
 				<div class="othertv-root">
-					<div v-for="(movie, index) in otherTv" style="margin-top: 20px;" v-if="!movie.hide">
-						<div style="display: flex;flex-direction:row;" @click.stop="tvListClick(index)">
-							<img v-lazy="movie.url" class="other-tv-cover">
-							<div style="display:flex;flex-direction:column;margin-left:10px;justify-content: center;">
-
-								<div class="movie-name">{{ movie.filename }}</div>
-
-								<!-- 电影文件大小 -->
-								<span style="flex-shrink:0;margin-top: 10px;"><span v-if="movie.movie_info_name"
-										style="margin-right:10px">{{ movie.movie_info_name }}</span>[{{
-											utils.formatSeconds(movie.duration) }}][{{
-		utils.getSizeStr(movie.size) }}]</span>
-								<div class="max-line-two" style="flex-shrink:0;margin-top: 10px;"
-									v-if="movie.movie_storyline">{{ movie.movie_storyline }}</div>
+					<div v-if="otherTv.length < 1" style="width:100%;text-align:center">{{ $t("video.noMoreVideo") }}</div>
+					<div v-for="(movie, index) in otherTv" style="margin-top: 20px;" v-if="!movie.hide" @click.stop="otherTvClick(otherTv[index])">
+						<div style="display: flex;flex-direction:row;" >
+							<div class="other-tv-cover-root"  @click.stop="tvListClick(index)">
+								<img v-lazy="movie.url" class="other-tv-cover">
+								<!-- 播放按钮 -->
+								<Button type="text" ghost  style="height:25px;position:absolute">
+									<span class="nasIcons icon-play" style="font-size:25px;line-height:25px" ></span>
+								</Button>
 							</div>
-
+							
+							<div style="display:flex;flex-direction:column;margin-left:10px;justify-content: center;">
+								<div class="movie-name">{{ movie.filename }}</div>
+								<!-- 电影文件大小 -->
+								<span style="flex-shrink:0;margin-top: 5px;;color:#ddd">
+									<span v-if="movie.movie_info_name" style="margin-right:10px;color:#ddd">{{ movie.movie_info_name }}</span>
+ 									<span v-if="movie.duration"  style="margin-right:10px;color:#ddd">[{{ utils.formatSeconds(movie.duration) }}]</span>
+									<span v-if="movie.size"  style="margin-right:10px;color:#ddd" >[{{ utils.getSizeStr(movie.size) }}]</span>
+								</span>
+								<!-- <div class="max-line-one" style="flex-shrink:0;margin-top: 5px;color:#ddd"
+									v-if="movie.movie_storyline">{{ movie.movie_storyline.trim() }}</div> -->
+							</div>
 						</div>
 					</div>
 				</div>
-			</Card>
+			</div>
 			<!-- 最近播放 -->
-			<Card class="mid-root " v-if="recentMovies && recentMovies.length > 0">
+			<div class="mid-root " v-if="recentMovies && recentMovies.length > 0">
 				<div>
 					<div class="recent-title">
 						{{ $t('movie.recentPlay') }}
@@ -212,19 +254,13 @@
 						</div>
 					</vue-horizontal>
 				</div>
-			</Card>
+			</div>
 			<!-- 电影流信息 -->
-			<Card class="bottom-root" v-if="movieIndexObj && movieIndexObj.stream_info">
-
-				<!-- stream 流信息 -->
-				<div class="recent-title">
-					{{ $t('movie.mediaInfo') }}
-				</div>
+			<div class="bottom-root" v-if="movieIndexObj && movieIndexObj.stream_info">
 				<vue-horizontal class="stream-root">
-					<Card class="stream-item-card" v-for="stream in movieIndexObj.stream_info"
+					<div class="stream-item-card" v-for="stream in movieIndexObj.stream_info"
 						v-if="stream.codec_type == 'video' || stream.codec_type == 'audio' || stream.codec_type == 'subtitle'">
-						<div
-							style="display: flex;align-items: center;justify-content: left;font-size: 16px;margin-bottom: 10px;">
+						<div class="stream-card-title-root">
 							<Icon style="margin-right:5px" size="16" v-if="stream.codec_type == 'video'"
 								type="md-videocam" />
 							<Icon style="margin-right:5px" size="16" v-if="stream.codec_type == 'audio'"
@@ -340,9 +376,9 @@
 							</p>
 
 						</div>
-					</Card>
+					</div>
 				</vue-horizontal>
-			</Card>
+			</div>
 
 		</div>
 		<Modal v-model="showVideoDetail" fullscreen footer-hide>
@@ -364,6 +400,22 @@
 		<Modal v-model="showPhotoDetail" fullscreen footer-hide style="background-color: transparent;">
 			<photo-detail v-if="showPhotoDetail" @onClose="showPhotoDetail = false" :fromFolderBrower="true"
 				ref="photoDetail"></photo-detail>
+		</Modal>
+		<!-- 片头片尾设置 -->
+		<Modal v-model="showVideoSettingDialog" @on-ok="setTitleEnding()">
+			<div class="flex-row" style="margin-bottom:10px">
+				<p>{{$t("movie.openDuration")}}：</p>
+				<InputNumber :max="movieIndexObj.duration" :min="1" v-model="movieIndexObj.open_duration" />
+			</div>
+			<div class="flex-row" style="margin-bottom:10px">
+				<p>{{$t("movie.endDuration")}}：</p>
+				<InputNumber :max="movieIndexObj.duration" :min="1" v-model="movieIndexObj.end_duration" />
+			</div>
+			<div class="flex-row" style="margin-bottom:10px">
+				<p>{{$t("movie.sikpOpenEnd")}}：</p>
+				<i-switch v-if="movieIndexObj&&movieIndexObj.skip_open_end!=null" :true-value="1" :false-value="0" v-model="movieIndexObj.skip_open_end" />
+			</div>
+
 		</Modal>
 	</div>
 </template>
@@ -391,23 +443,28 @@ export default {
 	},
 	data() {
 		return {
-
+			showVideoSettingDialog:false,
 			showPhotoDetail: false,
 			openAsPage: false,
 			detailMovieList: [],
 			detailIndex: [],
 			otherTv: false,
+			tvPageSize: 10,
+			tvListCount: 0,//剧集列表总数
+			tvPageSectionList: [],//列表分页区列表
+			tvPageSectionIndex: 0,//选中的分页区
+			tvSearchStr: "",
 			vipInfo: false,
 			showSearchMovieInfo: false,
 			showRecentList: true,
 			movieList: [],
-			currentIndex: false,
+			currentIndex: 0,
 			showVideoDetail: false,
 			movieIndexObj: '',
 			hasContinuePlay: false,
 			recentMovies: [],
-			lastProgressStr: '',
 			sameFolderImgList: [],
+			lastTvEpisodeIndex:null
 		}
 	},
 	components: {
@@ -440,42 +497,122 @@ export default {
 	beforeDestroy() {
 	},
 	methods: {
-		deleteNfoFile(){
+		//设置片头片尾接口
+		setTitleEnding(){
+			this.api.post('/api/movieApi/setTitleAndEnding', {
+				indexId: this.movieIndexObj.id,
+				openDuration:this.movieIndexObj.open_duration,
+				endDuration:this.movieIndexObj.end_duration,
+				autoSkip:this.movieIndexObj.skip_open_end
+			}).then((res) => {
+				if (!res.code) {
+					console.log("片头片尾设置成功了")
+					this.showVsNotification(this.$t('common.operationSuccess'))
+				}
+			}).catch((error) => { })
+		},
+		favoriteMovie() {
+			this.api.post('/api/movieApi/movieFavorite', {
+				movieIndexId: this.movieIndexObj.id,
+				hideLoading: true
+			}).then((res) => {
+				if (!res.code) {
+					this.movieIndexObj.favorite = res.favorite
+					console.log("收藏完成了")
+					this.$emit("onFavorite",this.movieIndexObj.id,res.favorite)
+				}
+			}).catch((error) => { })
+		},
+		onPopstate() {
+			console.log("onPopstate movie detail")
+			//后退按钮被点击 如果当前正在播放视频 则关闭视频 如果每播放 则后退
+			if (this.showVideoDetail) {
+				this.showVideoDetail = false
+			} else {
+				this.$emit("onClose")
+			}
+		},
+		deleteNfoFile() {
 			//删除nfo文件接口
-			if(!this.movieIndexObj.nfoFullPath){
+			if (!this.movieIndexObj.nfoFullPath) {
 				return
 			}
 			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('movie.confirClearMovieInfo'), () => {
 				this.api
-				.post("/api/file/deleteByPath", {
-					fullPath: this.movieIndexObj.nfoFullPath
-				}).then((res) => {
-					this.init()
-				}).catch(err => {})
+					.post("/api/file/deleteByPath", {
+						fullPath: this.movieIndexObj.nfoFullPath
+					}).then((res) => {
+						this.init()
+					}).catch(err => { })
 			})
 		},
-		onSearchMovieInfo(){
-			if(this.movieIndexObj.nfoFullPath){
+		onSearchMovieInfo() {
+			if (this.movieIndexObj.nfoFullPath) {
 				return this.showVsNotification(this.$t("movie.deleteNfoFirst"))
 			}
-			this.showSearchMovieInfo=true
+			this.showSearchMovieInfo = true
+		},
+		onTvSectionClick(page) {
+			this.tvSearchStr = ''
+			this.getTvList(page)
+		},
+		getTvList(page) {
+			this.api
+				.post("/api/movieApi/getTvList", {
+					id: this.movieIndexObj.id,
+					serverType: 'movie',
+					page: page,
+					pageSize: this.tvPageSize,
+					searchStr: this.tvSearchStr
+				}).then((res) => {
+					if (!res.code && res.tvplayList) {
+						this.tvPageSectionIndex = page
+						this.tvListCount = res.count
+						for (let i in res.tvplayList) {
+							let url = this.axios.getImgFullPath(res.tvplayList[i].id, true, res.tvplayList[i]
+								.filename, 'movie');
+							let rawUrl = this.axios.getImgFullPath(res.tvplayList[i].id, false, res.tvplayList[
+								i].filename, 'movie');
+							res.tvplayList[i].rawUrl = rawUrl
+							res.tvplayList[i].url = url
+							// if (res.tvplayList[i].folder_cover_path) {
+							// 	//看看有没有同文件夹下匹配的海报
+							// 	res.tvplayList[i].url = this.axios.getRawFileUrl(res.tvplayList[i].folder_cover_path, '', 'movie')
+							// }
+						}
+						this.otherTv = res.tvplayList
+						//当前是电视剧 要把播放列表替换为剧集去播放
+						if (this.otherTv && this.otherTv.length > 0) {
+							this.movieList = this.otherTv
+							this.currentIndex=0
+						}
+						console.log("this.movieList",this.movieList)
+
+						//解析分页区
+						this.tvPageSectionList = []
+						this.tvPageSize = res.pageSize
+						let sectionCount = Math.ceil(this.tvListCount / this.tvPageSize)
+						for (let i = 0; i < sectionCount; i++) {
+							let max = (i + 1) * this.tvPageSize
+							if (max > this.tvListCount) {
+								max = this.tvListCount
+							}
+							this.tvPageSectionList.push({
+								min: i * this.tvPageSize + 1,
+								max: max,
+								index: i
+							})
+						}
+
+
+					}
+
+				}).catch(err => { })
+
 		},
 		onSearchOtherTv(searchValue) {
-			console.log("searchValue", searchValue)
-			if (!this.otherTv) { return }
-			for (let i in this.otherTv) {
-				if (!searchValue) {
-					this.otherTv[i].hide = false
-					continue
-				}
-				if (!this.otherTv[i].filename.includes(searchValue)) {
-					this.otherTv[i].hide = true
-				} else {
-					this.otherTv[i].hide = false
-				}
-			}
-			console.log(this.otherTv)
-			this.$forceUpdate()
+			this.tvSearchStr = searchValue
+			this.getTvList(0)
 		},
 		goPreviewImageCover() {
 			//将文件对象包装为indexObj的格式 方便使用一套代码展示 从物理路径跳过去无法使用加入回收站功能 因为没有indexId
@@ -508,18 +645,6 @@ export default {
 			});
 			this.pushState()
 		},
-		goToSetting(pageName) {
-			if (this.$store.state.currentUser.is_admin == 1) {
-				this.$router.push({
-					path: "/setting",
-					query: {
-						pageName: pageName,
-					},
-				});
-			} else {
-				this.showVsNotification(this.$t('common.noPermission'))
-			}
-		},
 		goBack() {
 			if (this.openAsPage) this.$router.go(-1)
 			else this.$emit('onClose')
@@ -534,7 +659,7 @@ export default {
 			}
 		},
 		clearMovieInfo() {
-			if(this.movieIndexObj.nfoFullPath){
+			if (this.movieIndexObj.nfoFullPath) {
 				return this.showVsNotification(this.$t("movie.deleteNfoFirst"))
 			}
 			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('movie.confirClearMovieInfo'), () => {
@@ -559,37 +684,72 @@ export default {
 			this.showVideoDetail = false
 			this.hasContinuePlay = false
 			this.recentMovies = []
-			this.lastProgressStr = ''
 			this.movieIndexObj = this.movieList[this.currentIndex]
+			console.log("init ",this.movieIndexObj,this.movieList)
 			this.getIndexDetail()
-			this.checkCanContinue()
 			this.showRecentList = localStorage.getItem('moviedetail-showRecentList') == 1
+			this.$forceUpdate()
 		},
 		onPageScroll(e) {
 			if (this.showVideoDetail) {
 				return
 			}
 		},
-		playMovie() {
-			console.log("this.movieList", this.movieList)
-
-			if (localStorage.getItem("rawPlayer") == "1") {
-				//调用原生播放器
-				jsBridge.playVideo(JSON.stringify({
-					playIndex: this.currentIndex,
-					playList: this.movieList,
-					token: this.$store.state.token,
-					fromFileBrower: false,
-					serverType: "movie"
-				}))
-			} else {
-				//继续使用网页播放器
-				this.showVideoDetail = true;
-				this.$nextTick(() => {
-					this.$refs.videoPlayer.playVideo(this.movieList, this.currentIndex);
-				});
-				this.pushState()
+		playMovie(clickFromTopBtn) {
+			let that = this
+			function goPlay(list, index) {
+				if (localStorage.getItem("rawPlayer") == "1") {
+					//调用原生播放器
+					jsBridge.playVideo({
+						playIndex: index,
+						playList: list,
+						token: that.$store.state.token,
+						fromFileBrower: false,
+						serverType: "movie"
+					})
+				} else {
+					//继续使用网页播放器
+					that.showVideoDetail = true;
+					that.$nextTick(() => {
+						that.$refs.videoPlayer.playVideo(list, index);
+					});
+					that.pushState()
+				}
 			}
+
+			if (clickFromTopBtn && this.movieIndexObj.is_tvplay == 1) {
+				//电视剧 需要获取一下播放列表 传给播放器 当前的播放列表分区了 
+				this.api
+					.post("/api/movieApi/getTvList", {
+						id: this.movieIndexObj.id,
+						serverType: 'movie',
+						page: 0,
+						pageSize: 30,
+						searchStr: "",
+						fromName: this.movieIndexObj.filename
+					}).then((res) => {
+						if (!res.code && res.tvplayList) {
+							for (let i in res.tvplayList) {
+								let url = this.axios.getImgFullPath(res.tvplayList[i].id, true, res.tvplayList[i]
+									.filename, 'movie');
+								let rawUrl = this.axios.getImgFullPath(res.tvplayList[i].id, false, res.tvplayList[
+									i].filename, 'movie');
+								res.tvplayList[i].rawUrl = rawUrl
+								res.tvplayList[i].url = url
+								if (res.tvplayList[i].folder_cover_path) {
+									//看看有没有同文件夹下匹配的海报
+									res.tvplayList[i].url = this.axios.getRawFileUrl(res.tvplayList[i].folder_cover_path, '', 'movie')
+								}
+							}
+							goPlay(res.tvplayList, 0)
+						} else {
+							goPlay([this.movieIndexObj], 0)
+						}
+					}).catch(err => { })
+			} else {
+				goPlay(this.movieList, this.currentIndex)
+			}
+
 		},
 		getIndexDetail() {
 			this.api
@@ -598,6 +758,7 @@ export default {
 					serverType: 'movie'
 				}).then((res) => {
 					if (!res.code) {
+						this.lastTvEpisodeIndex=res.lastTvEpisodeIndex
 						if (res.movieIndex.stream_info && res.movieIndex.stream_info.length > 0) {
 							res.movieIndex.stream_info = JSON.parse(res.movieIndex.stream_info)
 						}
@@ -605,6 +766,7 @@ export default {
 							...this.movieIndexObj,
 							...res.movieIndex
 						}
+						console.log("getIndexDetail ",this.movieIndexObj)
 						if (this.movieIndexObj.folder_cover_path) {
 							// 看看有没有同文件夹下匹配的海报
 							this.movieIndexObj.url = this.axios.getRawFileUrl(this.movieIndexObj.folder_cover_path, '', 'movie')
@@ -615,6 +777,8 @@ export default {
 							this.movieIndexObj.url = this.axios.getImgFullPath(this.movieIndexObj.id, true, this
 								.movieIndexObj.filename, 'movie');
 						}
+
+						this.movieIndexObj.url=this.movieIndexObj.url+"&time="+new Date().getTime()
 						for (let i in res.recentMovies) {
 							let url = this.axios.getImgFullPath(res.recentMovies[i].id, true, res.recentMovies[i]
 								.filename, 'movie');
@@ -633,30 +797,7 @@ export default {
 						}
 						this.recentMovies = res.recentMovies
 
-						for (let i in res.tvplayList) {
-							let url = this.axios.getImgFullPath(res.tvplayList[i].id, true, res.tvplayList[i]
-								.filename, 'movie');
-							let rawUrl = this.axios.getImgFullPath(res.tvplayList[i].id, false, res.tvplayList[
-								i].filename, 'movie');
-							res.tvplayList[i].rawUrl = rawUrl
-							res.tvplayList[i].url = url
-							if (res.tvplayList[i].folder_cover_path) {
-								//看看有没有同文件夹下匹配的海报
-								res.tvplayList[i].url = this.axios.getRawFileUrl(res.tvplayList[i].folder_cover_path, '', 'movie')
-							}
-						}
-						this.otherTv = res.tvplayList
-						if (this.otherTv && this.otherTv.length > 0) {
-							let currentMovie = this.movieList[this.currentIndex]
-							//当前是电视剧 要把播放列表替换为剧集去播放
-							for (let i = 0; i < this.otherTv.length; i++) {
-								if (currentMovie.id == this.otherTv[i].id) {
-									this.currentIndex = i
-									this.movieList = this.otherTv
-									break
-								}
-							}
-						}
+
 						this.vipInfo = res.vipInfo
 
 						this.sameFolderImgList = []
@@ -665,20 +806,24 @@ export default {
 								this.sameFolderImgList.push(this.axios.getRawFileUrl(res.sameFolderImgList[i]))
 							}
 						}
+						if (this.movieIndexObj.is_tvplay == 1) {
+							this.getTvList(0)
+						}
 						this.$forceUpdate()
 					}
 				})
 		},
-		checkCanContinue() {
-			// 查询上次播放进度
-			if (this.movieIndexObj && this.movieIndexObj.id) {
-				let lastProgress = localStorage.getItem('videoProgress' + this.movieIndexObj.id)
-				console.log('lastProgress', lastProgress)
-				if (lastProgress && lastProgress > 60) {
-					this.hasContinuePlay = true
-					this.lastProgressStr = utils.formatSeconds(lastProgress)
-				}
-			}
+
+		otherTvClick(indexObj){
+			this.$nextTick(() => {
+				this.$refs.detailRoot.scrollTo({
+					top: 0,
+					behavior: "smooth"
+				});
+			})
+			this.movieList = [indexObj]
+			this.currentIndex = 0
+			this.init()
 		},
 		recentMovieClick(index) {
 			this.movieList = [this.recentMovies[index]]
@@ -694,6 +839,55 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+
+.top-operation-bar{
+	z-index: 9;
+	display: flex;
+	align-items: center;
+	padding-right: 10px;
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 60px;
+	width:calc(100% - 80px);
+	background-color: rgba(0,0,0,0.8);
+	overflow: hidden;
+}
+.top-bg{
+	position:fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 350px;
+	object-fit:cover;
+	z-index: 0;
+	filter: blur(20px);
+}
+.favorite-root {
+	background-color: rgba(0,0,0,0.8);
+	position: fixed;
+	right: 0;
+	top: 0;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	padding: 10px;
+	height: 60px;
+	width: 80px;
+	span {
+		margin-right: 10px;
+		line-height: 25px;
+		font-size: 25px;
+	}
+}
+
+.main-layout {
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	
+}
 ::v-deep .ivu-icon-ios-close {
 	display: none;
 }
@@ -720,7 +914,7 @@ export default {
 .movie-detail-root {
 	position: fixed;
 	padding: 10px;
-	background-color: #F5F5F5;
+	background-color: #101010;
 	padding-bottom: 20px;
 
 	display: flex;
@@ -729,17 +923,12 @@ export default {
 	justify-content: center;
 	height: 100%;
 	width: 100%;
-	overflow: scroll;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
-.main-layout {
-	width: 100%;
-	height: 100%;
-}
 
 .header-root {
-	border-bottom: 1px solid #eeeeee;
-	background-color: white;
 	z-index: 2;
 	height: 60px;
 	display: flex;
@@ -753,18 +942,21 @@ export default {
 }
 
 .top-root-card {
+	padding: 20px;
 	border-radius: 10px;
-	background-color: rgba(255, 255, 255, 1);
+	background-color: rgba(32, 32, 32, 0.9);
+	position: relative;
+
 }
 
 .movie-name {
 	color: $nas-text-title;
 	text-align: left;
-	font-size: 16px;
 	font-weight: bold;
 	word-break: break-all;
 	display: flex;
 	align-items: center;
+	color:white;
 }
 
 .movie-score-bg {
@@ -817,6 +1009,7 @@ export default {
 
 
 	.top-movie-info-root {
+		width: 100%;
 		@media not all and (max-width:640px) {
 			margin-left: 20px;
 		}
@@ -837,7 +1030,6 @@ export default {
 		margin-bottom: 10px;
 		display: flex;
 		align-items: flex-start;
-		font-size: 14px;
 		flex-direction: row;
 
 		.movie-info-item-title {
@@ -851,18 +1043,16 @@ export default {
 		.movie-info-item-content {
 			width: 100%;
 			text-align: left;
-			color: #333333;
+			color: #ddd;
 			word-break: break-all;
 		}
 	}
 
 	.movie-info-item-header {
-		margin-bottom: 10px;
+		max-width: 80%;
 		display: flex;
 		align-items: flex-start;
-		font-size: 16px;
 		flex-direction: row;
-
 
 		.movie-info-item-content {
 			font-weight: bold;
@@ -890,15 +1080,19 @@ export default {
 	text-align: left;
 	font-size: 22px;
 	font-weight: bolder;
+	color:#ddd;
 }
 
 .mid-root {
+	background-color: rgba(32, 32, 32, 0.9);
+	padding: 20px;
 	border-radius: 10px;
 	margin-top: 10px;
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-
+	position: relative;
+	z-index: 2;
 	.othertv-root {
 		width: 100%;
 		margin-top: 10px;
@@ -948,8 +1142,7 @@ export default {
 }
 
 .bottom-root {
-	border-radius: 10px;
-	margin-top: 10px;
+	margin-top: 20px;
 	display: flex;
 	flex-direction: column;
 	width: 100%;
@@ -958,14 +1151,23 @@ export default {
 .stream-root {
 	width: 100%;
 	display: flex;
-	margin-top: 20px;
+	
+	.stream-card-title-root {
+		display: flex;
+		align-items: center;
+		justify-content: left;
+		font-size: 16px;
+		margin-bottom: 10px;
+		color:#ddd;
+		}
 
 	.stream-item-card {
+		background-color: rgba(32, 32, 32, 0.9);
+		padding: 15px;
 		flex-shrink: 0;
 		margin-right: 10px;
 		border-radius: 10px;
 		min-width: 200px;
-		background-color: rgba(255, 255, 255, 1);
 	}
 
 	.stream-info-title {
@@ -982,7 +1184,7 @@ export default {
 		margin-top: 5px;
 		margin-left: 10px;
 		font-weight: normal;
-		color: #333333;
+		color: #fff;
 	}
 }
 
@@ -996,19 +1198,60 @@ export default {
 	/* Chrome Safari */
 }
 
-.other-tv-cover {
-	width: 200px;
-	border-radius: 10px;
+.other-tv-cover-root {
+	width: 120px;
+	height:80px;
+	border-radius: 5px;
 	object-fit: cover;
 	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 5px;
 	@media all and (max-width:640px) {
-		width: 120px;
+		width: 100px;
 	}
+
+	.other-tv-cover {
+		width: 120px;
+		height:80px;
+		border-radius: 5px;
+		object-fit: cover;
+		@media all and (max-width:640px) {
+			width: 100px;
+		}
+	}
+	
 }
 
-.closs-btn {
-	z-index: 999999999;
-	position: fixed;
-	right: 0px;
-	top: 0px;
+
+
+.tv-section-root::-webkit-scrollbar {
+	display: none;
+}
+
+.tv-section-root {
+	z-index: 2;
+	display: flex;
+	margin-top: 10px;
+	cursor: pointer;
+	.tv-section-item {
+		flex-shrink: 0;
+		display: inline;
+		margin-right: 10px;
+		border-radius: 4px;
+		background-color: #5f5f5f;
+
+		span {
+			color:#ddd;
+			font-size: 16px;
+			margin: 10px;
+		}
+	}
+
+	.tv-section-item-selected {
+		@extend .tv-section-item;
+		background-color: $nas-main;
+
+	}
 }</style>

@@ -1,4 +1,5 @@
 $nas-main: #386DF2;
+$nas-bg-dark: #212121;
 $nas-second:#BAC8D8;
 $nas-third:#77a8e1;
 $nas-red:#DE4545;
@@ -6,6 +7,7 @@ $nas-grey: #99AABF;
 $nas-text-title: #333333;
 $nas-text-content:#BAC8D8;
 $nas-text-grey:#999999;
+$nas-dark-text-content:#ddd;
 
 //修复vuesax dialog滚动在移动端下面空一块的问题
 ::v-deep .vs-dialog__content{

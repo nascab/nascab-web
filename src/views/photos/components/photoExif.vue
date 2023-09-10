@@ -4,37 +4,37 @@
 		<div class="exif-wrapper">
 			<div class="title-root">
 				<!-- 标题 -->
-				<Icon class="exif-close" type="md-close" size="20" @click="closeExif" />
+				<Icon color="white" class="exif-close" type="md-close" size="25" @click="closeExif" />
 				<p class="title">{{ $t('file.fileExifInfo') }}</p>
 				<!-- 重置缩略图 -->
-				<Button @click="clearTinyImg" size="small" type="primary" style="position: absolute;right: 20px;">{{
+				<!-- <Button @click="clearTinyImg" size="small"  style="position: absolute;right: 20px;">{{
 						this.$t('file.resetTinyImg')
-				}}</Button>
+				}}</Button> -->
 			</div>
-			<Divider plain>{{ $t('common.detail') }}</Divider>
+			<Divider plain style="color:white">{{ $t('common.detail') }}</Divider>
 			<!-- 基本信息 -->
-			<div class="exif-item-root" v-if="indexObj">
+			<div class="exif-item-root" v-if="indexObj&&indexObj.original_date">
 				<!-- 基础信息 -->
-				<Icon type="md-calendar" size="28" />
-				<div class="exif-item-right">
+				<Icon color="white" type="md-calendar" size="24" />
+				<div class="exif-item-right" >
 					<p class="exif-item-text-top">{{ indexObj.original_date }}</p>
 					<div v-if="dateEditing" style="margin-top: 5px;display:flex;align-items:center">
 						<DatePicker @on-change="onDateChange" :editable="true" type="datetime"
 							:placeholder="$t('photo.selectPhotoTakeTime')" style="width: 175px" />
-						<Icon type="md-close" size="24" style="cursor: pointer;margin-left: 5px;"
+						<Icon color="white" type="md-close" size="24" style="cursor: pointer;margin-left: 5px;"
 							@click="dateEditing = false; editDateValue = null" />
-						<Icon v-if="editDateValue" type="md-checkmark" size="24"
+						<Icon color="white" v-if="editDateValue" type="md-checkmark" size="24"
 							style="cursor: pointer;margin-left: 5px;" @click="submitNewDate" />
 					</div>
-					<p v-if="!dateEditing" class="exif-item-text-bottom">{{ new Date(indexObj.original_time).toString()
+					<p v-if="!dateEditing" class="exif-item-text-bottom">{{utils.formatTimeStamp(indexObj.original_time)
 					}}
-						<Icon @click="changeExifTime" style="cursor: pointer;margin-left: 5px;" type="md-create" />
+						<Icon color="white" @click="changeExifTime" style="cursor: pointer;margin-left: 5px;" type="md-create" />
 					</p>
 				</div>
 			</div>
 			<div class="exif-item-root" v-if="indexObj">
 				<!-- 文件名 大小等 -->
-				<Icon type="ios-folder" size="28" />
+				<Icon color="white" type="md-document" size="24" />
 				<div class="exif-item-right">
 					<p class="exif-item-text-top">{{ indexObj.path }}</p>
 					<p class="exif-item-text-top">{{ indexObj.filename }}</p>
@@ -45,7 +45,7 @@
 			</div>
 			<div class="exif-item-root" v-if="indexObj">
 				<!-- 光圈 型号等等 -->
-				<Icon type="ios-aperture" size="28"
+				<Icon color="white" type="ios-aperture" size="24"
 					v-if="(indexObj.mode && indexObj.mode != 'undefined') || exifStr || (exifInfo && exifInfo.LensModel)" />
 				<div class="exif-item-right">
 					<p class="exif-item-text-top" v-if="indexObj.mode && indexObj.mode != 'undefined'">{{ indexObj.mode
@@ -57,7 +57,7 @@
 			</div>
 			<div class="geo-root" v-if="geoStr && geoStr != ' '">
 				<div class="geo-title-root">
-					<Icon type="md-pin" size="28" />
+					<Icon color="white" type="md-pin" size="24" />
 					<p style="margin-left: 10px;">{{ geoStr }}</p>
 				</div>
 			</div>
@@ -134,8 +134,24 @@ export default {
 					this.map.remove()
 					this.map = null
 				}
-				this.initMap()
+				this.getZoomInfo()
 			})
+		},
+		getZoomInfo() {
+			//获取服务器支持的缩放级别
+			this.api
+				.post("/api/mapApi/getZoom", {
+					hideLoading:true
+				})
+				.then((res) => {
+					console.log(res)
+					if (!res.code) {
+						this.initMap(parseInt(res.zoomInfo.minZoom), parseInt(res.zoomInfo.maxZoom))
+					}
+				})
+				.catch((error) => {
+					console.log(error)
+				});
 		},
 		onDateChange(newDate) {
 			this.editDateValue = newDate
@@ -160,7 +176,7 @@ export default {
 				this.imgMaker.addTo(this.map)
 			}
 		},
-		initMap() {
+		initMap(minZoom, maxZoom) {
 			if (!this.showMap) {
 				console.log('!this.showMap')
 				return
@@ -181,8 +197,8 @@ export default {
 				center = new L.LatLng(36, 106);
 			}
 			var glayer_normal = new L.TileLayer(url_normal, {
-				minZoom: 2,
-				maxZoom: 8,
+				minZoom: minZoom,
+				maxZoom: maxZoom,
 				attribution: 'NORMAL'
 			});
 			var corner1 = L.latLng(-90, -360),
@@ -218,9 +234,10 @@ export default {
 		},
 		//编辑exif信息
 		editExifByIndexId(latitude, longitude, newDate) {
-			if (this.indexObj.type != 1) {
+			if (this.indexObj.type != 1 || (!this.indexObj.filename.toLowerCase().endsWith(".jpeg")&&!this.indexObj.filename.toLowerCase().endsWith(".jpg"))) {
 				return this.showVsNotification(this.$t('photo.onlySupportPhoto'))
 			}
+
 			this.api
 				.post("/api/photoApi/editExifByIndexId", {
 					latitude: latitude,
@@ -329,9 +346,13 @@ export default {
 	height: 100%;
 	width: 300px;
 	min-width: 300px;
-	background: white;
+	background: $nas-bg-dark;
 	right: 0;
 	top: 0;
+	p{
+		color:white;
+		font-size:14px;
+	}
 }
 
 .exif-wrapper {
@@ -351,12 +372,12 @@ export default {
 
 		.title {
 			margin-left: 10px;
-			font-size: 18px;
 			word-break: break-all;
 
 		}
 
 		.exif-close {
+			cursor:pointer;
 			margin-left: 10px;
 		}
 
@@ -365,11 +386,10 @@ export default {
 	.text-detail {
 		margin-left: 20px;
 		margin-top: 10px;
-		font-size: 18px;
 	}
 
 	.exif-item-root {
-		margin-top: 10px;
+		margin-top: 15px;
 		display: flex;
 		flex-direction: row;
 		align-items: center;
@@ -383,7 +403,6 @@ export default {
 			margin-left: 10px;
 
 			.exif-item-text-top {
-				font-size: 16px;
 				text-align: left;
 				word-break: break-all;
 
@@ -391,8 +410,7 @@ export default {
 
 			.exif-item-text-bottom {
 				text-align: left;
-				margin-top: 5px;
-				font-size: 14px;
+				margin-top: 3px;
 				word-break: break-all;
 
 			}

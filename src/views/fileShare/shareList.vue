@@ -69,7 +69,7 @@
 		</div>
 		<!-- 添加对话框 -->
 
-		<vs-dialog blur v-model="showAdd">
+		<vs-dialog  v-model="showAdd">
 			<template #header>
 				<h4 style="font-size: 16px;">
 					{{operationType == 'create' ? $t('share.addShareFold') : $t('share.updateShareFold')}}

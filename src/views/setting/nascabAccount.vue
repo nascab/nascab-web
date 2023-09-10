@@ -7,13 +7,18 @@
 
             <div class="item-root">
                 <span class="item-text-left">{{ $t('common.username') }}:</span>
-                <span>{{ currentNasUserInfo ? currentNasUserInfo.nickname : $t('nascab.notLogin') }}</span>
+                <span class="enable-text-select">{{ currentNasUserInfo ? currentNasUserInfo.nickname : $t('nascab.notLogin') }}</span>
                 <a @click="toNasLogin()" style="margin-left:10px">
                     {{ currentNasUserInfo ? $t('nascab.switchAccount') : $t('login.goLogin') }}</a>
 
                 <!-- 刷新 -->
                 <a v-if="this.currentNasUserInfo" @click="tokenLogin()" style="margin-left:10px;">
                     {{ $t('common.refresh') }}</a>
+            </div>
+            <!-- ID -->
+            <div class="item-root" v-if="currentVipInfo">
+                <span class="item-text-left">NasCab ID:</span>
+                <span class="enable-text-select">{{ currentNasUserInfo._id }}</span>
             </div>
             <div class="item-root" v-if="currentVipInfo">
                 <span class="item-text-left">{{ $t('user.subCountNum') }}:</span>

@@ -6,7 +6,7 @@
 				<div style="display: flex;align-items:center">
 					<!-- 返回按钮 -->
 					<vs-button icon>
-						<Icon style="cursor:pointer" @click="goBack" size="24" type="md-return-left" />
+						<Icon style="cursor:pointer" @click="goBack" size="20" type="md-return-left" />
 					</vs-button>
 					<!-- 标题 -->
 					<div class="max-line-one" style="font-size: 18px;font-weight: bold;height: 100%;margin-left: 20px;">
@@ -14,7 +14,7 @@
 				</div>
 			</div>
 			<div class="album-detail-content">
-				<movie-list :collectionId="collectionId" :collectionPwd="collectionPwd"></movie-list>
+				<movie-list :isAiCollection="isAiCollection" :collectionId="collectionId" :collectionPwd="collectionPwd"></movie-list>
 			</div>
 		</div>
 	</div>
@@ -25,6 +25,10 @@ import movieList from "@/views/movies/movieList.vue"
 
 export default {
 	props: {
+		isAiCollection:{
+			default: false,
+			type: Boolean
+		},
 		collectionId: {
 			default: 0,
 			type: Number
@@ -74,6 +78,7 @@ export default {
 	@media all and (max-width:640px) {
 		padding-left: 10px;
 		padding-right: 10px;
+		height: 60px;
 	}
 
 	position: absolute;
@@ -90,11 +95,13 @@ export default {
 .album-detail-content {
 	width: 100%;
 	height: 100%;
-	padding-top: 80px;
+	padding-top: 60px;
 
 	@media not all and (max-width:640px) {
 		padding-left: 30px;
 		padding-right: 30px;
+		padding-top: 80px;
+
 	}
 }
 </style>

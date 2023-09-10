@@ -1,8 +1,16 @@
 <!-- 内容单独定义 有多个页面用到了 -->
 <template>
 	<div class="map-root">
-		<div :style="{ 'border-top-left-radius': borderRadius, 'border-top-right-radius': borderRadius }"
-			class="map-content" id="mainmap"></div>
+		<div v-if="!isMobile" :style="{ 'border-top-left-radius': borderRadius, 'border-top-right-radius': borderRadius }"
+			class="map-content" id="mainmap">
+		</div>
+		<div v-else  class="map-content" id="mainmap">
+		</div>
+		<div class="zoom-title-root" v-if="map&&map._zoom&&!ordinaryAlbumId&&!albumId">
+			<!-- 解锁提示 -->
+			<p> {{$t("map.currentZoomLevel",{zoom:Math.ceil(map._zoom)})}}</p>
+			<a v-if="currentMaxZoom<9" @click="goToSetting('nasAccount')" >{{$t("map.upgradeZoom")}}</a>
+		</div>
 		<Modal footer-hide ref="myModal" v-model="showPhotoGeo" fullscreen @on-visible-change="onModalShow"
 			:closable="false">
 			<album-detail v-if="showPhotoGeo" @onClose="showPhotoGeo = false" :propsNearMode="true"
@@ -44,7 +52,8 @@ export default {
 			map: null,
 			markerGroup: null,
 			clickGeohash: null,
-			selectPositionStr: ""
+			selectPositionStr: "",
+			currentMaxZoom:8
 		}
 	},
 	mounted() {
@@ -73,6 +82,7 @@ export default {
 				.then((res) => {
 					console.log(res)
 					if (!res.code) {
+						this.currentMaxZoom=parseInt(res.zoomInfo.maxZoom)
 						this.initMap(parseInt(res.zoomInfo.minZoom), parseInt(res.zoomInfo.maxZoom))
 					}
 				})
@@ -83,7 +93,7 @@ export default {
 		initMap(minZoom, maxZoom) {
 			var url_normal = axios.mapUrl;
 			// url_normal="https://tile.openstreetmap.org/{z}/{x}/{y}.png	"
-			minZoom = minZoom < 4 ? 4 : minZoom
+			minZoom = minZoom < 2 ? 2 : minZoom
 			var glayer_normal = new L.TileLayer(url_normal, {
 				minZoom: minZoom,
 				maxZoom: maxZoom,
@@ -108,7 +118,7 @@ export default {
 			this.map = new L.Map('mainmap', {
 				maxBounds: bounds,
 				center: center,
-				zoom: minZoom,
+				zoom: parseInt(maxZoom/2),
 				attributionControl: false,
 				layers: [glayer_normal]
 			});
@@ -141,17 +151,23 @@ export default {
 		dealPhotoMap(zoomLevel, photoList) {
 			this.markerGroup.clearLayers();
 			for (let i in photoList) {
-				console.log(i)
 				let photo = photoList[i]
 
 				// 创建icon内容
 				let img = document.createElement('img')
 				img.src = axios.getImgFullPath(photo.id, true)
 				img.style =
-					"width: 100%;height: 100%; object-fit: cover;padding:2%"
+					"width: 100%;height: 100%; object-fit: cover;padding:2%";
 
+				let iconWidth=10 * zoomLevel
+				if(iconWidth>80){
+					iconWidth=80
+				}
+				if(iconWidth<40){
+					iconWidth=40
+				}
 				var myIcon = L.divIcon({
-					iconSize: [10 * zoomLevel * 1.2, 10 * zoomLevel * 1.2],
+					iconSize: [iconWidth , iconWidth],
 					html: img
 				});
 				if (photo.latitude == 0 && photo.longitude == 0) {
@@ -200,6 +216,7 @@ export default {
 			}
 		},
 		getAlbumPhotoList() {
+			
 			let params = {}
 			if (this.albumId) {
 				params.albumId = this.albumId
@@ -210,7 +227,7 @@ export default {
 				.post("/api/photoApi/getAlbumPhotoForMap", params)
 				.then((res) => {
 					if (!res.code) {
-						this.dealPhotoMap(4, res.mapPhoto)
+						this.dealPhotoMap(2, res.mapPhoto)
 					}
 				})
 				.catch((error) => {
@@ -219,6 +236,7 @@ export default {
 				});
 		},
 		getHashBox(e) {
+			console.log(this.map._zoom)
 			let zoomLevel = e.target._zoom
 			let currentBounds = this.map.getBounds()
 			let southWest = currentBounds._southWest
@@ -272,5 +290,17 @@ export default {
 	min-width: 200px;
 	min-height: 500px;
 	position: relative;
+}
+.zoom-title-root{
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	padding: 5px 10px;
+	background-color: white;
+	border-radius: 5px;
+	position: absolute;
+	z-index: 2;
+	right: 20px;
+	top: 20px;
 }
 </style>

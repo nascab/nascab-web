@@ -1,20 +1,18 @@
 <template>
 		<div class="album-root-wrapper">
 			<!-- 无数据提示 -->
-
 			<div
 				style="position: absolute;width: 100%;margin-top:150px;display:flex;flex-direction: column;align-items:center">
 				<my-nodata v-if="!loading && dataList.length < 1" :title="$t('photo.noPersonPlaceHolder')">
 				</my-nodata>
 				<my-btn v-if="!enable" @click="enableAiFace" :title="$t('photo.enableAiFace')" style="margin-top:20px;">
 				</my-btn>
-
 				<div style="margin-top:10px" v-if="enable&&dealState">[{{ dealState }}]</div>
 			</div>
 
-			<div style="width:100%;display:flex;height: 100%;flex-direction:row;overflow: hidden;">
+			<div :style="{'height':singleSelectMode?'450px':'100%'}" style="width:100%;display:flex;flex-direction:row;overflow: hidden;">
 				<!-- 分类列表 -->
-				<div class="album-list-root" ref="listWrapper">
+				<div class="album-list-root" ref="listWrapper" @scroll="onPageScroll">
 					<vs-card v-for="(item, index) in dataList" type='1' @click="onAlbumClick(index)"
 						@contextmenu="showRightMenu($event, $root, item, index)"
 						:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }"
@@ -42,13 +40,13 @@
 							</div>
 						</template>
 						<template #text >
-							<p style="text-align: center;margin-top: 5px;" v-if="$store.state.currentUser.is_admin == 1">{{
+							<p style="text-align: center;margin-top: 5px;" v-if="!singleSelectMode && $store.state.currentUser.is_admin == 1">{{
 								$t('photo.photoCount', { photoCount: item.face_photo_count }) }}</p>
 								<p v-else></p>
 						</template>
 						<template #interactions>
 
-							<div v-if="item.hover && !selectMode"
+							<div v-if="item.hover && !selectMode && !singleSelectMode"
 								style="display: flex;justify-content: flex-end;width: 100%;">
 								<!-- 编辑按钮 -->
 								<vs-button class="btn-chat" shadow @click.stop="onShowChangeName(index)">
@@ -60,14 +58,10 @@
 										:style="{ 'color': item.selected ? '#386DF2' : '' }"></span>
 								</vs-button>
 							</div>
-
-
 						</template>
 					</vs-card>
 					<div style="width:100%;height:80px"></div>
 				</div>
-
-				
 			</div>
 			<!-- 选择模式下的菜单 -->
 			<div v-if="selectMode" class="bottom-select-root">
@@ -92,6 +86,7 @@
 				<album-detail v-if="showAlbumDetail" @onClose="showAlbumDetail = false" :propsShowSearchBtn="false"
 					:propsTitle="selectedItem.face_name ? selectedItem.face_name : $t('photo.unnamed')"
 					:propsShowAddToAlbum="false" :propsShowDelete="false" :propsShowModeSwitch="false"
+					:propsShowRemoveFromAlbum="true"
 					:propsFaceId="selectedItem.id + ''">
 				</album-detail>
 
@@ -144,10 +139,18 @@
 
 <script>
 import axios from "@/plugins/axios";
-import albumDetail from "@/views/photos/photoPages/albumDetail.vue"
 import photoBase from "@/views/photos/photoBase";
+const albumDetail = () => import("@/views/photos/photoPages/albumDetail.vue")
+
 
 export default {
+	props:{
+		//单选模式 用于人物变更时选择目标人物
+		singleSelectMode:{
+			default:false,
+			type:Boolean
+		}
+	},
 	components: {
 		albumDetail,
 		photoBase
@@ -192,16 +195,23 @@ export default {
 		this.getFacesList()
 		window.addEventListener("resize", this.calImageWidth);
 		window.addEventListener('popstate', this.onPopstate)
-		window.addEventListener("scroll", this.onPageScroll, true);
 
 	},
 	beforeDestroy() {
 		window.removeEventListener("resize", this.calImageWidth);
 		window.removeEventListener('popstate', this.onPopstate);
-		window.removeEventListener("scroll", this.onPageScroll, true);
 		clearTimeout(this.checkStateTimeout)
 	},
 	methods: {
+		//选择模式 获取选中的相册id
+		getSelectedFaceId(){
+			for(let face of this.dataList){
+				if(face.selected){
+					return face.id
+				}
+			}
+			return false
+		},
 		//滚动回调
 		onPageScroll(e) {
 			//滚动时取消长按定时器 防止误触发
@@ -226,6 +236,12 @@ export default {
 			for (let i in this.dataList) {
 				this.dataList[i].selected = false
 			}
+		},
+		itemSingleSelect(index){
+			for(let i in this.dataList){
+				this.dataList[i].selected=(i==index)
+			}
+			this.$forceUpdate()
 		},
 		itemSelect(index) {
 			this.dataList[index].selected = !this.dataList[index].selected
@@ -363,14 +379,18 @@ export default {
 			this.$set(this.dataList[index], "hover", false);
 		},
 		showRightMenu(event, root, classVal, index) {
-			if (this.isMobile) return event.preventDefault()
-
+			if(this.singleSelectMode||this.isMobile){
+				return event.preventDefault()
+			}
 			this.selectedIndex = index
 			this.selectedItem = classVal
 			this.$easycm(event, root)
 		},
 		//右键菜单点击
 		rightMenuClick(indexList, clickType) {
+			if(this.singleSelectMode){
+				return false
+			}
 			this.showLongPressMenu = false
 			let type = clickType ? clickType : this.rightMenuList[indexList[0]].type
 			if (type == 'CHECK') { //查看
@@ -388,6 +408,11 @@ export default {
 			// if (this.dataList.length < 2) {
 			// 	return
 			// }
+			if(this.singleSelectMode){
+				//选择模式 缩小一些
+				this.itemBaseWidth=120
+				this.itemWidth=120
+			}
 			let wrapper = this.$refs.listWrapper.getBoundingClientRect();
 			let itemWidth = this.utils.calItemWidth(wrapper, this.itemBaseWidth, this.itemMargin)
 			if (itemWidth) this.itemWidth = itemWidth
@@ -395,6 +420,9 @@ export default {
 		onAlbumClick(index) {
 			if (this.selectMode) {
 				this.itemSelect(index)
+			}else if(this.singleSelectMode)
+			{
+				this.itemSingleSelect(index)
 			} else {
 				this.selectedItem = this.dataList[index]
 				this.showAlbumDetail = true
@@ -426,6 +454,9 @@ export default {
 						}
 						this.$nextTick(() => {
 							this.calImageWidth()
+							setTimeout(() => {
+								this.calImageWidth()
+							}, 300);
 						});
 					}
 					this.loading = false
@@ -489,42 +520,10 @@ export default {
 	padding-right: 20px;
 }
 
-.album-detail-header {
-	padding-left: 30px;
-	padding-right: 30px;
-	height: 80px;
-
-	@media all and (max-width:640px) {
-		padding-left: 10px;
-		padding-right: 10px;
-	}
-
-	position: absolute;
-	flex-shrink: 0;
-	z-index: 2;
-	width: 100%;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-}
-
 // 覆盖iview按钮的自带border颜色
 .ivu-btn {
 	border: 0px;
 	border-color: transparent !important;
-}
-
-.album-detail-content {
-	width: 100%;
-	height: 100%;
-	padding-top: 80px;
-
-	@media not all and (max-width:640px) {
-		padding-left: 30px;
-		padding-right: 30px;
-	}
-
 }
 
 .icon-add {

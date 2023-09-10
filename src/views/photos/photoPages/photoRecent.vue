@@ -31,6 +31,9 @@
 					ref="videoPlayer"></video-detail>
 			</Modal>
 		</div>
+
+		<my-scroll-bar ref="scrollBar" v-if="!showPhotoDetail&&!showVideoDetail"></my-scroll-bar>
+
 	</photo-base>
 </template>
 <script>
@@ -46,6 +49,7 @@ import photoOperationHeader from "@/views/photos/components/photoOperationHeader
 import photoListContent from "@/views/photos/components/photoListContent.vue"
 import photoBase from "@/views/photos/photoBase";
 import jsBridge from "@/plugins/jsBridge"
+import myScrollBar from "@/components/my-components/my-scrollbar/my-scrollbar"
 
 export default {
 	props: {
@@ -71,6 +75,7 @@ export default {
 		}
 	},
 	components: {
+		myScrollBar,
 		photoBase,
 		photoBottomSelect,
 		photoDetail,
@@ -144,6 +149,9 @@ export default {
 		onPageScroll(e) {
 			if (this.showPhotoDetail || this.showVideoDetail) {
 				return
+			}
+			if (this.$refs.scrollBar) {
+				this.$refs.scrollBar.onScroll(e)
 			}
 			this.$refs.photoContent.cancelTouchEvent()
 			let scrollTop = null;
@@ -263,13 +271,13 @@ export default {
 				} else if (photoList[index].type == 2) {
 					if (localStorage.getItem("rawPlayer") == "1") {
 						//调用原生播放器
-						jsBridge.playVideo(JSON.stringify({
+						jsBridge.playVideo({
 							playIndex: index,
 							playList: photoList,
 							token: this.$store.state.token,
 							fromFileBrower: false,
 							serverType: "photo"
-						}))
+						})
 					} else {
 						//继续使用网页播放器
 						this.showVideoDetail = true;

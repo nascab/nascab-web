@@ -12,19 +12,19 @@
 		<div class="main-layout nas-padding-right-zero">
 			<!-- 左侧边栏 -->
 			<div class="sidebar-root">
-				<my-sidebar ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
+				<my-sidebar name="filebrower"  ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
 			</div>
 			<!-- 左侧边栏-手机 -->
 			<div class="sidebar-mobile-root">
-				<my-sidebar-mobile ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
+				<my-sidebar-mobile name="filebrower"  ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
 				</my-sidebar-mobile>
 			</div>
 
 			<files-operation-record v-if="menuActive == 'operation_record'"></files-operation-record>
 			<!-- 所有用户共享的文件夹管理 -->
 			<files-share-for-all v-else-if="menuActive == 'share_manage'"></files-share-for-all>
-			<!-- 临时共享 -->
-			<files-share-temp v-else-if="menuActive == 'share_temp'"></files-share-temp>
+			<!-- 快速共享 -->
+			<files-quick-share v-else-if="menuActive == 'share_temp'"></files-quick-share>
 			<div v-else class="brower-list-root">
 				<folder-brower-operation-bar ref="fileBar" style="position: absolute;left: 0;"
 					@onBack="$refs.fileBrowser.goBack()" :showSlider="!isMobile" @createNewFolder="createNewFolder"
@@ -32,7 +32,7 @@
 					@onClear="onClear" :showCreateNew="showCreateNew" @onRefresh="$refs.fileBrowser.refresh()"
 					@onCopy="$refs.fileBrowser.copy()" @onSearch="(val) => $refs.fileBrowser.onSearch(val)">
 				</folder-brower-operation-bar>
-				<div style="width: 100%;height: 100%;overflow: hidden;padding-top: 80px;">
+				<div style="width: 100%;height: 100%;overflow: hidden;padding-top: 60px;">
 					<folder-brower style="width: 100%;height: 100%; z-index: 0;overflow-y: auto;" ref="fileBrowser"
 						@onParentChange="onParentChange">
 					</folder-brower>
@@ -48,7 +48,7 @@ import folderBrower from "@/components/folder-brower/folder-brower.vue"
 import folderBrowerOperationBar from "@/components/folder-brower/folder-brower-operation-bar.vue"
 import filesOperationRecord from "./filesOperationRecord.vue"
 import filesShareForAll from "./filesShareForAll.vue"
-import filesShareTemp from "./filesShareTemp.vue"
+import filesQuickShare from "./filesQuickShare.vue"
 
 export default {
 	components: {
@@ -57,7 +57,7 @@ export default {
 		folderBrowerOperationBar,
 		filesOperationRecord,
 		filesShareForAll,
-		filesShareTemp
+		filesQuickShare
 	},
 	data() {
 		return {
@@ -82,8 +82,7 @@ export default {
 			}, {
 				id: 'share_temp',
 				title: this.$t('home.shareTemp'),
-				font: "nasIcons icon-link",
-				onlyAdmin:true
+				font: "nasIcons icon-link"
 			}, {
 				id: 'operation_record',
 				title: this.$t('file.logs'),

@@ -6,7 +6,7 @@
                 :webkitdirectory="webkitdirectory" :accept="accept">
             <slot></slot>
         </div>
-        
+
         <slot name="tip"></slot>
         <upload-list v-if="showUploadList" :files="fileList" @on-file-remove="handleRemove"
             @on-file-preview="handlePreview"></upload-list>
@@ -165,9 +165,12 @@ export default {
             if (this.itemDisabled) return;
             this.$refs.input.click();
         },
+        //新增上传文件 外部调用
+        addUploadFile(uploadFile) {
+            this.uploadFiles([uploadFile]);
+        },
         handleChange(e) {
             const files = e.target.files;
-
             if (!files) {
                 return;
             }
@@ -175,6 +178,9 @@ export default {
             this.$refs.input.value = null;
         },
         onDrop(e) {
+            if (this.type != 'drag') {
+                return
+            }
             this.dragOver = false;
             if (this.itemDisabled) return;
             this.uploadFiles(e.dataTransfer.files);
@@ -183,17 +189,6 @@ export default {
             if (this.itemDisabled) return;
             if (this.paste) {
                 this.uploadFiles(e.clipboardData.files);
-            }
-        },
-        //按顺序一个一个上传
-        startUpload() {
-            this.dealOverCount = 0
-            for (let i = 0; i < this.maxCountSameTime; i++) {
-                if (this.waitList.length > 0) {
-                    let upItem = this.waitList[0]
-                    this.waitList.splice(0, 1)
-                    this.upload(upItem);
-                }
             }
         },
         uploadFiles(files) {
@@ -211,6 +206,18 @@ export default {
                 this.startUpload()
             }
         },
+        //按顺序一个一个上传
+        startUpload() {
+            this.dealOverCount = 0
+            for (let i = 0; i < this.maxCountSameTime; i++) {
+                if (this.waitList.length > 0) {
+                    let upItem = this.waitList[0]
+                    this.waitList.splice(0, 1)
+                    console.log("this.upload(upItem);", upItem)
+                    this.upload(upItem);
+                }
+            }
+        },
         upload(file) {
             if (!this.beforeUpload) {
                 return this.post(file);
@@ -218,7 +225,6 @@ export default {
 
             const before = this.beforeUpload(file);
             if (before && before.then) {
-                console.log('before && before.then')
                 before.then(processedFile => {
                     if (Object.prototype.toString.call(processedFile) === '[object File]') {
                         this.post(processedFile);
@@ -226,12 +232,15 @@ export default {
                         this.post(file);
                     }
                 }, () => {
+                    console.log("拒绝了")
+                    this.dealOverCount += 1
                     // this.$emit('cancel', file);
                 });
             } else if (before !== false) {
-                console.log('before !== false')
+                console.log("else else else ")
                 this.post(file);
             } else {
+                console.log("else else else ")
                 // this.$emit('cancel', file);
             }
         },
@@ -273,6 +282,7 @@ export default {
                 onSuccess: res => {
                     this.handleSuccess(res, file);
                     this.dealOverCount += 1
+                    console.log("onSuccess dealOverCount",this.dealOverCount)
                     if (this.dealOverCount >= this.maxCountSameTime || this.waitList.length < 1) {
                         this.startUpload()
                     }
@@ -280,6 +290,7 @@ export default {
                 onError: (err, response) => {
                     this.handleError(err, response, file);
                     this.dealOverCount += 1
+                    console.log("onError dealOverCount",this.dealOverCount)
                     if (this.dealOverCount >= this.maxCountSameTime || this.waitList.length < 1) {
                         this.startUpload()
                     }
@@ -334,7 +345,7 @@ export default {
                 _file.status = 'finished';
                 _file.response = res;
 
-                this.onSuccess(res, _file, this.fileList);
+                this.onSuccess(res, _file, this.fileList, file);
                 this.dispatch('FormItem', 'on-form-change', _file);
 
                 setTimeout(() => {

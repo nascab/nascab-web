@@ -1,6 +1,6 @@
 <template>
 	<div style="width:100%;height:100%;overflow:hidden">
-		<div class="security-root">
+		<div class="security-root" @scroll="onPageScroll">
 
 			<Card shadow :border="false" class="card-root" v-for="record in recordList">
 				<div class="card-item">
@@ -16,7 +16,7 @@
 					</Tag>
 				</div>
 				<div class="card-item">
-					<h4>{{ $t('security.client') }}:</h4>
+					<h4>IP:</h4>
 					<Tag style="margin-left: 10px;border-radius: 10px;background-color: white;">
 						{{ record.ip }}
 					</Tag>
@@ -27,6 +27,13 @@
 						{{ record.create_time }}
 					</Tag>
 				</div>
+				<div class="card-item">
+					<h4>{{ $t('security.client') }}:</h4>
+					<span style="border-radius: 10px;background-color: white;text-align:left">
+						{{ record.remark }}
+					</span>
+				</div>
+				
 			</Card>
 
 			<!-- 底部的loading和没有更多 -->
@@ -51,12 +58,9 @@ import utils from "@/plugins/utils";
 export default {
 	mounted() {
 		//在header的mounted中触发加载第一页数据 在onChooseRange
-		// 监听滚动条
-		window.addEventListener("scroll", this.onPageScroll, true);
 		this.getRecordList()
 	},
 	beforeDestroy() {
-		window.removeEventListener("scroll", this.onPageScroll, true);
 	},
 
 	components: {

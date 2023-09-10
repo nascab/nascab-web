@@ -6,6 +6,181 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "7575062",
+      "name": "24gf-network",
+      "font_class": "network",
+      "unicode": "e99d",
+      "unicode_decimal": 59805
+    },
+    {
+      "icon_id": "1718467",
+      "name": "资料库",
+      "font_class": "ziliaoku",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "5111258",
+      "name": "喜欢-实",
+      "font_class": "xihuan-shi",
+      "unicode": "e65e",
+      "unicode_decimal": 58974
+    },
+    {
+      "icon_id": "494590",
+      "name": "list_2f",
+      "font_class": "list",
+      "unicode": "e6b9",
+      "unicode_decimal": 59065
+    },
+    {
+      "icon_id": "15838597",
+      "name": "filter-filling",
+      "font_class": "filter",
+      "unicode": "e68a",
+      "unicode_decimal": 59018
+    },
+    {
+      "icon_id": "11903694",
+      "name": "grid",
+      "font_class": "grid",
+      "unicode": "e659",
+      "unicode_decimal": 58969
+    },
+    {
+      "icon_id": "27363935",
+      "name": "sort-alpha-down-alt",
+      "font_class": "sort-alpha-down-alt",
+      "unicode": "eb9b",
+      "unicode_decimal": 60315
+    },
+    {
+      "icon_id": "27363936",
+      "name": "sort-alpha-up",
+      "font_class": "sort-alpha-up",
+      "unicode": "eb9c",
+      "unicode_decimal": 60316
+    },
+    {
+      "icon_id": "1233",
+      "name": "文本",
+      "font_class": "exif-info",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "1447269",
+      "name": "下载",
+      "font_class": "download",
+      "unicode": "e615",
+      "unicode_decimal": 58901
+    },
+    {
+      "icon_id": "880316",
+      "name": "back",
+      "font_class": "back",
+      "unicode": "e6a9",
+      "unicode_decimal": 59049
+    },
+    {
+      "icon_id": "12290498",
+      "name": "麦克风2",
+      "font_class": "music",
+      "unicode": "e631",
+      "unicode_decimal": 58929
+    },
+    {
+      "icon_id": "12578852",
+      "name": "hd-video",
+      "font_class": "hd",
+      "unicode": "e6b8",
+      "unicode_decimal": 59064
+    },
+    {
+      "icon_id": "12578973",
+      "name": "subtitles",
+      "font_class": "subtitles",
+      "unicode": "e6fc",
+      "unicode_decimal": 59132
+    },
+    {
+      "icon_id": "29300667",
+      "name": "sound-off",
+      "font_class": "sound-off",
+      "unicode": "e630",
+      "unicode_decimal": 58928
+    },
+    {
+      "icon_id": "6265247",
+      "name": "闪聘",
+      "font_class": "play-speed",
+      "unicode": "e655",
+      "unicode_decimal": 58965
+    },
+    {
+      "icon_id": "29300651",
+      "name": "pause",
+      "font_class": "pause",
+      "unicode": "e63d",
+      "unicode_decimal": 58941
+    },
+    {
+      "icon_id": "29300652",
+      "name": "fullscreen-enter",
+      "font_class": "fullscreen",
+      "unicode": "e63e",
+      "unicode_decimal": 58942
+    },
+    {
+      "icon_id": "29300654",
+      "name": "fullscreen-exit",
+      "font_class": "exit-fullscreen",
+      "unicode": "e63f",
+      "unicode_decimal": 58943
+    },
+    {
+      "icon_id": "29300655",
+      "name": "microphone",
+      "font_class": "microphone",
+      "unicode": "e640",
+      "unicode_decimal": 58944
+    },
+    {
+      "icon_id": "29300656",
+      "name": "play",
+      "font_class": "play",
+      "unicode": "e641",
+      "unicode_decimal": 58945
+    },
+    {
+      "icon_id": "29300658",
+      "name": "play-previous",
+      "font_class": "video-last",
+      "unicode": "e642",
+      "unicode_decimal": 58946
+    },
+    {
+      "icon_id": "29300659",
+      "name": "play-next",
+      "font_class": "video-next",
+      "unicode": "e643",
+      "unicode_decimal": 58947
+    },
+    {
+      "icon_id": "29300664",
+      "name": "sound-on",
+      "font_class": "sound-on",
+      "unicode": "e644",
+      "unicode_decimal": 58948
+    },
+    {
+      "icon_id": "29300666",
+      "name": "settings",
+      "font_class": "settings",
+      "unicode": "e645",
+      "unicode_decimal": 58949
+    },
+    {
       "icon_id": "34453282",
       "name": "share live-fill",
       "font_class": "share",
@@ -104,76 +279,6 @@
       "unicode_decimal": 58923
     },
     {
-      "icon_id": "31772101",
-      "name": "icon播放",
-      "font_class": "play",
-      "unicode": "e630",
-      "unicode_decimal": 58928
-    },
-    {
-      "icon_id": "31772102",
-      "name": "icon全屏",
-      "font_class": "fullscreen",
-      "unicode": "e631",
-      "unicode_decimal": 58929
-    },
-    {
-      "icon_id": "31772103",
-      "name": "icon上一个",
-      "font_class": "video-last",
-      "unicode": "e632",
-      "unicode_decimal": 58930
-    },
-    {
-      "icon_id": "31772104",
-      "name": "icon文件元信息",
-      "font_class": "exif-info",
-      "unicode": "e633",
-      "unicode_decimal": 58931
-    },
-    {
-      "icon_id": "31772105",
-      "name": "icon分享",
-      "font_class": "download",
-      "unicode": "e634",
-      "unicode_decimal": 58932
-    },
-    {
-      "icon_id": "31772106",
-      "name": "icon音量",
-      "font_class": "volumn",
-      "unicode": "e635",
-      "unicode_decimal": 58933
-    },
-    {
-      "icon_id": "31772107",
-      "name": "icon下一个",
-      "font_class": "video-next",
-      "unicode": "e636",
-      "unicode_decimal": 58934
-    },
-    {
-      "icon_id": "31772108",
-      "name": "icon暂停",
-      "font_class": "pause",
-      "unicode": "e637",
-      "unicode_decimal": 58935
-    },
-    {
-      "icon_id": "31772109",
-      "name": "icon缩小屏幕",
-      "font_class": "exit-fullscreen",
-      "unicode": "e638",
-      "unicode_decimal": 58936
-    },
-    {
-      "icon_id": "31772110",
-      "name": "icon字幕",
-      "font_class": "subtitles",
-      "unicode": "e639",
-      "unicode_decimal": 58937
-    },
-    {
       "icon_id": "31772069",
       "name": "icon错误未选中备份",
       "font_class": "msg-error",
@@ -207,13 +312,6 @@
       "font_class": "img-folder",
       "unicode": "e614",
       "unicode_decimal": 58900
-    },
-    {
-      "icon_id": "31727822",
-      "name": "icon返回上一级不可点",
-      "font_class": "back",
-      "unicode": "e615",
-      "unicode_decimal": 58901
     },
     {
       "icon_id": "31718990",

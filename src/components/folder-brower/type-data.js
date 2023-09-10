@@ -28,7 +28,7 @@ let typeData={
 	'.json': 3,
 	'.js': 3,
 	'.html': 3,
-	'.pdf': 3,
+	'.pdf': 4,
 	'.docx': 3,
 	'.doc': 3,
 	'.dot': 3,

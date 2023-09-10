@@ -158,9 +158,9 @@ export default {
 			toolbar.prev = {
 				show: true
 			}
-			// toolbar.play = {
-			// 	show: true
-			// }
+			toolbar.play = {
+				show: true
+			}
 			toolbar.next = {
 				show: true
 			}
@@ -224,7 +224,7 @@ export default {
 			let viewer = this.$viewerApi({
 				options: {
 					//android 和 pc端不显示动画 太卡 && !/(Android)/i.test(navigator.userAgent)
-					transition: this.isMobile,
+					transition: this.isMobile && !/(Android)/i.test(navigator.userAgent),
 					button: false,
 					className: "viewerroot",
 					initialViewIndex: showIndex,

@@ -31,7 +31,7 @@
 				</div>
 				<div style="width: 100%;height: 100%;padding-top: 80px;overflow: hidden;">
 					<div v-if="messageList.length > 0"
-						style="padding-bottom: 15px;overflow: auto;height: 100%;width: 100%;">
+						style="padding-bottom: 15px;overflow: auto;height: 100%;width: 100%;" @scroll="onPageScroll">
 						<Card class="card-root" v-for="(msg, index) in messageList">
 
 							<div
@@ -102,11 +102,8 @@ export default {
 	mounted() {
 		this.getMessageList()
 		//在header的mounted中触发加载第一页数据 在onChooseRange
-		// 监听滚动条
-		window.addEventListener("scroll", this.onPageScroll, true);
 	},
 	beforeDestroy() {
-		window.removeEventListener("scroll", this.onPageScroll, true);
 	},
 	computed: {
 

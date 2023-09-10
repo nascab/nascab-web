@@ -29,7 +29,7 @@
 			</vs-button>
 			<!-- 背景任务 -->
 
-			<vs-button id="switchBg" class="iconBtn" v-if="currentUser" @click="switchBgTask" animation-type="vertical">
+			<vs-button v-if="!showHome && currentUser" id="switchBg" class="iconBtn" @click="switchBgTask" animation-type="vertical">
 				<Icon type="md-pulse" size="25" class="btnIconFont" />
 				<template #animate v-if="!isMobile">
 					{{ $t('home.task') }}
@@ -67,7 +67,7 @@
 			</vs-button>
 		</div>
 
-		<vs-dialog prevent-close blur v-model="showUserSetting">
+		<vs-dialog prevent-close  v-model="showUserSetting">
 			<user-setting @onClose="showUserSetting = false"></user-setting>
 		</vs-dialog>
 
@@ -146,6 +146,11 @@ export default {
 						})
 					}
 				}, 500)
+
+				this.api.post('/api/usersApi/logout', {
+					token: this.$store.state.token,
+					hideLoading: true
+				}).then((res) => { })
 			})
 		}
 

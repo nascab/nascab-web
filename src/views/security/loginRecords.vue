@@ -34,10 +34,7 @@
 						</vs-td>
 						<vs-td style="text-align: left;">
 							<vs-tooltip>
-								{{ tr.client }}
-								<template #tooltip>
-									{{ tr.remark }}
-								</template>
+								{{ tr.remark}}
 							</vs-tooltip>
 						</vs-td>
 						<vs-td style="text-align: left;">

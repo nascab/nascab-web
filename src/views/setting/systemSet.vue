@@ -4,28 +4,27 @@
 		<div class="item-root">
 			<!-- 当前系统版本 -->
 			<div style="flex-shrink:0">{{ $t('system.currentSystemVersion') }}:</div>
-			<span style="margin-right: 20px;">V{{ currentVersion }}</span>
+			<span style="margin-right: 10px;">V{{ currentVersion }}</span>
+			<a v-if="updateIsShow"  @click="showUpdate">{{$t('system.update')}}</a>
 		</div>
 		<div class="item-root" v-if="versionInfo">
 			<!-- 最新系统版本 -->
 			<div style="flex-shrink:0">{{ $t('system.lastestVersion') }}:</div>
-			<span style="margin-right: 20px;">V{{ versionInfo.version }}</span>
-			<!-- <a @click="showUpdate">{{$t('system.update')}}</a> -->
+			<span style="margin-right: 10px;">V{{ versionInfo.version }}</span>
+			
 			<!-- 更新按钮 -->
-			<vs-button v-if="updateIsShow" @click="showUpdate" border style="height: 25px;line-height:25px">
+			<!-- <vs-button v-if="updateIsShow" @click="showUpdate" border style="height: 25px;line-height:25px">
 				{{ $t('system.update') }}
-			</vs-button>
+			</vs-button> -->
 			<!-- 更新日志 -->
-			<vs-button @click="showUpdateLog" border style="height: 25px;line-height:25px;margin-left: 10px;">
-				{{ $t('system.updateLog') }}
-			</vs-button>
+			<a style="flex-shrink: 0;" @click="showUpdateLog">{{ $t('system.updateLog') }}</a>
 		</div>
 
 		<Divider>{{ $t('state.systemInfo') }}</Divider>
 		<div class="item-root">
 			<!-- 安装目录 -->
 			<div style="flex-shrink:0">{{ $t('state.appRootPath') }}:</div>
-			<span class=" enable-text-select" style="margin-right: 20px;" @click="copyText(systemInfo.appRootPath)">{{
+			<span class=" enable-text-select" style="margin-right: 20px;text-align:left;word-break:break-all" @click="copyText(systemInfo.appRootPath)">{{
 				systemInfo.appRootPath }}</span>
 		</div>
 
@@ -36,9 +35,8 @@
 			<div style="flex-shrink:0;margin-right: 10px;">{{ $t('setting.databasePath') }}:</div>
 			<span class="enable-text-select" style="word-break:break-all;text-align: left;"
 				@click="copyText(systemInfo.databaseFolder)">{{ systemInfo.databaseFolder }}</span>
-			<vs-button @click="onVacuumDb()" border style="height: 25px;flex-shrink: 0;">
-				{{ $t('setting.vacuumDb') }}
-			</vs-button>
+
+			<a style="margin-left:10px;flex-shrink: 0;" @click="onVacuumDb()">{{ $t('setting.vacuumDb') }}</a>
 		</div>
 		<div class="divider"></div>
 		<div class="item-root">
@@ -46,28 +44,22 @@
 			<div style="flex-shrink:0;margin-right: 10px">{{ $t('setting.cachePath') }}:</div>
 			<span class="enable-text-select" style="word-break:break-all;text-align: left"
 				@click="copyText(systemInfo.imgFolder)">{{ systemInfo.imgFolder }}</span>
-			<span style="flex-shrink:0" class="icon-main-color"
-				v-if="this.systemInfo.imgFolderUsable == 1">({{ $t("common.available") }})</span>
+			<span style="flex-shrink:0" class="icon-main-color" v-if="this.systemInfo.imgFolderUsable == 1">({{
+				$t("common.available") }})</span>
 			<span style="flex-shrink:0" class="icon-red-color" v-if="this.systemInfo.imgFolderUsable != 1">({{
 				$t("common.unavailable") }})</span>
-			<vs-button @click="onSelectCachePath('')" border style="height: 25px;flex-shrink: 0;">
-				{{ $t('Reset') }}
-			</vs-button>
-			<vs-button @click="showCacheChangeDialog()" border style="height: 25px;flex-shrink: 0;">
-				{{ $t('common.change') }}
-			</vs-button>
+			<a style="margin-left:10px;flex-shrink: 0;" @click="onSelectCachePath('')"> {{ $t('Reset') }}</a>
+			<a style="margin-left:10px;flex-shrink: 0;" @click="showCacheChangeDialog()"> {{ $t('common.change') }}</a>
 		</div>
 		<div class="divider"></div>
 		<div class="item-root" v-if="systemInfo.cacheImageInfo">
 			<!-- 缩略图大小 -->
-			<div style="display:flex;flex-direction:column;align-items:flex-start;margin-right:10px">
+			<!-- <div style="display:flex;flex-direction:column;align-items:flex-start;margin-right:10px"> -->
 				<span>{{ $t('setting.cacheSize') }}:{{ utils.getSizeStr(systemInfo.cacheImageInfo.totalSize) }}</span>
-				<span style="margin-top:5px">{{ $t('setting.cacheCount') }}:{{ systemInfo.cacheImageInfo.count }}</span>
-			</div>
+				<!-- <span style="margin-top:5px">{{ $t('setting.cacheCount') }}:{{ systemInfo.cacheImageInfo.count }}</span> -->
+			<!-- </div> -->
 
-			<vs-button @click="handleClickCache" border style="height: 25px;">
-				{{ $t('setting.clearCache') }}
-			</vs-button>
+			<a style="margin-left:10px;flex-shrink: 0;"  @click="handleClickCache"> {{ $t('setting.clearCache') }}</a>
 
 		</div>
 
@@ -269,4 +261,5 @@ export default {
 	width: 100%;
 	height: 1px;
 	background-color: #eee;
-}</style>
+}
+</style>

@@ -41,8 +41,8 @@ export default {
 	flex-shrink: 0;
 	padding-left: 10px;
 	padding-right: 10px;
-	border-radius: 20px;
-	height: 40px;
+	border-radius: 18px;
+	height: 36px;
 }
 
 .my-bt-red {

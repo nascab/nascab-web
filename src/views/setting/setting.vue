@@ -12,11 +12,11 @@
 		<div class="main-layout nas-padding-right-zero">
 			<!-- 左侧边栏 -->
 			<div class="sidebar-root">
-				<my-sidebar ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
+				<my-sidebar name="setting"  ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
 			</div>
 			<!-- 左侧边栏-手机 -->
 			<div class="sidebar-mobile-root">
-				<my-sidebar-mobile ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
+				<my-sidebar-mobile name="setting"  ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
 				</my-sidebar-mobile>
 			</div>
 			<div class="setting-list-root">
@@ -31,7 +31,7 @@
 				<!-- ddns -->
 				<ddns v-if="leftIndex == 'ddns'" @onToLogin="switchToNasLogin"></ddns>
 				<!-- 远程访问 -->
-				<!-- <remote-access v-if="leftIndex == 'remoteAccess'" @onToLogin="switchToNasLogin"></remote-access> -->
+				<remote-access v-if="leftIndex == 'remoteAccess'" @onToLogin="switchToNasLogin"></remote-access>
 				<!-- nascab账号 -->
 				<nascab-account v-if="leftIndex == 'nasAccount'"></nascab-account>
 			</div>
@@ -102,15 +102,16 @@ export default {
 				title: this.$t('setting.systemSetting'),
 				font: "nasIcons icon-setting-system"
 			},
-			// {
-			// 	id: 'remoteAccess',
-			// 	title: this.$t('nascab.remoteAccessMenu'),
-			// 	font: "nasIcons icon-download"
-			// },
+			
 			{
 				id: 'custom',
 				title: this.$t('setting.custom'),
 				font: "nasIcons icon-custome"
+			},
+			{
+				id: 'remoteAccess',
+				title: this.$t('nascab.remoteAccessMenu'),
+				font: "nasIcons icon-network"
 			},
 			{
 				id: 'ddns',

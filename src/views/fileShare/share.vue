@@ -13,11 +13,11 @@
 		<div class="main-layout  nas-padding-right-zero">
 			<!-- 左侧边栏 -->
 			<div class="sidebar-root">
-				<my-sidebar ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
+				<my-sidebar name="share"  ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
 			</div>
 			<!-- 左侧边栏-手机 -->
 			<div class="sidebar-mobile-root">
-				<my-sidebar-mobile ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
+				<my-sidebar-mobile name="share"  ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
 				</my-sidebar-mobile>
 			</div>
 			<div class="share-list-root">

@@ -50,7 +50,7 @@ export default {
   computed: {},
   data() {
     return {
-      showMenuArr: [],
+      showMenuArr: ["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"],
       rightMenuList: [{
         text: this.$t('file.openInNewWindow'),
         type: "NEW_WINDOW",
@@ -149,7 +149,11 @@ export default {
         }else{
           this.showMenuArr=["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"]
         }
-      }).catch((error) => { })
+      }).catch((error) => { 
+
+        this.showMenuArr=["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"]
+
+      })
     },
     //手机同步点击
     onClickMobileSync() {

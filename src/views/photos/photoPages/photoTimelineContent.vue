@@ -4,9 +4,11 @@
 		<!-- 头部操控条 -->
 		<div class="photo-header">
 			<photo-operation-header ref="photoHeader" @showSearchBtn="showSearchBtn" @onChooseDataType="onChooseDataType"
+			:showSourceFilter="true"
+			:restoreFilter="!nearMode&&!ordinaryAlbumId&&!albumId&&!faceId&&!aiClassId"
 				@onChangeShowMode="onChangeShowMode" @onSizeChange="setImgSize" :editMode="editMode"
 				@onChooseRange="onChooseRange" :nearMode="nearMode" @onSearch="onSearch" @albumId="albumId"
-				@onSwitchEditMode="switchEditMode">
+				@onSwitchEditMode="switchEditMode" @onChooseSource="onChooseSource">
 			</photo-operation-header>
 		</div>
 		<div class="photo-content">
@@ -14,7 +16,7 @@
 			<photo-list-content ref="photoContent" @onHoverSelected="onHoverSelected" @onPhotoClick="onPhotoClick"
 				@onPhotoLoadOver="onPhotoLoadOver" :showMode="showMode" :geohash="geohash" :albumId="albumId"
 				:aiClassId="aiClassId" :ordinaryAlbumId="ordinaryAlbumId" :showRangeType="showRangeType"
-				:showFileType="showFileType" :searchStr="searchStr" :faceId="faceId">
+				:showFileType="showFileType" :searchStr="searchStr" :faceId="faceId" :sourceFolderList="sourceFolderList">
 			</photo-list-content>
 			<!-- 时间轴 -->
 			<photo-timeline class="timeline-wrapper" v-show="timeLine.length > 0" ref="timeline" :geohash="geohash"
@@ -25,6 +27,7 @@
 		<div v-show="editMode" class="bottom-select-root">
 			<photo-bottom-select @onRemoveFromAlbum="onTrashInSuc" :ordinaryAlbumId="ordinaryAlbumId"
 				:showRemoveFromAlbum="showRemoveFromAlbum" :showAddToAlbum="showAddToAlbum" ref="selectView"
+				:faceId="faceId"
 				@onUnSelect="onUnSelect" @onTrashInSuc="onTrashInSuc()" :editMode="editMode">
 			</photo-bottom-select>
 		</div>
@@ -114,6 +117,7 @@ export default {
 	},
 	data() {
 		return {
+			sourceFolderList:'',//已选中的来源文件夹列表json 空代表全部
 			searchStr: "",
 			showRangeType: '0',
 			showVideoDetail: false,
@@ -131,7 +135,6 @@ export default {
 		window.addEventListener("scroll", this.onPageScroll, true)
 		window.addEventListener("resize", this.onWindowResize)
 		window.addEventListener('popstate', this.onPopstate)
-		this.checkSourePath()
 
 	},
 	beforeDestroy() {
@@ -165,7 +168,7 @@ export default {
 			this.$nextTick(() => {
 				if (!this.$refs.timeline) return
 				this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0",
-					this.getGeoParam(), this.albumId, this.ordinaryAlbumId, "", this.aiClassId, this.faceId);
+					this.getGeoParam(), this.albumId, this.ordinaryAlbumId, "", this.aiClassId, this.faceId,this.sourceFolderList);
 			})
 		},
 
@@ -185,33 +188,7 @@ export default {
 				this.$refs.photoContent.getPhotoByDate(this.timeLine[0], 1);
 			}
 		},
-		checkSourePath() {
-			//查询是否设置了来源文件夹 没有设置用户设置
-			if (this.$store.state.currentUser.is_admin == 1) {
-				this.api.post('/api/sourceFolderApi/getPathByType', {
-					type: 'photo',
-				}).then((res) => {
-					if (!res.code) {
-						if (res.data.length < 1) {
-							this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
-								'photo.noSourceSetAlert'), () => {
-									this.goPath('/photoSourceSet')
-								}, null, this.$t('photo.goToSet'))
-						} else {
-							for (let i in res.data) {
-								if (res.data[i].exist == 0) {
-									this.showVsConfirmDialog(this.$t('common.confirm'), this.$t(
-										'photo.sourcePathUnusable', { path: res.data[i].path }), () => {
-											this.goPath('/photoSourceSet')
-										}, null, this.$t('photo.goToSet'))
-									break
-								}
-							}
-						}
-					}
-				}).catch((error) => { })
-			}
-		},
+
 		//窗口变化回调
 		onWindowResize(e) {
 			this.$nextTick(() => {
@@ -226,7 +203,9 @@ export default {
 			if (this.showPhotoDetail || this.showVideoDetail) {
 				return
 			}
-
+			if(e.target.id!="photo-wrapper"){
+				return
+			}
 			this.$refs.photoContent.cancelTouchEvent()
 
 
@@ -272,11 +251,17 @@ export default {
 			console.log('onUnSelect')
 			this.clearSelected();
 		},
+		onChooseSource(sourceFolderList){
+			this.sourceFolderList=sourceFolderList
+			this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0", this
+				.getGeoParam(), this.albumId, this.ordinaryAlbumId, null, this.aiClassId, this.faceId,this.sourceFolderList);
+			this.clearSelected();
+		},
 		onSearch(searchStr) {
 			//头部搜索回调
 			this.searchStr = searchStr
 			this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0", this
-				.getGeoParam(), this.albumId, this.ordinaryAlbumId, searchStr, this.aiClassId, this.faceId);
+				.getGeoParam(), this.albumId, this.ordinaryAlbumId, searchStr, this.aiClassId, this.faceId,this.sourceFolderList);
 			this.clearSelected();
 		},
 		//改变数据类型的回调 0全部 1照片 2视频
@@ -284,7 +269,7 @@ export default {
 			this.showFileType = fileType
 			//重新加载时间轴数据
 			this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0", this
-				.getGeoParam(), this.albumId, this.ordinaryAlbumId, null, this.aiClassId, this.faceId);
+				.getGeoParam(), this.albumId, this.ordinaryAlbumId, null, this.aiClassId, this.faceId,this.sourceFolderList);
 			this.clearSelected();
 		},
 		getGeoParam() {
@@ -394,14 +379,28 @@ export default {
 
 				} else if (photoList[index].type == 2) {
 					if (localStorage.getItem("rawPlayer") == "1") {
-						//调用原生播放器
-						jsBridge.playVideo(JSON.stringify({
-							playIndex: index,
-							playList: photoList,
+						//调用原生播放器 筛选出视频
+						let useIndexList=[]
+						let useIndex=0
+						for(let i in photoList){
+							if(photoList[i].type==2){
+								useIndexList.push(photoList[i])
+							}
+						}
+
+						for(let i in useIndexList){
+							if(useIndexList[i].id==photoList[index].id){
+								useIndex=i 
+								break
+							}
+						}
+						jsBridge.playVideo({
+							playIndex: useIndex,
+							playList: useIndexList,
 							token: this.$store.state.token,
 							fromFileBrower: false,
 							serverType: "photo"
-						}))
+						})
 					} else {
 						//继续使用网页播放器
 						this.showVideoDetail = true;

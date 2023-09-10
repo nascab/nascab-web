@@ -14,7 +14,7 @@
 			<img :id="'photoImg' + photo.id" :style="{ height: photoHeight + 'px', 'object-fit': showMode }"
 				class="photo-img" v-lazy="photo.url" @dragstart.prevent />
 			<!-- 播放按钮 -->
-			<div class="icon-play-root" v-if="photo.type == 2 && photo.is_livephoto ==0">
+			<div class="icon-play-root" v-if="photo.type == 2 && photo.is_livephoto == 0">
 				<!-- 视频的时长 -->
 				<span style="color: white;font-size: 30px;" class="nasIcons icon-play"></span>
 				<p class="icon-duration">{{ utils.formatSeconds(photo.duration) }}</p>
@@ -56,13 +56,34 @@
 		<my-btn-icon v-if="showToTopBtn" class="to-top" iIcon="md-arrow-up"
 			@click="$refs.photoWrapper.scrollTo({ top: 0, behavior: 'smooth' })"></my-btn-icon>
 
+		<!-- 人物选择对话框 让用户选择变更到哪个人物 -->
+		<vs-dialog v-model="showSelectFace" scroll>
+			<template #header>
+				<h4 style="font-size: 16px;">
+					{{ $t('photo.changePeopleAlert') }}
+				</h4>
+			</template>
+			<!-- 待选人物列表 -->
+			<photo-faces-select ref="photoFaceSelect" :singleSelectMode="true"></photo-faces-select>
+			<template #footer>
+				  <vs-button block @click="onSelectPeople">
+					{{ $t("common.select") }}
+				  </vs-button>
+			  </template>
+		</vs-dialog>
+
+		
 	</div>
 </template>
 <script>
 import axios from "@/plugins/axios";
 import utils from "@/plugins/utils";
+const photoFacesSelect = () => import('@/views/photos/photoPages/photoFaces.vue')
 
 export default {
+	components:{
+		photoFacesSelect
+	},
 	props: {
 		//每次网络请求加载行数
 		pageRows: {
@@ -121,10 +142,15 @@ export default {
 		searchStr: {
 			default: '',
 			type: String
+		},
+		sourceFolderList: {
+			default: '',
+			type: String
 		}
 	},
 	data() {
 		return {
+			showSelectFace:false,
 			showToTopBtn: false,
 			rightMenuList: [{
 				text: this.$t('file.check'),
@@ -146,7 +172,8 @@ export default {
 			baseUrl: axios.baseUrl, //服务器地址
 			dataColumns: 10, //数据有多少咧
 			selectedIndex: null,
-			selectedFile: null
+			selectedFile: null,
+			switchPeopleIndexList:[]
 
 		};
 	},
@@ -174,7 +201,29 @@ export default {
 				}
 			}
 		})
-
+		//从人脸相册移出 由photoBottomSelect这个组件发出的事件
+		this.$bus.$on('onRemoveFromFace', (selectedIdList) => {
+			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('photo.removeFromAlbum') + "?", () => {
+				let removeIndexList = []
+				for (let idx of this.photoList) {
+					if (selectedIdList.includes(idx.id)) {
+						removeIndexList.push(idx)
+					}
+				}
+				this.removeFromFaceApi(removeIndexList)
+			})
+		})
+		//转移到其他人物
+		this.$bus.$on('onSwitchToOtherPeople', (selectedIdList) => {
+			let switchIndexList = []
+			for (let idx of this.photoList) {
+				if (selectedIdList.includes(idx.id)) {
+					switchIndexList.push(idx)
+				}
+			}
+			this.switchPeopleIndexList=switchIndexList
+			this.showSelectFace=true
+		})
 		this.$nextTick(() => {
 			//如果是人脸相册 右键菜单加一个设置为人物相册海报
 			console.log("faceId:" + this.faceId)
@@ -201,9 +250,53 @@ export default {
 	beforeDestroy() {
 		this.$bus.$off("removeIndexById");
 		this.$bus.$off("onIndexUpdate");
+		this.$bus.$off("onRemoveFromFace");
+
 
 	},
 	methods: {
+		onSelectPeople(){
+			if(this.$refs.photoFaceSelect){
+				let selectedFaceId=this.$refs.photoFaceSelect.getSelectedFaceId()
+				if(selectedFaceId){
+					let rawList=[]
+					for(let i of this.switchPeopleIndexList){
+						rawList.push({
+							photo_index_id:i.id,
+							face_id:i.face_id
+						})
+					}
+					//调用变更人物接口
+					let params={
+						targetFaceId:selectedFaceId,
+						rawFaceIndexIdList:JSON.stringify(rawList)
+					}
+					// 
+					this.api.post("/api/photoApi/switchFaceId",params)
+					.then((res) => {
+						if (!res.code) {
+							this.showVsNotification(this.$t('common.changeSuccess'));
+							if(res.sucIdList){
+								for(let i in res.sucIdList){
+									let sucId = res.sucIdList[i]
+									// 从数组移出
+									for (let j = this.photoList.length - 1; j >= 0; j--) {
+										if (this.photoList[j].id == sucId) {
+											console.log("删除",this.photoList[j].id)
+											this.photoList.splice(j, 1)
+											break
+										}
+									}
+								}
+							}
+							this.showSelectFace=false
+						}
+					})
+					.catch((error) => { });
+						console.log(params)
+					}
+			}
+		},
 		touchstart(index) {
 			clearTimeout(this.longPressTimeout); //再次清空定时器，防止重复注册定时器
 			this.longPressTimeout = setTimeout(() => {
@@ -224,7 +317,7 @@ export default {
 			this.showToTopBtn = show
 		},
 		showRightMenu(event, root, file, index) {
-			if(file.selected){
+			if (file.selected) {
 				return event.preventDefault()
 			}
 			if (this.isMobile) return event.preventDefault()
@@ -244,20 +337,36 @@ export default {
 				this.setFacePosterApi(this.selectedIndex)
 			} else if (type == "REMOVE_FROM_FACE") {
 				//从人脸相册移除
-				this.removeFromFaceApi(this.selectedIndex)
+				this.removeFromFaceApi([this.photoList[this.selectedIndex]])
 			}
 		},
-		removeFromFaceApi(index) {
+		removeFromFaceApi(indexList) {
 			// 从人脸相册移除
+			let deleteArr = []
+			for (let index of indexList) {
+				deleteArr.push({
+					faceId: index.face_id,
+					indexId: index.id
+				})
+			}
 			this.api
 				.post("/api/photoApi/removeFromFace", {
-					photoIndexId: this.photoList[index].id,
-					rawFaceId: this.photoList[index].face_id
+					deleteList: JSON.stringify(deleteArr)
 				})
 				.then((res) => {
 					if (!res.code) {
 						this.showVsNotification(this.$t('common.changeSuccess'));
-						this.photoList.splice(index, 1)
+						for (let i in indexList) {
+							let item = indexList[i]
+							// 从数组移出
+							for (let j = this.photoList.length - 1; j >= 0; j--) {
+								if (this.photoList[j].id == item.id) {
+									this.photoList.splice(j, 1)
+									break
+								}
+							}
+						}
+
 					}
 				})
 				.catch((error) => { });
@@ -375,14 +484,14 @@ export default {
 		//根据日期获取数据
 		getPhotoByDate(dateStr, timeType) {
 			// let timestamp = new Date(dateStr.original_date).getTime() + 16 * 3600000;
-			this.getPhotoByTime(dateStr.original_time+ 24 * 3600000, timeType);
+			this.getPhotoByTime(dateStr.original_time + 24 * 3600000, timeType);
 		},
 		//根据时间戳获取数据 loadLastPage为获取本页数据后是否自动获取上一页 因为点击时间轴后需要自动加载上一页提升用户体验
 		getPhotoByTime(timestamp, timeType, loadLastPageAfterReq) {
 			this.sortType = timeType == 1 ? "desc" : "asc";
 			// 防止重复触发
 			if (this.lastLoading || this.nextLoading) {
-				console.log('防止重复出发', this.lastLoading, this.nextLoading)
+				console.log('防止重复触发', this.lastLoading, this.nextLoading)
 				return;
 			}
 			timeType = parseInt(timeType);
@@ -438,6 +547,9 @@ export default {
 			if (this.searchStr) {
 				params.searchStr = this.searchStr
 			}
+			if (this.sourceFolderList) {
+				params.sourceFolderList = this.sourceFolderList
+			}
 			this.api
 				.post("/api/photoApi/getPhotoByTime", params)
 				.then((res) => {
@@ -474,17 +586,17 @@ export default {
 						if (res.data.length < reqCount) {
 							this.nextHasMore = false;
 						}
-						if (!this.isMobile) {
-							//手机上有兼容性问题 目前只在pc做这个操作
-							if (res.data.length > 0 && this.photoList.length > this.listMaxLength) {
-								//从前面删除一页
-								this.photoList.splice(0, res.data.length)
-								let resHeight = (this.photoWidth + this.photoMargin * 2) * res.data.length / this.dataColumns
-								this.$nextTick(() => {
-									this.$refs.photoWrapper.scrollTop = this.$refs.photoWrapper.scrollTop - resHeight
-								})
-							}
-						}
+						// if (!this.isMobile) {
+						//手机上有兼容性问题 目前只在pc做这个操作
+						// if (res.data.length > 0 && this.photoList.length > this.listMaxLength) {
+						// 	//从前面删除一页
+						// 	this.photoList.splice(0, res.data.length)
+						// 	let resHeight = (this.photoWidth + this.photoMargin * 2) * res.data.length / this.dataColumns
+						// 	this.$nextTick(() => {
+						// 		this.$refs.photoWrapper.scrollTop = this.$refs.photoWrapper.scrollTop - resHeight
+						// 	})
+						// }
+						// }
 
 						console.log('往列表后面追加', this.photoList.length)
 					}
@@ -560,10 +672,11 @@ export default {
 
 	.ic-livephoto {
 		position: absolute;
-		right: 5px;
-		top: 5px;
+		right: 2px;
+		top: 2px;
 		color: white;
-		font-size: 30px;
+		font-size: 25px;
+		line-height: 25px;
 	}
 
 	.photo-select-mask {
@@ -629,10 +742,9 @@ export default {
 
 
 	.icon-duration {
-		margin-right: 8px;
 		margin-top: 3px;
-		font-size: 16px;
 		color: white;
 		// font-weight: bold;
 	}
-}</style>
+}
+</style>

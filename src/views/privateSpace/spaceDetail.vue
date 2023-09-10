@@ -4,7 +4,7 @@
 			<div class="album-detail-header">
 				<div style="display: flex;align-items:center">
 					<vs-button icon style="flex-shrink: 0;">
-						<Icon style="cursor:pointer" @click="goBack" size="24" type="md-return-left" />
+						<Icon style="cursor:pointer" @click="goBack" size="20" type="md-return-left" />
 					</vs-button>
 					<div
 						style="font-size: 18px;font-weight: bold;height: 100%;margin-left: 20px;display: flex;align-items: center;">
@@ -44,14 +44,14 @@
 						<!-- 上传和刷新 手机端按钮 -->
 						<div class="private-header-mobile-show">
 							<div style="display: flex;align-items: center;white-space: nowrap;">
-								<my-btn-icon iIcon="md-cloud-upload" @click="uploadFiles()"></my-btn-icon>
+								<my-btn-icon style="margin-right:10px" iIcon="md-cloud-upload" @click="uploadFiles()"></my-btn-icon>
 								<my-btn-icon iIcon="md-sync" @click="loadFirstPage()"></my-btn-icon>
 							</div>
 						</div>
 					</div>
 					<!-- 列表 -->
 					<div class="list-content-root">
-						<div class="file-list" ref="photoWrapper">
+						<div class="file-list" ref="photoWrapper" @scroll="onPageScroll">
 							<div v-for="(file, index) in dataList"
 								:style="{ 'margin': itemMargin + 'px', 'width': itemWidth + 'px' }"
 								@mouseenter="mouseEnterImg(index)" @mouseleave="mouseLeaveImg(index)" :key="file.id"
@@ -156,10 +156,8 @@
 				<Upload @fileUploaded="hasNewFileUploaded = true" ref="spaceUpload" :spaceId="spaceId"></Upload>
 			</div>
 		</Modal>
-		<!-- 返回顶部按钮 -->
-		<my-btn-icon v-if="showToTopBtn && !showVideoDetail && !showPhotoDetail"
-			style="position:fixed;right:10px;bottom:55px;z-index:9999;" iIcon="md-arrow-up"
-			@click="$refs.photoWrapper.scrollTo({ top: 0, behavior: 'smooth' })"></my-btn-icon>
+		<my-scroll-bar ref="scrollBar" v-if="!showPhotoDetail&&!showVideoDetail"></my-scroll-bar>
+
 	</div>
 </template>
 
@@ -170,6 +168,7 @@ import videoDetail from "@/views/videoDetail/videoDetail.vue";
 import photoDetail from "@/views/photos/components/photoDetail.vue";
 import { Base64 } from "js-base64"
 import jsBridge from "@/plugins/jsBridge"
+import myScrollBar from "@/components/my-components/my-scrollbar/my-scrollbar"
 
 export default {
 	watch: {
@@ -191,7 +190,6 @@ export default {
 			spaceId: "",
 			selectedSpace: {},
 			hasNewFileUploaded: false,
-			showToTopBtn: false,
 			typeMenuOptionList: [{
 				title: this.$t('photo.all'),
 				id: "all"
@@ -241,6 +239,7 @@ export default {
 		}
 	},
 	components: {
+		myScrollBar,
 		Upload,
 		videoDetail,
 		photoDetail
@@ -261,15 +260,12 @@ export default {
 		} else {
 			this.getFileList(false)
 		}
-		// 监听滚动条
-		window.addEventListener("scroll", this.onPageScroll, true);
 		//窗口变化监听
 		window.addEventListener("resize", this.onWindowResize);
 		window.addEventListener('popstate', this.onPopstate)
 
 	},
 	beforeDestroy() {
-		window.removeEventListener("scroll", this.onPageScroll, true);
 		window.removeEventListener("resize", this.onWindowResize);
 		window.removeEventListener('popstate', this.onPopstate);
 
@@ -473,13 +469,13 @@ export default {
 			console.log("useList",useList)
 			if (localStorage.getItem("rawPlayer") == "1") {
 				//调用原生播放器
-				jsBridge.playVideo(JSON.stringify({
+				jsBridge.playVideo({
 					playIndex: showIndex,
 					playList: useList,
 					token: this.$store.state.token,
 					fromFileBrower: false,
 					serverType: "photo"
-				}))
+				})
 			} else {
 				//继续使用网页播放器
 				this.showVideoDetail = true;
@@ -507,17 +503,17 @@ export default {
 			if (this.showPhotoDetail || this.showVideoDetail || this.loading) {
 				return
 			}
-
+			if (this.$refs.scrollBar) {
+				this.$refs.scrollBar.onScroll(e)
+			}
 			//滚动的时候清空计时器 防止触发菜单
 			if (this.longPressTimeout) {
 				clearTimeout(this.longPressTimeout);
 				this.longPressTimeout = null
 			}
-
 			this.dealOnPageScroll(e, () => {
 				this.getFileList(true)
 			}, (showTopBtn) => {
-				this.showToTopBtn = showTopBtn
 			})
 
 		},
@@ -628,15 +624,19 @@ export default {
 	align-items: center;
 	justify-content: space-between;
 
-
+	@media all and (max-width:640px) {
+		height: 60px;
+	}
 }
 
 .album-detail-content {
 	// 列表容器 外层
 	width: 100%;
 	height: 100%;
-	padding-top: 80px;
-
+	padding-top: 60px;
+	@media not all and (max-width:640px) {
+		padding-top: 80px;
+	}
 	.content-root {
 		// 列表容器 包含列表头和列表内容
 		width: 100%;

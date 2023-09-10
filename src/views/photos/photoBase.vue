@@ -11,11 +11,11 @@
 		<div class="main-layout nas-padding-right-zero">
 			<!-- 左侧边栏 -->
 			<div class="sidebar-root">
-				<my-sidebar :initIndex="initIndex" ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
+				<my-sidebar  name="photo" :initIndex="initIndex" ref="sidebar" @onItemClick="setLeftMenuId" :optionList="sideOptionList"></my-sidebar>
 			</div>
 			<!-- 左侧边栏-手机 -->
 			<div class="sidebar-mobile-root">
-				<my-sidebar-mobile :initIndex="initIndex" ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
+				<my-sidebar-mobile  name="photo" :initIndex="initIndex" ref="sidebarMobile" @onItemClick="setLeftMenuId" :optionList="sideOptionList">
 				</my-sidebar-mobile>
 			</div>
 			<!-- 右侧内容区域 -->
@@ -106,7 +106,9 @@ export default {
 	methods: {
 
 		setLeftMenuId(menu) {
+			console.log("setLeftMenuId",menu)
 			this.goPath(menu.id)
+			window.localStorage.photoViewType=menu.id
 		},
 
 	}

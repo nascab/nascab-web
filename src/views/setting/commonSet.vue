@@ -1,14 +1,13 @@
 <template>
 	<div class="setting-root-wrapper">
 		<div class="common-setting-root">
-			<div style="display: flex;justify-content: left;">
+			<div style="width: 100%;display: flex;justify-content: left;align-items:center">
 				<div style="margin-right: 20px;">{{ $t('setting.language') }}:</div>
-				<vs-radio v-model="settingData.language" val="zh-CN" style="margin-right: 20px;">
-					中文
-				</vs-radio>
-				<vs-radio v-model="settingData.language" val="en-US">
-					English
-				</vs-radio>
+				<Select v-model="settingData.language" style="width:120px">
+					<Option  value="zh-CN" key="zh-CN">中文[简体]</Option>
+					<Option  value="zh-TW" key="zh-TW">中文[簡體]</Option>
+					<Option  value="en-US" key="en-US">English</Option>
+				</Select>
 			</div>
 
 			<Divider style="margin-top: 30px;margin-bottom: 20px;">{{ $t('setting.commonSetting') }}</Divider>
@@ -37,6 +36,16 @@
 					<i-switch v-model="settingData.autoShowWindow" />
 				</div>
 			</div>
+			<!-- 启动程序时扫描来源文件夹 -->
+			<div style="width: 100%;display: flex;flex-direction: column;align-items: center;">
+				<div
+					style="display: flex;flex-direction: row;align-items: center;margin-top: 20px;justify-content: flex-start;width: 100%;">
+					<div style="margin-right: 20px;">{{ $t('setting.autoScanSource') }}</div>
+					<i-switch v-model="settingData.autoScanSource" />
+				</div>
+				<p class="text-grey" style="text-align:left;width:100%;margin-top:5px">{{$t("setting.autoScanSourceB")}}</p>
+			</div>
+			
 			<Divider style="margin-top: 30px;margin-bottom: 20px;">{{ $t('setting.portSetting') }}</Divider>
 			<p style="margin-bottom: 10px;">{{ $t('setting.ifPortInUserWillAdd') }}</p>
 			<div style="width: 100%;display: flex;flex-direction: column;align-items: center;">
@@ -68,6 +77,11 @@
 				<!-- 线程数量 -->
 				<vs-input autocapitalize="off" autocorrect="off" type="number" class="item-input" style="margin-top: 20px;" v-model="settingData.threadCount"
 					:label="$t('setting.threadCount') + '[' + $t('setting.threadCountHint') + ']'">
+				</vs-input>
+
+				<!-- 登录状态保持时间 -->
+				<vs-input autocapitalize="off" autocorrect="off" type="number" class="item-input" style="margin-top: 30px;" v-model="settingData.tokenKeepHour"
+					:label="$t('setting.tokenKeepTime') ">
 				</vs-input>
 			</div>
 
@@ -108,7 +122,9 @@ export default {
 				apiPort: null,
 				apiPortHttps: null,
 				webDavPort: null,
-				FTPPort: null
+				FTPPort: null,
+				tokenKeepHour:24,
+				autoScanSource:false
 			}
 		}
 	},
@@ -116,7 +132,6 @@ export default {
 
 	},
 	methods: {
-
 		resetConfig() {
 			if (this.returnData) {
 				this.settingData.apiPort = this.returnData.defaultApiPort
@@ -126,6 +141,7 @@ export default {
 				this.settingData.autoLaunch = false
 				this.settingData.autoLoginClient = true
 				this.settingData.autoShowWindow = true
+				this.settingData.autoScanSource=true
 			}
 		},
 		onLanguageChange(e) {
@@ -134,10 +150,16 @@ export default {
 			let params = {
 				...this.settingData
 			}
+			if(params.tokenKeepHour>720){
+				params.tokenKeepHour=720
+			}
+			if(params.tokenKeepHour<0){
+				params.tokenKeepHour=1
+			}
 			params.autoLaunch = params.autoLaunch ? "1" : "0"
 			params.autoLoginClient = params.autoLoginClient ? "1" : "0"
 			params.autoShowWindow = params.autoShowWindow ? "1" : "0"
-
+			params.autoScanSource = params.autoScanSource ? "1" : "0"
 			this.api.post('/api/commonApi/saveConfig', params).then((res) => {
 				this.showVsNotification(this.$t('setting.saveSuccessRestartValid'))
 				this.$i18n.locale = this.settingData.language
@@ -167,10 +189,15 @@ export default {
 						this.settingData.autoLoginClient = configItem.value == '1'
 					} else if (configItem.title == 'autoShowWindow') {
 						this.settingData.autoShowWindow = configItem.value == '1'
-					} else if (configItem.title == 'httpsCert') {
+					} else if (configItem.title == 'autoScanSource') {
+						this.settingData.autoScanSource = configItem.value == '1'
+					} 
+					else if (configItem.title == 'httpsCert') {
 						this.settingData.httpsCert = configItem.value
 					} else if (configItem.title == 'httpsKey') {
 						this.settingData.httpsKey = configItem.value
+					}else if (configItem.title == 'tokenKeepHour') {
+						this.settingData.tokenKeepHour = configItem.value
 					}
 
 				}

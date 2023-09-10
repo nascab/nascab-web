@@ -7,7 +7,10 @@
 		<div v-for="item in taskList">
 			<div style="display: flex;align-items:center;margin-top: 10px;">
 				<div class="blue-point"></div>
-				<div class="task-type">{{ item.taskTypeStr }}<Icon v-if="item.taskTypeStrAlert" @click="showVsAlertDialog($t('common.alert'), item.taskTypeStrAlert)" style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" /></div>
+				<div class="task-type">{{ item.taskTypeStr }}
+					<Icon v-if="item.taskTypeStrAlert" @click="showVsAlertDialog($t('common.alert'), item.taskTypeStrAlert)"
+						style="cursor: pointer;margin-left: 5px;" size="16" type="ios-help-circle-outline" />
+				</div>
 			</div>
 			<div style="display:flex;align-items: center;">
 				<div v-if="item.sizeStr" class="size-str">{{ item.sizeStr }}</div>
@@ -54,11 +57,10 @@ export default {
 		};
 	},
 	mounted() {
-		this.timer = setInterval(() => {
-			if (this.$store.state.token) this.getBgTaskList(1)
-		}, 8000)
-
-		if (this.$store.state.token) this.getBgTaskList(1)
+		if (this.timer == null) {
+			this.timer = setInterval(this.getBgTaskList, 8000)
+		}
+		this.getBgTaskList()
 	},
 
 	beforeDestroy() {
@@ -77,13 +79,23 @@ export default {
 							taskId: item.id
 						}).then((res) => {
 							if (!res.code) {
-								this.getBgTaskList(1)
+								this.getBgTaskList()
 							}
 						})
 				})
 		},
 		getBgTaskList(taskState) {
+			if (!this.isInHome()) {
+				return
+			}
+			if (!taskState) {
+				taskState = 1
+			}
+			
 			if (this.loading) {
+				return
+			}
+			if (!this.$store.state.token) {
 				return
 			}
 			this.loading = true
@@ -94,21 +106,11 @@ export default {
 				offset: 0,
 				hideLoading: true
 			}
-			let playerCount = sessionStorage.getItem('player-count')
-			if (!playerCount || playerCount < 1) {
-				//如果当前没有在执行播放 那么查看下是否有残留的 停止失败的playid 有的话一起发送给服务器 让服务区停止转码
-				let playIdList = sessionStorage.getItem('play-id-list')
-				if (playIdList) {
-					try {
-						playIdList = JSON.parse(playIdList)
-						params.playIdList = playIdList
-					} catch (err) { }
-				}
-			}
+
 			//获取正在执行的背景任务
 			this.api.post('/api/commonApi/getBgTask', params).then((res) => {
 				this.loading = false
-
+				
 				if (!res.code) {
 					if (params.playIdList && params.playIdList.length > 0) {
 						sessionStorage.setItem('play-id-list', [])
@@ -160,8 +162,8 @@ export default {
 							this.taskList[i].taskTypeStr = this.$t('photo.doingPhash')
 						} else if (this.taskList[i].task_type == 'SUBTITLE_PRE_GEN') {
 							//字幕预提取
-							this.taskList[i].taskTypeStr = this.$t('movie.subtitlePreGen')+"..."
-							this.taskList[i].taskTypeStrAlert = this.$t('movie.subtitlePreGenAlert')+"["+this.$t('movie.subtitlePrenGenClose')+"]"
+							this.taskList[i].taskTypeStr = this.$t('movie.subtitlePreGen') + "..."
+							this.taskList[i].taskTypeStrAlert = this.$t('movie.subtitlePreGenAlert') + "[" + this.$t('movie.subtitlePrenGenClose') + "]"
 						}
 						// 设置任务执行百分比
 						if (item.size_current && item.size_all && item.size_current > 0) {
@@ -207,7 +209,7 @@ export default {
 	background-color: rgba(255, 255, 255, 1);
 	border-radius: 20px;
 	padding: 20px;
-	box-shadow: 0px 6px 10px rgba(0, 0, 0, 0.3);
+	box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);
 }
 
 .bgtask-root-mobile {

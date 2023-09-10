@@ -8,19 +8,20 @@
 }
 
 .icon_controller_s {
-	font-size: 30px;
+	font-size: 25px;
 	color: white
 }
 .icon_controller_m {
+	font-size: 30px;
+	color: white
+}
+.icon_controller_l {
 	font-size: 35px;
 	color: white
 }
-.icon_controller_xxxl {
-	font-size: 50px;
-	color: white
-}
+
 .icon_controller_xxl {
-	font-size: 40px;
+	font-size: 35px;
 	color: white
 }
 //加粗slider bar
@@ -209,15 +210,20 @@
 	max-width: 300px;
 	font-size: 14px;
 	cursor: pointer;
-	margin-bottom: 10px;
+	margin-bottom: 8px;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 }
+.size-list-root{
+	height:300px;
+	overflow-y: scroll;
+}
+
 
 .video-name {
 	text-align: left;
-	font-size: 18px;
+	font-size: 16px;
 	margin-left: 20px;
 	color: white;
 	margin-right: 20px;
