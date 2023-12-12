@@ -27,6 +27,7 @@
 			<files-quick-share v-else-if="menuActive == 'share_temp'"></files-quick-share>
 			<div v-else class="brower-list-root">
 				<folder-brower-operation-bar ref="fileBar" style="position: absolute;left: 0;"
+				@onClickOrder="onClickOrder"
 					@onBack="$refs.fileBrowser.goBack()" :showSlider="!isMobile" @createNewFolder="createNewFolder"
 					@onSliderChange="onSliderChange" :showSearch="menuActive == 'list'" :showClearBtn="menuActive != 'list'"
 					@onClear="onClear" :showCreateNew="showCreateNew" @onRefresh="$refs.fileBrowser.refresh()"
@@ -97,7 +98,7 @@ export default {
 		window.addEventListener("resize", this.onWindowResize);
 		this.$nextTick(() => {
 			let saveSliderValue = localStorage.getItem('folderImageSize')
-			if (saveSliderValue && parseInt(saveSliderValue) >= 100) {
+			if (saveSliderValue && parseInt(saveSliderValue) >= 40) {
 				this.$refs.fileBar.sliderValue = parseInt(saveSliderValue)
 				this.onSliderChange(parseInt(saveSliderValue))
 			}
@@ -147,6 +148,9 @@ export default {
 		},
 		createNewFolder(folderName) {
 			this.$refs.fileBrowser.createNewFolder(folderName)
+		},
+		onClickOrder(sortField,sortType){
+			this.$refs.fileBrowser.onClickOrder(sortField,sortType)
 		}
 	}
 }

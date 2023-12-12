@@ -167,6 +167,8 @@ export default {
 }
 
 .user-list {
+	height: 100%;
+	overflow: auto;
 	width: 100%;
 	display: flex;
 	flex-direction: row;

@@ -1,6 +1,6 @@
 <template>
 	<!-- 照片容器 -->
-	<div class="photo-wrapper" id="photo-wrapper" ref="photoWrapper">
+	<div class="photo-wrapper" id="photo-wrapper" ref="photoWrapper" @mouseleave="onMouseLeaveRoot">
 		<!-- 加载中 -->
 		<div v-if="lastHasMore" style="width:100%;display:flex;justify-content:center;height:60px;align-items:center">
 			<Spin />
@@ -9,7 +9,8 @@
 		<div style="cursor: pointer;" v-for="(photo, index) in photoList" :id="'photoItem' + photo.id" :key="photo.id"
 			class="photo-item" :style="{ margin: photoMargin + 'px', width: photoWidth + 'px', height: photoHeight + 'px' }"
 			@click="onPhotoClick(index)" @mouseenter="mouseEnterImg(index)" @mouseleave="mouseLeaveImg(index)"
-			@contextmenu="showRightMenu($event, $root, photo, index)" @touchstart="touchstart(index)" @touchend="touchend">
+			@contextmenu="showRightMenu($event, $root, photo, index)" @touchstart="touchstart(index)" @touchend="touchend" 
+			@mousedown="onMouseDown($event,index)" @mouseup="onMouseUp(index)">
 			<!-- 照片 -->
 			<img :id="'photoImg' + photo.id" :style="{ height: photoHeight + 'px', 'object-fit': showMode }"
 				class="photo-img" v-lazy="photo.url" @dragstart.prevent />
@@ -115,6 +116,11 @@ export default {
 			default: '',
 			type: String
 		},
+		//照片合集id
+		libraryId: {
+			default: '',
+			type: String
+		},
 		showMode: {
 			default: "cover",
 			type: String
@@ -150,6 +156,10 @@ export default {
 	},
 	data() {
 		return {
+			isInDragSelectMode:false,//是否处于拖动多选
+			dragStartIndex:0,//拖拽选择开始的索引
+			dragEndIndex:0,//拖拽选择结束的索引
+			dragSelectMode:true,//进入拖拽选择模式的时候 如果项目是未选中的则为true 否则为false 反选模式
 			showSelectFace:false,
 			showToTopBtn: false,
 			rightMenuList: [{
@@ -255,6 +265,59 @@ export default {
 
 	},
 	methods: {
+		//鼠标按下
+		onMouseDown(event,index){
+			if(!event || event.buttons!=1){
+				return
+			}
+			this.isInDragSelectMode=true
+			this.dragSelectMode=!this.photoList[index].selected
+			this.dragStartIndex=index
+		},
+		//鼠标抬起
+		onMouseUp(index){
+			this.isInDragSelectMode=false;
+		},
+		onMouseLeaveRoot(){
+			//鼠标离开列表区域 取消拖拽多选
+			this.isInDragSelectMode=false;
+		},
+		mouseEnterImg(index) {
+			if(this.isInDragSelectMode){
+				this.dragEndIndex=index
+				//拖拽选择模式
+				this.setDragRange()		
+			}else{
+				//普通鼠标悬浮模式
+				if (!this.isMobile) {
+					this.photoList[index].hover = true;
+					this.$forceUpdate()
+				}
+			}
+		},
+		mouseLeaveImg(index) {
+			if (!this.isMobile) {
+				this.photoList[index].hover = false;
+			}
+		},
+		setDragRange(){
+			//设置范围选中
+			let rangeMinIndex=this.dragStartIndex>this.dragEndIndex?this.dragEndIndex:this.dragStartIndex
+			let rangeMaxIndex=this.dragStartIndex>this.dragEndIndex?this.dragStartIndex:this.dragEndIndex
+
+			for(let i=rangeMinIndex;i<=rangeMaxIndex;i++){
+				if(this.dragSelectMode){
+					if(!this.photoList[i].selected){
+						this.hoverSelect(i)
+					}
+				}else{
+					if(this.photoList[i].selected){
+						this.hoverSelect(i)
+					}
+				}
+			}
+
+		},
 		onSelectPeople(){
 			if(this.$refs.photoFaceSelect){
 				let selectedFaceId=this.$refs.photoFaceSelect.getSelectedFaceId()
@@ -298,6 +361,7 @@ export default {
 			}
 		},
 		touchstart(index) {
+			console.log("touchstart",index)
 			clearTimeout(this.longPressTimeout); //再次清空定时器，防止重复注册定时器
 			this.longPressTimeout = setTimeout(() => {
 				this.hoverSelect(index)
@@ -413,16 +477,7 @@ export default {
 			this.lastLoading = false;
 			this.nextLoading = false;
 		},
-		mouseEnterImg(index) {
-			if (!this.isMobile) {
-				this.$set(this.photoList[index], "hover", true);
-			}
-		},
-		mouseLeaveImg(index) {
-			if (!this.isMobile) {
-				this.photoList[index].hover = false;
-			}
-		},
+
 		hoverSelect(index) {
 			this.$emit('onHoverSelected', index)
 		},
@@ -535,6 +590,9 @@ export default {
 			if (this.albumId) {
 				params.albumId = this.albumId
 			}
+			if (this.libraryId) {//合集筛选
+				params.libraryId = this.libraryId
+			}
 			if (this.ordinaryAlbumId) {
 				params.ordinaryAlbumId = this.ordinaryAlbumId
 			}
@@ -628,6 +686,7 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
+$item-boder-radius:6px;
 .to-top {
 	position: fixed;
 	right: 90px;
@@ -681,7 +740,7 @@ export default {
 
 	.photo-select-mask {
 		height: 100%;
-		border-radius: 10px;
+		border-radius: $item-boder-radius;
 		position: absolute;
 		width: 100%;
 		background: rgba(0, 0, 0, 0.4);
@@ -696,7 +755,7 @@ export default {
 
 	.photo-hover-mask {
 		height: 100%;
-		border-radius: 10px;
+		border-radius: $item-boder-radius;
 		position: absolute;
 		width: 100%;
 		background: rgba(0, 0, 0, 0.2);
@@ -706,7 +765,7 @@ export default {
 .photo-select-icon-hover {
 	color: white;
 	font-size: 20px;
-	border-radius: 10px;
+	border-radius: $item-boder-radius;
 	right: 10px;
 	bottom: 10px;
 	height: 28px;
@@ -722,13 +781,13 @@ export default {
 
 .photo-img {
 	pointer-events: none;
-	border-radius: 10px;
+	border-radius: $item-boder-radius;
 	width: 100%;
 }
 
 .icon-play-root {
-	border-top-left-radius: 10px;
-	border-top-right-radius: 10px;
+	border-top-left-radius: $item-boder-radius;
+	border-top-right-radius: $item-boder-radius;
 	top: 0;
 	padding: 3% 5%;
 	width: 100%;

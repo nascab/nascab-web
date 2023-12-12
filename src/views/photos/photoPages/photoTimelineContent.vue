@@ -15,6 +15,7 @@
 			<!-- 照片列表容器 -->
 			<photo-list-content ref="photoContent" @onHoverSelected="onHoverSelected" @onPhotoClick="onPhotoClick"
 				@onPhotoLoadOver="onPhotoLoadOver" :showMode="showMode" :geohash="geohash" :albumId="albumId"
+				:libraryId="libraryId"
 				:aiClassId="aiClassId" :ordinaryAlbumId="ordinaryAlbumId" :showRangeType="showRangeType"
 				:showFileType="showFileType" :searchStr="searchStr" :faceId="faceId" :sourceFolderList="sourceFolderList">
 			</photo-list-content>
@@ -97,6 +98,10 @@ export default {
 			default: '',
 			type: String
 		},
+		libraryId: {//合集id
+			default: '',
+			type: String
+		},
 		aiClassId: {
 			default: '',
 			type: String
@@ -168,7 +173,7 @@ export default {
 			this.$nextTick(() => {
 				if (!this.$refs.timeline) return
 				this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0",
-					this.getGeoParam(), this.albumId, this.ordinaryAlbumId, "", this.aiClassId, this.faceId,this.sourceFolderList);
+					this.getGeoParam(), this.albumId, this.ordinaryAlbumId, "", this.aiClassId, this.faceId,this.sourceFolderList,this.libraryId);
 			})
 		},
 
@@ -254,14 +259,14 @@ export default {
 		onChooseSource(sourceFolderList){
 			this.sourceFolderList=sourceFolderList
 			this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0", this
-				.getGeoParam(), this.albumId, this.ordinaryAlbumId, null, this.aiClassId, this.faceId,this.sourceFolderList);
+				.getGeoParam(), this.albumId, this.ordinaryAlbumId, null, this.aiClassId, this.faceId,this.sourceFolderList,this.libraryId);
 			this.clearSelected();
 		},
 		onSearch(searchStr) {
 			//头部搜索回调
 			this.searchStr = searchStr
 			this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0", this
-				.getGeoParam(), this.albumId, this.ordinaryAlbumId, searchStr, this.aiClassId, this.faceId,this.sourceFolderList);
+				.getGeoParam(), this.albumId, this.ordinaryAlbumId, searchStr, this.aiClassId, this.faceId,this.sourceFolderList,this.libraryId);
 			this.clearSelected();
 		},
 		//改变数据类型的回调 0全部 1照片 2视频
@@ -269,7 +274,7 @@ export default {
 			this.showFileType = fileType
 			//重新加载时间轴数据
 			this.$refs.timeline.getTimeLine(this.$refs.photoHeader ? this.$refs.photoHeader.showFileType : "0", this
-				.getGeoParam(), this.albumId, this.ordinaryAlbumId, null, this.aiClassId, this.faceId,this.sourceFolderList);
+				.getGeoParam(), this.albumId, this.ordinaryAlbumId, null, this.aiClassId, this.faceId,this.sourceFolderList,this.libraryId);
 			this.clearSelected();
 		},
 		getGeoParam() {

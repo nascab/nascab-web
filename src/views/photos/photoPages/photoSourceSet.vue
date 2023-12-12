@@ -1,5 +1,5 @@
 <template>
-	<photo-base :initIndex="8">
+	<photo-base :initIndex="9">
 		<div class="source-setting-root">
 			<!-- 来源设置 -->
 			<div class="content-root">
@@ -147,7 +147,6 @@ export default {
 			showChangeSourcePosition: false,
 			canAddPath: true, //在electron内选文件夹会短时间内回调两次 弄个标记做一下防重
 			showChooseFolder: false,
-			runInElectron: this.$store.state.runInElectron,
 			pathList: [],
 			selectedItem: {}
 		}
@@ -241,6 +240,8 @@ export default {
 			}).then((res) => {
 				if (!res.code) {
 					this.showVsNotification(this.$t('common.operationSuccess'))
+
+					
 					this.getPathList()
 					this.showChangeSourcePosition = false
 				}
@@ -256,7 +257,6 @@ export default {
 			}).catch((error) => { })
 		},
 		selectPath() {
-			console.log("this.runInElectron", this.runInElectron)
 			this.showChooseFolder = true
 		},
 		addPathReq(path) {
@@ -266,7 +266,12 @@ export default {
 				path: path
 			}).then((res) => {
 				if (!res.code) {
-					this.showVsNotification(this.$t('common.operationSuccess'))
+					if(localStorage.sourceAddAlert==1){
+						this.showVsNotification(this.$t('common.operationSuccess'))
+					}else{
+						this.showVsAlertDialog(this.$t('common.alert'), this.$t('photo.addSourceAlert'))
+						localStorage.sourceAddAlert=1
+					}
 					this.getPathList()
 				}
 			}).catch((error) => { })

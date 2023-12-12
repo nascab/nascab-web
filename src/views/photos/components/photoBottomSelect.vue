@@ -238,7 +238,7 @@ export default {
 		},
 		// 恢复全部已选
 		restoreAll(photoList) {
-			this.showVsConfirmDialog(this.$t('common.confirm'), photoList.length + this.$t('file.doAllRestore'),
+			this.showVsConfirmDialog(this.$t('common.confirm'),this.$t('file.doAllRestore'),
 				() => {
 					this.api.post('/api/photoApi/restoreTrashBinFiles', {
 					}).then((res) => {
@@ -253,7 +253,7 @@ export default {
 		},
 		//彻底删除全部已选
 		deleteAll(photoList) {
-			this.showVsConfirmDialog(this.$t('common.confirm'), photoList.length + this.$t('file.doAllDelete'), () => {
+			this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('file.doAllDelete'), () => {
 				this.api.post('/api/photoApi/clearTrashBin', {
 				}).then((res) => {
 					if (!res.code) {
@@ -298,8 +298,7 @@ export default {
 				//全部删除点击
 				this.$emit('deleteAll')
 			} else {
-				this.showVsConfirmDialog(this.$t('common.confirm'), this.selectedList.length + this.$t(
-					'file.doAllDelete'), () => {
+				this.showVsConfirmDialog(this.$t('common.confirm'), this.$t('common.deleteSure'), () => {
 						this.deleteApi(true)
 					})
 			}

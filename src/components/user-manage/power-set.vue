@@ -11,14 +11,18 @@
 				<span class="nasIcons icon-movies-library" style="font-size: 14px;"></span>
 				{{ $t('user.powerMovie') }}
 				</MenuItem>
+				<MenuItem name="music">
+				<span class="nasIcons icon-play" style="font-size: 14px;"></span>
+				{{ $t('user.powerMusic') }}
+				</MenuItem>
 				<MenuItem name="folder">
 				<span class="nasIcons icon-file-list" style="font-size: 14px;"></span>
 				{{ $t('user.powerFolder') }}
 				</MenuItem>
-				<!-- <MenuItem name="menu">
+				<MenuItem name="menu">
 				<span class="nasIcons icon-grid" style="font-size: 14px;"></span>
 				{{ $t('common.menu') }}
-				</MenuItem> -->
+				</MenuItem>
 			</Menu>
 		</div>
 		<!-- 手机端显示 -->
@@ -30,17 +34,23 @@
 				<vs-option :label="$t('user.powerMovie')" value="movie">
 					{{ $t('user.powerMovie') }}
 				</vs-option>
+				<vs-option :label="$t('user.powerMusic')" value="music">
+					{{ $t('user.powerMusic') }}
+				</vs-option>
 				<vs-option :label="$t('user.powerFolder')" value="folder">
 					{{ $t('user.powerFolder') }}
 				</vs-option>
-				<!-- <vs-option :label="$t('common.menu')" value="menu">
+				<vs-option :label="$t('common.menu')" value="menu">
 					{{ $t('common.menu') }}
-				</vs-option> -->
+				</vs-option>
 			</vs-select>
 		</div>
 		<!-- 权限目录列表 -->
 		<div v-for="(power, index) in userPower"
-			v-if="indexName == 'photo' && power.server_type == 'photo' || indexName == 'movie' && power.server_type == 'movie' || indexName == 'folder' && power.server_type == 'folder'">
+			v-if="indexName == 'photo' && power.server_type == 'photo' 
+			|| indexName == 'movie' && power.server_type == 'movie' 
+			|| indexName == 'music' && power.server_type == 'music'
+			|| indexName == 'folder' && power.server_type == 'folder'">
 			<div class="path-item-root">
 				<!-- <Icon type="ios-folder-open-outline" size="30" style="margin-right: 10px;" /> -->
 				<span class="item-icon-folder nasIcons icon-img-folder"></span>
@@ -55,7 +65,7 @@
 						<Checkbox v-if="indexName == 'folder'" :true-value="1" :false-value="0" v-model="power.power_add"
 							@on-change="powerChange(index)">{{ $t('common.upload') }}
 						</Checkbox>
-						<Checkbox v-if="indexName != 'movie'" :true-value="1" :false-value="0" v-model="power.power_change"
+						<Checkbox v-if="indexName != 'movie' && indexName != 'music'" :true-value="1" :false-value="0" v-model="power.power_change"
 							@on-change="powerChange(index)">{{ $t('common.change') }}
 						</Checkbox>
 						<Checkbox :true-value="1" :false-value="0" v-model="power.power_delete"
@@ -85,6 +95,13 @@
 					@click="showChoosePath"></my-btn>
 			</div>
 		</div>
+		<!-- 音乐服务 -->
+		<div v-if="indexName == 'music'">
+			<div class="btn-root">
+				<my-btn style="width: 250px;margin-top: 30px;" :title="$t('user.addMusicPowerPath')"
+					@click="showChoosePath"></my-btn>
+			</div>
+		</div>
 		<!-- 文件浏览 -->
 		<div v-if="indexName == 'folder'">
 			<div class="btn-root">
@@ -95,18 +112,18 @@
 
 		<!-- 菜单权限 -->
 		<div v-if="indexName == 'menu'" style="margin-top:10px;">
-			<div style="text-align:left"> <b>{{ $t("whatModelWillYouUseSubuser") }}</b></div>
-			<CheckboxGroup @on-change="onMenuChange" v-model="showMenuList" class="option-root">
+			<div style="text-align:left"> <b>{{ $t("whatModelWillYouUseSubuser") }}</b> ({{$t("setting.noSetShowAllMenu")}})</div>
+			<CheckboxGroup @on-change="onUserMenuChange" v-model="showMenuList" class="option-root">
 				<Checkbox class="ckItem" label="photoManage" border>{{ $t("home.photoManage") }}</Checkbox>
 				<Checkbox class="ckItem" label="movieManage" border>{{ $t("home.movieManage") }}</Checkbox>
+				<Checkbox class="ckItem" label="musicManage" border>{{ $t("home.musicManage") }}</Checkbox>
 				<Checkbox class="ckItem" label="filesBrower" border>{{ $t("home.fileBrower") }}</Checkbox>
 				<Checkbox class="ckItem" label="privateSpace" border>{{ $t("photo.privateSpace") }}</Checkbox>
 			</CheckboxGroup>
-
+			
 		</div>
 
 		<!-- 来源路径选择 -->
-
 		<vs-dialog blur v-model="showSourcePathSelect">
 			<template #header>
 				<h4 style="font-size: 16px;">
@@ -165,13 +182,18 @@ export default {
 			btnCanUse: true,
 			userPower: [],
 			pathList: [],
-			showSourcePathSelect: false
+			showSourcePathSelect: false,
+			showMenuList:[]
 		}
 	},
 	mounted() {
 		this.getUserPower()
 	},
 	methods: {
+		onUserMenuChange(){
+				console.log(this.showMenuList)
+				this.apiSetUserMenu()
+		},
 		// 文件浏览权限选择目录回调
 		onSelectPath(selectedPath) {
 			this.showChooseFolder = false
@@ -182,6 +204,8 @@ export default {
 				this.initPath = "sourceFolderPhoto"
 			} else if (this.indexName == "movie") {
 				this.initPath = "sourceFolderMovie"
+			}else if (this.indexName == "music") {
+				this.initPath = "sourceFolderMusic"
 			} else if (this.indexName == "folder") {
 				this.initPath = ""
 			}
@@ -217,11 +241,24 @@ export default {
 			}).then((res) => {
 				if (!res.code) {
 					this.userPower = res.userPower
-					console.log(this.userPower)
 					this.showSourcePathSelect = false
 					this.getUserPower()
 				}
-			}).catch((error) => { })
+			}).catch((error) => {
+				this.showVsNotification(this.$t('common.operationFail'))
+			 })
+		},
+		
+		apiSetUserMenu() {
+			this.api.post('/api/usersApi/setUserMenu', {
+				username: this.user.username,
+				menuList: this.showMenuList
+			}).then((res) => {
+				if (!res.code) {
+				}
+			}).catch((error) => {
+				this.showVsNotification(this.$t('common.operationFail'))
+			 })
 		},
 		//点击路径的事件处理
 		selectPath(index) {
@@ -252,6 +289,7 @@ export default {
 			}).then((res) => {
 				if (!res.code) {
 					this.userPower = res.userPower
+					this.showMenuList=JSON.parse(res.userMenu)
 				}
 			}).catch((error) => {
 				this.showVsNotification(this.$t('common.getFail'))
@@ -326,5 +364,9 @@ export default {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+::v-deep .vs-select-content{
+	max-width: 100%;
 }
 </style>

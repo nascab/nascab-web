@@ -91,8 +91,9 @@
 					console.log("点击了返回上一级")
 					let lastSepIndex = this.parent.lastIndexOf(this.pathSep) > 0 ? this.parent.lastIndexOf(this.pathSep) :
 						1
-					console.log("lastSepIndex:" + lastSepIndex)
 					let lastPath = this.parent.substring(0, lastSepIndex)
+					console.log("lastPath:" + lastPath)
+
 					this.getFileTree(lastPath)
 				} else if (data.type == 2 && data.selected) {
 					// 初次选中文件夹

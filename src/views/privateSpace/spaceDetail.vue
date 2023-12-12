@@ -783,7 +783,7 @@ export default {
 
 .item-img {
 	object-fit: cover;
-	border-radius: 10px;
+	border-radius:6px;
 }
 
 .bottom-root {

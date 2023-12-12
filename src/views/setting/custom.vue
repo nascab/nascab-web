@@ -18,6 +18,7 @@
 			<CheckboxGroup @on-change="onMenuChange" v-model="showMenuList" class="option-root">
 				<Checkbox class="ckItem" label="photoManage" border>{{ $t("home.photoManage") }}</Checkbox>
 				<Checkbox class="ckItem" label="movieManage" border>{{ $t("home.movieManage") }}</Checkbox>
+				<Checkbox class="ckItem" label="musicManage" border>{{ $t("home.musicManage") }}</Checkbox>
 				<Checkbox class="ckItem" label="filesBrower" border>{{ $t("home.fileBrower") }}</Checkbox>
 				<Checkbox class="ckItem" label="backup" border>{{ $t("home.backup") }}</Checkbox>
 				<Checkbox class="ckItem" label="sharing" border>{{ $t("home.sharing") }}</Checkbox>
@@ -25,8 +26,6 @@
 				<Checkbox class="ckItem" label="security" border>{{ $t("home.securityCenter") }}</Checkbox>
 			</CheckboxGroup>
 		</div>
-
-
 	</div>
 </template>
 <script>
@@ -41,7 +40,7 @@ export default {
 		return {
 			shareUrl:"",
 			shareProtocol:"http://",
-			showMenuList: ["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"],
+			showMenuList: ["photoManage","musicManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"],
 		}
 	},
 	computed: {

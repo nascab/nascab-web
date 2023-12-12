@@ -57,7 +57,7 @@
 						@click="clickFile(index)">
 						<div style="display: flex;align-items: center;justify-content: center;">
 							<div style="position: relative;display: flex;align-items: center;justify-content: center;">
-								<img @dragstart.prevent v-lazy="file.url" style="object-fit: cover;border-radius: 10px;"
+								<img @dragstart.prevent v-lazy="file.url" style="object-fit: cover;border-radius: 6px;"
 									:style="{ 'width': itemWidth + 'px', 'height': itemWidth + 'px' }" />
 								<!-- 播放按钮 -->
 								<div class="icon-play-root" v-if="file.type == 2">
@@ -746,6 +746,6 @@ export default {
 	padding-bottom: 5px;
 	cursor: pointer;
 	font-size: 16px;
-	border-radius: 5px;
+	border-radius: 6px;
 	color: $nas-text-grey;
 }</style>

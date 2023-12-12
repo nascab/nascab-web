@@ -274,7 +274,7 @@ export default {
 }
 
 .item-img {
-	border-radius: 10px;
+	border-radius: 6px;
 	width: 100%;
 }
 

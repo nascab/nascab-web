@@ -6,11 +6,11 @@
   "description": "",
   "glyphs": [
     {
-      "icon_id": "7575062",
-      "name": "24gf-network",
+      "icon_id": "212766",
+      "name": "network_topology",
       "font_class": "network",
-      "unicode": "e99d",
-      "unicode_decimal": 59805
+      "unicode": "ea2f",
+      "unicode_decimal": 59951
     },
     {
       "icon_id": "1718467",

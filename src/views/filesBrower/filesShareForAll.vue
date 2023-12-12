@@ -86,7 +86,6 @@ export default {
 		return {
 			canAddPath: true, //在electron内选文件夹会短时间内回调两次 弄个标记做一下防重
 			showChooseFolder: false,
-			runInElectron: this.$store.state.runInElectron,
 			pathList: [],
 			selectedItem: {},
 			publicUserName:"nascabPublicUser"
@@ -115,7 +114,6 @@ export default {
 			})
 		},
 		selectPath() {
-			console.log("this.runInElectron", this.runInElectron)
 			this.showChooseFolder = true
 		},
 		addPathReq(setPath) {

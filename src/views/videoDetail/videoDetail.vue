@@ -10,7 +10,7 @@
 		</video>
 
 		<!-- 承载点击事件的ui层 -->
-		<div @click="videoClick" style="position:fixed;width:100%;height:100%;z-index: 1;"></div>
+		<div @click="videoClick" @touchstart.stop="onMouseDown" @touchend.stop="onMouseUp" @mousedown.stop="onMouseDown" @mouseup.stop="onMouseUp" style="position:fixed;width:100%;height:100%;z-index: 1;"></div>
 		<!-- 头部控制条 -->
 		<div class="video-controller-top" @click="videoClick" v-if="showCustomController">
 			<!-- 返回按钮 -->
@@ -336,7 +336,15 @@ export default {
 			userFontSize: '1.5rem',
 			ifContinueAlertIndexId: "",
 			skippedEnd: false,//当前视频是否已经执行过跳过片尾 防止多次触发的标记
-			currentVideoStream: false//当前的视频流信息
+			currentVideoStream: false,//当前的视频流信息
+			clickObj: {
+				firstTime: '', // mousedown的时间戳
+				lastTime: '', // mouseup的时间戳
+				isClick:false,
+				isLongPress:false,
+				longPressSpeedingMsg:null,
+				longPressTimeOut:null
+			}
 		};
 	},
 	mounted() {
@@ -375,6 +383,42 @@ export default {
 		document.onkeydown = null
 	},
 	methods: {
+		onMouseDown: function () {
+			console.log("onMouseDown")
+			 this.clickObj.isLongPress=false
+	   		 this.clickObj.firstTime = new Date().getTime()
+			 this.clickObj.longPressTimeOut = setTimeout(() => {
+				if(this.isPlaying){
+					if(this.clickObj.longPressSpeedingMsg){
+						this.clickObj.longPressSpeedingMsg()
+					}
+					this.clickObj.isLongPress=true
+					//开始长按视频加速事件
+        			this.vPlayer.playbackRate(4)
+					// this.videoHelper.changePlaySpeed(6)
+					this.clickObj.longPressSpeedingMsg = this.$Message.loading({
+						content: this.$t('video.speedingPlay'),
+						duration: 0
+					});
+				}
+			 }, 300);
+		},
+		onMouseUp: function () {
+			this.clickObj.lastTime = new Date().getTime()
+			// 鼠标点击和抬起的时间差<200，或者选中文本为空时，可以触发点击
+			if((this.clickObj.lastTime - this.clickObj.firstTime) >= 300 && this.clickObj.isLongPress){
+				//正在长按加速 停止
+				this.videoHelper.changePlaySpeed(2)
+				this.clickObj.longPressSpeedingMsg()
+			}
+			if(this.clickObj.longPressSpeedingMsg){
+				this.clickObj.longPressSpeedingMsg()
+			}
+			if(this.clickObj.longPressTimeOut){
+				clearTimeout(this.clickObj.longPressTimeOut)
+			}
+		},
+
 		//展示字幕选择
 		showChooseSub() {
 			this.showChooseSubtitle = true
@@ -479,6 +523,9 @@ export default {
 			this.noMoveTime = 0
 		},
 		videoClick() {
+			if(this.clickObj.isLongPress){
+				return
+			}
 			//如果自定义控制器处于展示状态 先隐藏
 			this.noMoveTime = 0
 			return this.showCustomController = !this.showCustomController

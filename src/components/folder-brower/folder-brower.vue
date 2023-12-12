@@ -1,7 +1,7 @@
 <template>
-	<div @contextmenu.stop="showRightMenuBg($event, $root)" class="browser-root" ref="rootWrapper">
+	<div @contextmenu.stop="showRightMenuBg($event, $root)" class="browser-root" ref="rootWrapper" @mouseleave="onMouseLeaveRoot">
 
-		<div v-if="!selectMode&&!doingSelect" class="path-root">
+		<div v-show="!selectMode&&!doingSelect" class="path-root">
 				<p style="color:#999999;margin-right:10px;flex-shrink:0" v-if="!isRoot&&fileTree.length>3" class="max-line-one">{{fileTree.length}} {{$t("itemsCount")}}</p>
 				<a style="font-size:14px;flex-shrink: 0;margin-left: 5px;" @click="parentPathClick(pitem, index)"
 					v-for="(pitem, index) in parentPathList"
@@ -10,7 +10,7 @@
 				<a v-if="parentPathList.length < 1">{{ $t('file.rootPath') }}</a>
 		</div>
 
-		<div :style="{  'height': showInWindow ? '550px' : 'auto' }"  style="overflow:hidden;">
+		<div :style="{  'height': showInWindow ? '550px' : '100%' }"  style="overflow:hidden;">
 			<div class="list-root" ref="wrapper"  @scroll="onPageScroll" >
 				<div v-if="fileTree.length < 1" style="margin-top: 20px;width: 100%;">{{ this.$t('common.noMore') }}
 				</div>
@@ -19,7 +19,8 @@
 					:class="{ 'list-item-root-list': showType == 'list' }"
 					:style="{ 'background-color': selectedIndex == index ? 'rgba(0,0,0,0.1)' : 'transparent', 'padding': itemMargin / 2 + 'px' }"
 					@contextmenu.stop="showRightMenu($event, $root, file, index)" @touchstart="touchstart(file, index)"
-					@mouseenter="mouseEnterImg(index)" @mouseleave="mouseLeaveImg(index)" @touchend="touchend">
+					@mouseenter="mouseEnterImg(index)" @mouseleave="mouseLeaveImg(index)" @touchend="touchend"
+					@mousedown="onMouseDown($event,index)" @mouseup="onMouseUp(index)">
 
 					<div :class="{ 'list-item-list': showType == 'list', 'list-item-grid': showType == 'grid' }"
 						@click="(e) => { clickTree(e, file, index) }">
@@ -47,6 +48,8 @@
 								src="@/static/icon-folder-file.png" />
 							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'pdf'"
 								src="@/static/icon-folder-pdf.png" />
+							<img @dragstart.prevent class="item-img" v-if="file.type == 1 && file.fileType == 'music'"
+								src="@/static/icon-folder-music.png" />
 						</div>
 
 
@@ -57,13 +60,13 @@
 							<!-- hover层 -->
 							<div class="hover-mask" v-if="!selectMode && file.hover">
 								<!-- 勾选框 -->
-								<span @click.stop="selectFileItem(file, index)"
+								<span @click.stop="selectFileItem(index)"
 									class="select-icon-hover nasIcons icon-radio-unchecked"></span>
 							</div>
 							<!-- 选择层 -->
 							<div class="select-mask" v-if="!selectMode && file.selected">
 								<!-- 已选 -->
-								<span @click.stop="selectFileItem(file, index)"
+								<span @click.stop="selectFileItem(index)"
 									class="select-icon-hover nasIcons icon-radio-checked"></span>
 							</div>
 						</div>
@@ -94,11 +97,11 @@
 		</my-dialog-input>
 
 		<!-- 底部多选操作条 -->
-		<div class="bottom-select-root" v-if="doingSelect">
+		<div class="bottom-select-root" v-show="doingSelect">
 			<div style="display:flex;align-items: center;">
 				<Checkbox @on-change="onSelectAll" v-model="checkAll"></Checkbox>
-				<div style="color:white">{{ $t('common.selectAll') }}</div>
-				<div @click="cancelMultipleSelect" style="color:white;margin-left: 10px;">{{ $t('common.cancel') }}</div>
+				<div style="color:white;cursor:pointer">{{ $t('common.selectAll') }}</div>
+				<div @click="cancelMultipleSelect" style="color:white;margin-left: 10px;cursor:pointer">{{ $t('common.cancel') }}</div>
 
 			</div>
 			<div style="display:flex;align-items: center;">
@@ -171,7 +174,7 @@
 		</Modal>
 
 		<!-- 压缩 解压选择目的地 -->
-		<vs-dialog v-model="showChooseTargetFolder" prevent-close scroll :full-screen="isMobile">
+		<vs-dialog scroll v-model="showChooseTargetFolder" prevent-close scroll :full-screen="isMobile">
 			<template #header>
 				<h4 v-if="currentOperationType == 'ZIP'" style="font-size: 16px;">
 					{{ $t("backup.chooseTargetPath") + " " + $t("file.zip") + ":" + selectedFile.name }}
@@ -181,7 +184,8 @@
 				</h4>
 			</template>
 			<file-select ref="fileSelector" v-if="showChooseTargetFolder" parent="root" :type="2"
-				@onSelect='onSelectTargetFolder' @onCancel="showChooseTargetFolder = false"></file-select>
+				@onSelect='onSelectTargetFolder' @onCancel="showChooseTargetFolder = false"
+				:initPath="parent ? parent : ''"></file-select>
 			<template #footer>
 				<file-select-bar @back="$refs.fileSelector.goBack()" @select="$refs.fileSelector.onSelect()"
 					@create="(newFolderName) => $refs.fileSelector.createNewFolder(newFolderName)"></file-select-bar>
@@ -243,6 +247,10 @@ export default {
 	},
 	data() {
 		return {
+			isInDragSelectMode:false,//是否处于拖动多选
+			dragStartIndex:0,//拖拽选择开始的索引
+			dragEndIndex:0,//拖拽选择结束的索引
+			dragSelectMode:true,//进入拖拽选择模式的时候 如果项目是未选中的则为true 否则为false 反选模式
 			showAddLocalPath: false,//新增本地路径的对话框是否显示
 			supportUnzipFormat: ['.tar', '.gzip', '.tgz', '.zip'],//支持的解压缩格式
 			currentOperationType: "",//当前正在进行的文件操作类型
@@ -258,7 +266,7 @@ export default {
 			rightMenuList: [],
 			itemBaseWidth: 80,
 			itemWidth: 80,
-			itemMargin: 10,
+			itemMargin: 6,
 			showVideoDetail: false,
 			source: "list",
 			visible: false,
@@ -303,6 +311,59 @@ export default {
 
 	},
 	methods: {
+		onMouseLeaveRoot(){
+			//鼠标离开列表区域 取消拖拽多选
+			this.isInDragSelectMode=false;
+		},
+		//鼠标按下
+		onMouseDown(event,index){
+			if(this.isRoot || !event || event.buttons!=1 || this.selectMode){
+				return
+			}
+			
+			this.isInDragSelectMode=true
+			this.dragSelectMode=!this.fileTree[index].selected
+			this.dragStartIndex=index
+			console.log("进入拖拽选择模式")
+		},
+		//鼠标抬起
+		onMouseUp(index){
+			this.isInDragSelectMode=false;
+			console.log("离开拖拽选择模式")
+
+		},
+		setDragRange(){
+			//设置范围选中
+			let rangeMinIndex=this.dragStartIndex>this.dragEndIndex?this.dragEndIndex:this.dragStartIndex
+			let rangeMaxIndex=this.dragStartIndex>this.dragEndIndex?this.dragStartIndex:this.dragEndIndex
+
+			for(let i=rangeMinIndex;i<=rangeMaxIndex;i++){
+				if(this.dragSelectMode){
+					if(!this.fileTree[i].selected){
+						this.selectFileItem(i)
+					}
+				}else{
+					if(this.fileTree[i].selected){
+						this.selectFileItem(i)
+					}
+				}
+			}
+
+		},
+		mouseEnterImg(index) {
+			if(this.isInDragSelectMode){
+				this.dragEndIndex=index
+				//拖拽选择模式
+				this.setDragRange()		
+			}else{
+				if (this.isMobile || this.isRoot || this.selectMode) return
+				this.$set(this.fileTree[index], "hover", true);
+			}
+		},
+		mouseLeaveImg(index) {
+			if (this.isMobile || this.isRoot  || this.selectMode) return
+			this.fileTree[index].hover = false;
+		},
 		operationLocalPath(operationType, localPath, pathId, pathName) {
 			this.api.post('/api/file/operationPathMount',
 				{
@@ -372,9 +433,11 @@ export default {
 			}
 		},
 		//勾选框的点击事件 
-		selectFileItem(file, index) {
+		selectFileItem(index) {
+			console.log("selectFileItem",index)
+			let file=this.fileTree[index]
 			if (this.fileTree[index].selected) {
-				this.$set(this.fileTree[index], "selected", false);
+				this.fileTree[index].selected=false;
 				for (let i in this.selectedFileList) {
 					if (this.selectedFileList[i].fileFullPath == file.fileFullPath) {
 						this.selectedFileList.splice(i, 1)
@@ -382,15 +445,17 @@ export default {
 					}
 				}
 			} else {
-				this.$set(this.fileTree[index], "selected", true)
+				console.log("进入多选")
+				this.fileTree[index].selected=true;
 				this.selectedFileList.push(this.fileTree[index])
 			}
+			this.$forceUpdate()
 			this.setIsDoingSelect()
 		},
 		//目录点击事件
 		clickTree(e, data, index) {
 			if (this.doingSelect) {
-				this.selectFileItem(data, index)
+				this.selectFileItem(index)
 			} else {
 				if (this.selectedIndex == index) {
 					//双击
@@ -400,14 +465,7 @@ export default {
 				this.selectedFile = data
 			}
 		},
-		mouseEnterImg(index) {
-			if (this.isMobile || this.isRoot || this.selectMode) return
-			this.$set(this.fileTree[index], "hover", true);
-		},
-		mouseLeaveImg(index) {
-			if (this.isMobile || this.isRoot  || this.selectMode) return
-			this.fileTree[index].hover = false;
-		},
+		
 		onPopstate() {
 			//后退按钮被点击 如果当前正在播放视频 则关闭视频 如果每播放 则后退
 			if (this.showPhotoDetail || this.showVideoDetail) {
@@ -821,11 +879,11 @@ export default {
 				}, null, this.$t('common.delete'), this.$t('common.cancel'), 300, true)
 			} else if (type == "DOWNLOAD") {
 				//下载this.selectedFile
-				this.downloadFile(this.getRawUrl(this.selectedIndex))
+				this.downloadFile(this.getRawUrl(this.selectedIndex),this.selectedFile)
 			} else if (type == "CANCEL_SELECT") {
 				this.cancelMultipleSelect()
 			} else if (type == "MULTIPLE_SELECT") {
-				this.selectFileItem(this.selectedFile, this.selectedIndex)
+				this.selectFileItem(this.selectedIndex)
 			} else if (type == "SHOW_TYPE_GRID") {
 				this.showType = 'grid'
 			} else if (type == "SHOW_TYPE_LIST") {
@@ -849,12 +907,35 @@ export default {
 			}
 			localStorage.setItem("folderBrowerShowType", this.showType)
 		},
-		downloadFile(url) {
+		downloadFile(url,downloadIndex) {
+			//raw=1代表下载源文件 否则特殊格式的图片会被转换 如heic bmp raw等
+			if(url.indexOf("&raw=1")==-1){
+				url+="&raw=1"
+			}
+			console.log("downloadIndex",downloadIndex,url)
 			let fullUrl = window.location.protocol + "//" + window.location.host + url
 			if (this.isFromApp) {
 				jsBridge.openInBrowser(fullUrl)
 			} else {
-				window.open(url, "_blank")
+				if(downloadIndex&&(downloadIndex.fileType=="image"||downloadIndex.fileType=="music")){
+					//图片类型 用fetch下载
+					fetch(url)
+					.then(resp => resp.blob())
+					.then(blobobject => {
+						const blob = window.URL.createObjectURL(blobobject);
+						const anchor = document.createElement('a');
+						anchor.style.display = 'none';
+						anchor.href = blob;
+						anchor.download = downloadIndex.name;
+						document.body.appendChild(anchor);
+						anchor.click();
+						window.URL.revokeObjectURL(blob);
+					})
+					.catch(() => console.log('An error in downloadin gthe file sorry'));
+				}else{
+					//调用浏览器下载
+					window.open(url, "_blank")
+				}
 			}
 		},
 		setItemBaseWidth(baseWidth) {
@@ -967,7 +1048,7 @@ export default {
 					} else if (data.fileType == 'pdf') {
 						this.goPreviewPdf(this.getRawUrl(index, this.fileTree[index].name))
 					} else {
-						this.downloadFile(this.getRawUrl(index, this.fileTree[index].name))
+						this.downloadFile(this.getRawUrl(index, this.fileTree[index].name),this.fileTree[index])
 					}
 				}
 			}
@@ -1004,7 +1085,7 @@ export default {
 			this.$refs.quickShareAdd.showAdd(this.getCurrentSelectedPath())
 		},
 		getFileFullPath(fileObj) {
-			if (this.parent == "sourceFolderPhoto" || this.parent == "sourceFolderMovie") {
+			if (this.parent == "sourceFolderPhoto" || this.parent == "sourceFolderMovie" || this.parent == "sourceFolderMusic") {
 				return fileObj.fileFullPath
 			}
 			//根据文件对象拼接完整访问物理路径
@@ -1025,7 +1106,7 @@ export default {
 		},
 		goBack() {
 			//选择来源文件夹状态 直接返回到根目录
-			if (this.initPath == "sourceFolderPhoto" || this.initPath == "sourceFolderMovie") {
+			if (this.initPath == "sourceFolderPhoto" || this.initPath == "sourceFolderMovie" || this.initPath == "sourceFolderMusic") {
 				return this.getFileTree(this.initPath, true)
 			}
 			//点击了返回上一级
@@ -1051,6 +1132,7 @@ export default {
 
 		//点击了图片 跳转到图片详情
 		goPreviewImage(index) {
+
 			//将文件对象包装为indexObj的格式 方便使用一套代码展示 从物理路径跳过去无法使用加入回收站功能 因为没有indexId
 			let useList = []
 			let showIndex = 0
@@ -1070,6 +1152,8 @@ export default {
 					break
 				}
 			}
+			console.log(" this.fileTree", this.fileTree)
+
 			this.showPhotoDetail = true;
 			this.$nextTick(() => {
 				this.$refs.photoDetail.showImg(useList, showIndex);
@@ -1138,6 +1222,34 @@ export default {
 					}
 				})
 		},
+		//对文件进行排序
+		sortFiles(fileList,sortField,sortType){
+				fileList.sort(function (a, b) {
+					if(sortType=="asc"){
+						if (a[sortField] < b[sortField]) {
+							return -1;
+						}
+						if (a[sortField] > b[sortField]) {
+							return 1;
+						}
+					}else{
+						if (a[sortField] < b[sortField]) {
+							return 1;
+						}
+						if (a[sortField] > b[sortField]) {
+							return -1;
+						}
+					}
+					return 0;
+				});
+				return fileList
+		},
+		//点击了排序
+		onClickOrder(sortField,sortType){
+			localStorage.folderBroweerSortField=sortField
+			localStorage.folderBroweerSortType=sortType
+			this.sortFiles(this.fileTree,sortField,sortType)
+		},
 		deleteFileRecord(type, fileObj, deleteAll) {
 			let params = {
 				id: fileObj ? fileObj.id : '',
@@ -1157,7 +1269,6 @@ export default {
 								}
 							}
 						}
-
 					}
 				})
 		},
@@ -1198,7 +1309,7 @@ export default {
 							}
 
 							this.addPathTipName(res.data[i])
-							res.data[i].url = axios.getTinyUrlByFilePath(res.data[i].parent + res.data[i].path_sep + res.data[i].name)
+							res.data[i].url = axios.getTinyUrlByFilePath(res.data[i].parent + res.data[i].path_sep + res.data[i].name,false,res.data[i].name)
 
 						}
 						this.fileTree = res.data
@@ -1209,7 +1320,7 @@ export default {
 		//创建新文件夹 
 		createNewFolder(folderName) {
 			if (!this.parent) {
-				return this.showVsNotification('无法在当前位置创建')
+				return this.showVsNotification(this.$t('file.cannotCreateHere'))
 			}
 			let ppath = this.getDealedPath(this.parent)
 			this.api
@@ -1236,6 +1347,8 @@ export default {
 					return "text"
 				case 4:
 					return "pdf"
+				case 5:
+					return "music"
 				default:
 					return "file"
 			}
@@ -1270,11 +1383,10 @@ export default {
 						this.parseParentPath()
 
 						let children = res.data.children
+						//根据当前排序类型进行排序
 						//根据文件名字判断不同类型 显示不同图标
 						for (let i = 0; i < children.length; i++) {
 							this.addPathTipName(children[i])
-
-
 							children[i].parent = res.data.parent
 							children[i].pathSep = res.data.sep
 
@@ -1288,9 +1400,14 @@ export default {
 								//没有后缀名 归类为普通文件
 								children[i].fileType = "file"
 							}
-							children[i].url = axios.getTinyUrlByFilePath(children[i].fileFullPath)
+							children[i].url = axios.getTinyUrlByFilePath(children[i].fileFullPath,false,children[i].name)
 						}
-						this.fileTree = children
+						//如果缓存类排序 则使用排序后的列表
+						if(localStorage.folderBroweerSortField&&localStorage.folderBroweerSortType){
+							this.fileTree = this.sortFiles(children,localStorage.folderBroweerSortField,localStorage.folderBroweerSortType)
+						}else{
+							this.fileTree = children
+						}
 						this.$emit('onParentChange', this.parent, this.isRoot)
 
 						if (this.isRoot) {

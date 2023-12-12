@@ -1,5 +1,5 @@
 <template>
-	<photo-base :initIndex="6">
+	<photo-base :initIndex="7">
 		<div class="photo-recent-root" ref="photoListRoot">
 			<!-- 头部操控条 -->
 			<photo-operation-header style="width:100%;height:70px;position: absolute;left: 0;z-index: 2;" ref="photoHeader"

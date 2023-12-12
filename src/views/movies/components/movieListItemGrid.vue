@@ -4,6 +4,10 @@
 			<!-- 封面 禁用浏览器默认的事件-->
 			<img class="movie-cover" v-lazy="movie.url" :style="{ height: itemWidth / 3 * 4.5 + 'px' ,width:itemWidth+'px'}" />
 
+			<div class="hover-half-root" v-if="!movie.hover">
+				
+			</div>
+
 			<div class="hover-root" v-if="movie.hover">
 				<!-- 播放按钮 -->
 				<Button type="text" ghost @click.stop="$emit('playClick')" style="height:40px">
@@ -115,7 +119,19 @@ export default {
 	border-radius: 5px;
 
 }
-
+.hover-half-root{
+	background: linear-gradient(to top, #000, rgba(0, 0, 0, 0));
+	position: absolute;
+	width: 100%;
+	height: 30px;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
 .cover-root {
 	display: flex;
 	align-items: center;
@@ -130,7 +146,7 @@ export default {
 	color: #eee;
 	position: absolute;
 	left: 6px;
-	bottom: 6px;
+	bottom: 4px;
 	font-weight: bold;
 }
 

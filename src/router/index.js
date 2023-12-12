@@ -139,6 +139,16 @@ const routes = [{
     component: () =>
         import('../views/photos/photoPages/ordinaryAlbum.vue')
 },
+{ //照片模块-合集
+    path: '/photoLibrary',
+    name: 'photoLibrary',
+    meta: {
+        level: 3,
+        title: i18n.t('photo.library'),
+    },
+    component: () =>
+        import('../views/photos/photoPages/photoLibrary.vue')
+},
 { //照片模块-文件试图
     path: '/photoFolderView',
     name: 'photoFolderView',

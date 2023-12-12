@@ -62,6 +62,11 @@ export default {
 				font: "nasIcons icon-normal-album"
 			},
 			{
+				id: '/photoLibrary',
+				title: this.$t('photo.library'),
+				font: "nasIcons icon-ziliaoku"
+			},
+			{
 				id: '/photoFolderView',
 				title: this.$t('photo.folder'),
 				font: "nasIcons icon-folder-iew"

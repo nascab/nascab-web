@@ -8,7 +8,7 @@
 							{{ $t('security.username') }}
 						</vs-th>
 						<vs-th>
-							{{ $t('security.type') }}
+							{{ $t('type') }}
 						</vs-th>
 						<vs-th>
 							IP

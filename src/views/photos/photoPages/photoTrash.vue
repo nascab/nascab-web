@@ -1,5 +1,5 @@
 <template>
-	<photo-base :initIndex="7">
+	<photo-base :initIndex="8">
 		<div class="trash-root" ref="photoListRoot">
 			<!-- 头部操控条 -->
 			<photo-operation-header style="width:100%;height:70px;position: absolute;left: 0;z-index: 2;" ref="photoHeader"

@@ -139,13 +139,27 @@ export default {
 					Url = Url.replace('type=tiny', 'type=raw');
 				}
 				Url = Url.replace('tinyImg', 'rawFile');
-
-
+				if(Url.indexOf("&raw=1")==-1){
+					Url+="&raw=1"
+				}
 				let fullUrl = window.location.protocol + "//" + window.location.host + Url
 				if (this.isFromApp) {
 					jsBridge.openInBrowser(fullUrl)
 				} else {
-					window.open(Url, "_blank")
+					//图片类型 用fetch下载
+					fetch(Url)
+						.then(resp => resp.blob())
+						.then(blobobject => {
+							const blob = window.URL.createObjectURL(blobobject);
+							const anchor = document.createElement('a');
+							anchor.style.display = 'none';
+							anchor.href = blob;
+							anchor.download = this.indexObj.filename || this.indexObj.title;
+							document.body.appendChild(anchor);
+							anchor.click();
+							window.URL.revokeObjectURL(blob);
+						})
+						.catch((e) => console.log(e));
 				}
 
 			}
@@ -224,7 +238,8 @@ export default {
 			let viewer = this.$viewerApi({
 				options: {
 					//android 和 pc端不显示动画 太卡 && !/(Android)/i.test(navigator.userAgent)
-					transition: this.isMobile && !/(Android)/i.test(navigator.userAgent),
+					// transition: this.isMobile && !/(Android)/i.test(navigator.userAgent),
+					transition: this.isMobile ,
 					button: false,
 					className: "viewerroot",
 					initialViewIndex: showIndex,

@@ -1,5 +1,5 @@
 <template>
-	<photo-base :initIndex="5">
+	<photo-base :initIndex="6">
 		<div class="photo-ai-root">
 			<div style="display:flex; align-items:center;width:100%;padding: 10px 20px;height:70px;">
 				<my-menu-select :shrinkModeTh="300" @onItemClick="onChooseAIType" :optionList="AIMenuList"></my-menu-select>

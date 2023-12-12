@@ -178,7 +178,7 @@ export default {
 
 		},
 		//获取时间轴
-		getTimeLine(fileType, geohash, albumId, ordinaryAlbumId, searchStr, aiClassId, faceId, sourceFolderList) {
+		getTimeLine(fileType, geohash, albumId, ordinaryAlbumId, searchStr, aiClassId, faceId, sourceFolderList,libraryId) {
 			// 先获取时间轴
 			let params = {
 				type: parseInt(fileType),
@@ -203,6 +203,9 @@ export default {
 			}
 			if (sourceFolderList) {
 				params['sourceFolderList'] = sourceFolderList
+			}
+			if(libraryId){
+				params['libraryId'] = libraryId
 			}
 			this.api
 				.post("/api/photoApi/getTimeLineDateList", params)

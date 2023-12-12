@@ -1,10 +1,10 @@
 {
   "name": "nascab",
-  "version": "3.3.1",
-  "versionCode": "331",
+  "version": "3.3.5", 
+  "versionCode": "335",
   "scripts": {
     "analyzer": "cross-env use_analyzer=true npm run build",
-    "serve": "vue-cli-service serve",
+    "dev": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "postinstall": "patch-package"
   },

@@ -1,5 +1,5 @@
 <template>
-	<photo-base :initIndex="4">
+	<photo-base :initIndex="5">
 		<folder-view></folder-view>
 	</photo-base>
 </template>

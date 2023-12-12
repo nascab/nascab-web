@@ -229,7 +229,7 @@ export default {
 									//没有后缀名 归类为普通文件
 									this.fileTree[i].fileType = "file"
 								}
-								this.fileTree[i].url = axios.getTinyUrlByFilePath(this.fileTree[i].fileFullPath, true) + "&shareToken=" + this.shareToken + "&sharePwd=" + base64.encode(this.password)
+								this.fileTree[i].url = axios.getTinyUrlByFilePath(this.fileTree[i].fileFullPath, true,this.fileTree[i].name) + "&shareToken=" + this.shareToken + "&sharePwd=" + base64.encode(this.password)
 								console.log(this.fileTree)
 							}
 						}
@@ -289,7 +289,7 @@ export default {
 
 .item-img {
 	pointer-events: none;
-	border-radius: 10px;
+	border-radius:6px;
 	width: 100%;
 	height: 100%;
 	object-fit: cover;

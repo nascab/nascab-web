@@ -146,7 +146,7 @@ requests.interceptors.response.use((response) => {
 }, err)
 function dealFileName(fileName) {
     if (!fileName || fileName.length < 1) return ''
-    const specialChars = /[`!@#$%^&*()+=\[\]{};':"\\|,<>\/?~]/;
+    const specialChars = /[`!@#$%^&*()+=[\]{};':"\\|,<>/?~]/
     var ext = fileName.substr(fileName.lastIndexOf('.') + 1);
 
     if (specialChars.test(fileName)) {
@@ -184,13 +184,19 @@ function getImgFullPath(indexId, tiny, fileName, serverType) {
 }
 
 //根据文件物理路径获取缩略图
-function getTinyUrlByFilePath(filePath,ignoreToken) {
+function getTinyUrlByFilePath(filePath,ignoreToken,fileName) {
+    if(fileName){
+        //处理特殊字符 防止url无法访问
+        fileName = dealFileName(fileName)
+    }else{
+        fileName="tiny.webp"
+    }
     filePath = encodeURIComponent(filePath)
     filePath = base64.encode(filePath)
     if(ignoreToken){
-        return baseUrl + `/api/fileApi/tinyImgByPath/tiny.webp?fullPath=${filePath}`
+        return baseUrl + `/api/fileApi/tinyImgByPath/${fileName}?fullPath=${filePath}`
     }else{
-        return baseUrl + `/api/fileApi/tinyImgByPath/tiny.webp?fullPath=${filePath}&token=${utils.getToken()}`
+        return baseUrl + `/api/fileApi/tinyImgByPath/${fileName}?fullPath=${filePath}&token=${utils.getToken()}`
     }
 }
 

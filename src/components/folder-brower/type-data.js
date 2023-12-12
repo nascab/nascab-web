@@ -5,7 +5,20 @@ let typeData={
 	'.heif':1,
 	'.gif': 1,
 	'.webp': 1,
+	'.bmp': 1,
+	'.tiff': 1,
+	'.svg': 1,
+	'.nrw': 1,
 	'.png': 1,
+	'.dng': 1,
+	'.cr2': 1,
+	'.nef': 1,
+	'.orf': 1,
+	'.raf': 1,
+	'.raw': 1,
+	'.cr3': 1,
+	'.x3f': 1,
+	'.rw2': 1,
 	'.mp4': 2,
 	'.mov': 2,
 	'.avi': 2,
@@ -35,6 +48,13 @@ let typeData={
 	'.xml': 3,
 	'.xls': 3,
 	'.xlsm': 3,
-	'.csv': 3
+	'.csv': 3,
+	'.mp3':5,
+	'.wav':5,
+	'.ogg':5,
+	'.flac':5,
+	'.opus':5,
+	'.aac':5
 }
+
 export default typeData

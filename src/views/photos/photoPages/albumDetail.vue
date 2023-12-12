@@ -26,13 +26,16 @@
 			</div>
 			<div class="album-detail-content">
 				<!-- 地图模式 -->
-				<photo-map :albumDetailInner="true" v-if="!isMobile && dataMode == 'map'" :albumId="albumId + ''"
-					:ordinaryAlbumId="ordinaryAlbumId + ''">
+				<photo-map :albumDetailInner="true" v-if="!isMobile && dataMode == 'map'" 
+					:ordinaryAlbumId="ordinaryAlbumId ? ordinaryAlbumId + '' : ''"
+					:libraryId="libraryId ? libraryId + '' : ''"
+					:albumId="albumId ? albumId + '' : ''">
 				</photo-map>
 				<!-- 列表模式 -->
 				<photo-timeline-content v-if="dataMode == 'list'" :nearMode="nearMode" :showSearchBtn="showSearchBtn"
 					:showAddToAlbum="showAddToAlbum" :geohash="geoHash ? geoHash : ''"
 					:ordinaryAlbumId="ordinaryAlbumId ? ordinaryAlbumId + '' : ''"
+					:libraryId="libraryId ? libraryId + '' : ''"
 					:albumId="albumId ? albumId + '' : ''" :faceId="faceId ? faceId + '' : ''"
 					:aiClassId="aiClassId ? aiClassId + '' : ''" :showRemoveFromAlbum="showRemoveFromAlbum">
 				</photo-timeline-content>
@@ -59,7 +62,11 @@ export default {
 			default: "",
 			type: String
 		},
-		propsAlbumId: {
+		propsAlbumId: {//智能相册
+			default: '',
+			type: String
+		},
+		propsLibraryId: {//合集id
 			default: '',
 			type: String
 		},
@@ -119,17 +126,19 @@ export default {
 			nearMode: false,
 			showSearchBtn: false,
 			openAsPage: false,
-			showRemoveFromAlbum:false
+			showRemoveFromAlbum:false,
+			libraryId:""
 		}
 	},
 	mounted() {
 		let passParams = this.$route.params
 
-		if (this.propsAiClassId || this.propsFaceId || this.propsGeoHash || this.propsAlbumId || this.propsOrdinaryAlbumId) {
+		if (this.propsAiClassId || this.propsFaceId || this.propsGeoHash || this.propsAlbumId || this.propsOrdinaryAlbumId || this.propsLibraryId) {
 			//处理组件弹窗方式打开
 			this.title = this.propsTitle
 			this.geoHash = this.propsGeoHash
 			this.albumId = this.propsAlbumId
+			this.libraryId=this.propsLibraryId
 			this.nearMode = this.propsNearMode
 			this.showSearchBtn = this.propsShowSearchBtn
 			this.showModeSwitch = this.propsShowModeSwitch
@@ -153,6 +162,7 @@ export default {
 			this.ordinaryAlbumId = passParams.ordinaryAlbumId
 			this.faceId = passParams.faceId
 			this.aiClassId = passParams.aiClassId
+			this.libraryId=passParams.propsLibraryId
 			this.showRemoveFromAlbum=passParams.showRemoveFromAlbum
 		}
 		

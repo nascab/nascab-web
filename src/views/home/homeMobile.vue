@@ -110,6 +110,7 @@ import userSetting from "@/components/my-header/user-setting.vue"
 import systemState from "@/views/home/systemState.vue";
 import serviceState from "@/views/home/serviceState.vue";
 import bgTask from "@/components/bg-task/bg-task.vue";
+import axios from "@/plugins/axios";
 
 export default {
   mounted() { },
@@ -152,12 +153,14 @@ export default {
         { id: "movieManage", src: require("@/static/mobile/ic_movie.png"), path: "/movies", title: this.$t("home.movieManage"), isShow: this.showMenuArr.includes('movieManage') },
         //  文件浏览器
         { id: "filesBrower", src: require("@/static/mobile/ic_folder.png"), path: "/filesBrower", title: this.$t("home.fileBrower"), isShow: this.showMenuArr.includes('filesBrower') },
-        //  备份
-        { id: "backup", src: require("@/static/mobile/ic_backup.png"), path: "/backup", title: this.$t("home.backup"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('backup')  },
+        //  音乐管理
+        { id: "musicManage", src: require("@/static/mobile/ic_music.png"), path: "music", title: this.$t("home.musicManage"), isShow: this.showMenuArr.includes("musicManage") ,newTag:true },
       ]
     },
     homeMenuListB() {
       return [
+        { id: "backup", src: require("@/static/mobile/ic_backup.png"), path: "/backup", title: this.$t("home.backup"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('backup')  },
+
         // 分享
         { id: "sharing", src: require("@/static/mobile/ic_share.png"), path: "/share", title: this.$t("home.sharing"), isShow: this.$store.state.currentUser.is_admin == 1&&this.showMenuArr.includes('sharing') },
         // 私有空间
@@ -228,6 +231,10 @@ export default {
         this.goPathNewWebView(menu.path, menu.title, null, menu.newTag)
       }
     },
+    openTerminalPage() {
+      let terminalUrl = `http://${window.location.host}/#/?token=${this.$store.state.token}&target=terminal`;
+      window.open(terminalUrl, "_blank");
+    },
     getVersionInfo() {
       this.api.post('/api/commonApi/getVersionInfo', { hideLoading: true }).then((res) => {
         if (res.currentVersion) {
@@ -242,11 +249,11 @@ export default {
         if (res.showMenuArr) {
           this.showMenuArr = res.showMenuArr
         }else{
-          this.showMenuArr=["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"]
+          this.showMenuArr = ["photoManage", "movieManage", "musicManage", "filesBrower", "backup", "sharing", "privateSpace", "security"];
         }
         console.log(this.showMenuArr)
       }).catch((error) => {
-        this.showMenuArr=["photoManage", "movieManage", "filesBrower", "backup", "sharing", "privateSpace", "security"]
+        this.showMenuArr = ["photoManage", "movieManage", "musicManage", "filesBrower", "backup", "sharing", "privateSpace", "security"];
        })
     },
     getNasAccountInfo() {

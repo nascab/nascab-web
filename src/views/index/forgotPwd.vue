@@ -83,7 +83,7 @@ export default {
 	},
 	methods: {
 		showForgetAnswer(){
-			this.showVsAlertDialog(this.$t('common.alert'), this.$t('login.forgetAnswerAlert',{dbPath:`C:\\Users\\您的Windows用户名\\AppData\\Roaming\\nascab\\database`}))
+			this.showVsAlertDialog(this.$t('common.alert'), this.$t('login.forgetAnswerAlert',{dbPath:`WINDOWS:C:\\Users\\USERNAME\\AppData\\Roaming\\nascab\\database      MAC:/Users/USERNAME/Library/Application Support/nascab/database`}))
 		},
 		goLogin() {
 			this.$router.push({
@@ -92,7 +92,6 @@ export default {
 		},
 		getInfo() {
 			this.api.post('/api/usersApi/resetPwdInfo', this.formInline).then((res) => {
-				console.log(this.$store.state.runInElectron)
 				if (this.$store.state.runInElectron) {
 					if (res.data.username) {
 						this.formInline.username = res.data.username

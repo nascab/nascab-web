@@ -78,8 +78,6 @@
 		},
 		data() {
 			return {
-				runInElectron: this.$store.state.runInElectron,
-
 				showChooseUser: false,
 				showChooseFolder: false,
 				shareData: {

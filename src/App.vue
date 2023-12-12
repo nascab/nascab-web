@@ -202,10 +202,17 @@ export default {
 				//如果在app里面就打开新页面
 				jsBridge.onOpenNewWebViewByPath(path, title)
 			} else {
-				console.log("newTag", newTag)
+				console.log("newTag", newTag,path)
 				if (newTag) {
 					console.log("location.href", location.href)
-					window.open(location.protocol + '//' + window.location.host + "/#" + path, "_blank");
+					let middleSep="/#"
+					if(['music'].includes(path)){
+						middleSep="/"
+					}
+					let openUrl=location.protocol + '//' + window.location.host +middleSep + path
+					console.log("openUrl", openUrl)
+
+					window.open(openUrl, "_blank");
 				} else {
 					this.goPath(path, query)
 				}
@@ -453,14 +460,14 @@ body,
 
 //ui框架的卡片 本来是四面圆角 改为上面两个圆角
 .vs-card__img {
-	border-top-left-radius: 20px !important;
-	border-top-right-radius: 20px !important;
+	border-top-left-radius: 10px !important;
+	border-top-right-radius: 10px !important;
 	border-bottom-left-radius: 0 !important;
 	border-bottom-right-radius: 0 !important;
 
 	img {
-		border-top-left-radius: 20px !important;
-		border-top-right-radius: 20px !important;
+		border-top-left-radius: 10px !important;
+		border-top-right-radius: 10px !important;
 		border-bottom-left-radius: 0 !important;
 		border-bottom-right-radius: 0 !important;
 	}

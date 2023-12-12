@@ -31,7 +31,9 @@ class VideoHelper {
         //播放速率选项
         this.optionsPlaySpeed = [
             { value: 0.5, label: '0.5x' },
+            { value: 0.75, label: '0.75x' },
             { value: 1, label: '1x' },
+            { value: 1.25, label: '1.25x' },
             { value: 1.5, label: '1.5x' },
             { value: 2, label: '2x' },
             { value: 3, label: '3x' }]
@@ -236,6 +238,7 @@ class VideoHelper {
         this.vue.subtitleStreamIndex = 0
         this.vue.uploadSubtitleFilePath = null
         this.vue.videoSameNameSubtitleFilePath = null
+        this.vue.playSpeed=1
         this.vue.setBurnState()
     }
     //切换全屏

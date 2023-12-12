@@ -10,7 +10,7 @@
 					</Tag>
 				</div>
 				<div class="card-item">
-					<h4>{{ $t('security.type') }}:</h4>
+					<h4>{{ $t('type') }}:</h4>
 					<Tag style="margin-left: 10px;border-radius: 10px;background-color: white;">
 						{{ record.typeStr }}
 					</Tag>

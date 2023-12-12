@@ -37,6 +37,10 @@ export default {
 			default: '',
 			Type: String
 		},
+		libraryId: {
+			default: '',
+			Type: String
+		},
 		ordinaryAlbumId: {
 			default: '',
 			Type: String
@@ -123,7 +127,7 @@ export default {
 				layers: [glayer_normal]
 			});
 
-			if (this.albumId || this.ordinaryAlbumId) {
+			if (this.albumId || this.ordinaryAlbumId || this.libraryId) {
 				this.getAlbumPhotoList()
 			} else {
 				this.map.on('moveend', (e) => {
@@ -222,6 +226,8 @@ export default {
 				params.albumId = this.albumId
 			} else if (this.ordinaryAlbumId) {
 				params.ordinaryAlbumId = this.ordinaryAlbumId
+			}else if(this.libraryId){
+				params.libraryId = this.libraryId
 			}
 			this.api
 				.post("/api/photoApi/getAlbumPhotoForMap", params)

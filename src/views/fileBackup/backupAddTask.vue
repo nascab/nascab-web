@@ -164,7 +164,6 @@ export default {
 		return {
 			showTargetPathList: [],//要展示的目标文件夹列表
 			taskType: "1",
-			runInElectron: this.$store.state.runInElectron,
 			excludeValue: '',
 			showAddExclude: false,
 			selectPathType: "source", //当前正在选择的路径类型
